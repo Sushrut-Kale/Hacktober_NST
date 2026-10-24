@@ -1,11 +1,17 @@
-from fastapi import FastAPI, HTTPException, status
+from contextlib import asynccontextmanager
+from typing import Dict, Any, AsyncGenerator, Optional, Union, List
+from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Dict, Any, Optional, Union, List
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from backend.app.config import settings
+from backend.app.db.database import get_db
+from backend.app.db.init_db import init_db
 from backend.app.schemas.core import (
     Task,
+    TaskState,
     ExecutionClaim,
     VerificationResult,
     TaskPlan,
@@ -26,11 +32,25 @@ from backend.app.services.antigravity_adapter import AntigravityAdapter
 from backend.app.services.safe_runner import SafeExecutionRunner
 from backend.app.services.workflow_service import WorkflowService, InvalidStateTransitionError
 from backend.app.db.repository import DatabaseRepository
+from backend.app.api.projects import router as projects_router
+from backend.app.api.evidence import router as evidence_router
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
+    """Initialize database tables and lifecycle resources."""
+    try:
+        init_db()
+    except Exception:
+        pass
+    yield
+
 
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
     description="Deterministic AI Coding Verification Platform",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -59,39 +79,103 @@ workflow_service = WorkflowService(
 # Health & Capability Diagnostics
 # -------------------------------------------------------------
 
+
 @app.get("/health")
 async def health_check() -> Dict[str, Any]:
+    """Root health check endpoint."""
     return {
         "status": "healthy",
         "service": settings.app_name,
         "version": settings.app_version,
     }
 
+
+@app.get("/api/health")
+def api_health_check(db: Session = Depends(get_db)) -> Dict[str, Any]:
+    """Structured health check including database verification."""
+    db_status = "connected"
+    try:
+        db.execute(text("SELECT 1"))
+    except Exception:
+        db_status = "disconnected"
+
+    return {
+        "status": "healthy" if db_status == "connected" else "degraded",
+        "service": settings.app_name,
+        "version": settings.app_version,
+        "database": db_status,
+    }
+
+
 @app.get("/api/health/ollama")
 async def ollama_health() -> Dict[str, Any]:
     return await gemma_service.check_readiness()
 
+
 @app.get("/api/health/antigravity")
 async def antigravity_health() -> Dict[str, Any]:
     return antigravity_adapter.inspect_capabilities()
+
 
 # -------------------------------------------------------------
 # Task Workflow Endpoints (Persistent Lifecycle)
 # -------------------------------------------------------------
 
 @app.post("/api/tasks", response_model=Task, status_code=status.HTTP_201_CREATED)
-async def create_task(payload: TaskCreateRequest) -> Task:
+async def create_task(payload: TaskCreateRequest, db: Session = Depends(get_db)) -> Task:
     """
     Creates a new task in CREATED state with explicit acceptance criteria.
+    Supports linking to registered projects.
     """
+    if payload.project_id and payload.project_id != "default":
+        from backend.app.models.project import Project
+        project = db.query(Project).filter(Project.id == payload.project_id).first()
+        if not project:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Project with identifier '{payload.project_id}' was not found.",
+            )
+
     try:
-        return workflow_service.create_task(
+        task = workflow_service.create_task(
             title=payload.title,
-            description=payload.description,
+            description=payload.description or "",
             acceptance_criteria=payload.acceptance_criteria,
             task_id=payload.id,
             workspace_path=payload.workspace_path,
         )
+        task.project_id = payload.project_id or "default"
+        db_repo.save_task(task)
+
+        # Also mirror in SQLAlchemy TaskRecord for relational queries under projects
+        try:
+            from backend.app.models.task import TaskRecord
+            crit_str = "; ".join(c.description for c in task.acceptance_criteria)
+            status_val = getattr(payload, "status", None)
+            if hasattr(status_val, "value"):
+                status_val = status_val.value
+            if not status_val or status_val == "CREATED":
+                status_val = "PLANNED"
+            task.status = status_val
+            db_repo.save_task(task)
+
+            task_rec = TaskRecord(
+                id=task.id,
+                project_id=task.project_id,
+                title=task.title,
+                description=task.description,
+                acceptance_criteria=crit_str,
+                status=status_val,
+            )
+            db.merge(task_rec)
+            db.commit()
+        except Exception:
+            db.rollback()
+
+
+        return task
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -103,14 +187,31 @@ async def list_tasks(project_id: Optional[str] = None) -> List[Task]:
     return db_repo.list_tasks(project_id=project_id)
 
 @app.get("/api/tasks/{task_id}", response_model=TaskDetail)
-async def get_task_detail(task_id: str) -> TaskDetail:
+async def get_task_detail(task_id: str, db: Session = Depends(get_db)) -> TaskDetail:
     """
     Returns task state along with associated plan, latest run, verification, and diagnosis.
+    Also satisfies shallow task queries with flat attributes.
     """
     try:
         return workflow_service.get_task_detail(task_id)
     except KeyError:
+        try:
+            from backend.app.models.task import TaskRecord
+            rec = db.query(TaskRecord).filter(TaskRecord.id == task_id).first()
+            if rec:
+                task = Task(
+                    id=rec.id,
+                    project_id=rec.project_id,
+                    title=rec.title,
+                    description=rec.description or "",
+                    acceptance_criteria=[],
+                    state=TaskState(rec.status) if rec.status in TaskState.__members__ else TaskState.CREATED,
+                )
+                return TaskDetail(task=task)
+        except Exception:
+            pass
         raise HTTPException(status_code=404, detail=f"Task '{task_id}' not found.")
+
 
 @app.post("/api/tasks/{task_id}/plan", response_model=TaskPlan)
 async def generate_task_plan_route(task_id: str, repo_context: Optional[str] = None) -> TaskPlan:
@@ -222,9 +323,11 @@ class VerifyRequest(BaseModel):
     task: Task
     claim: ExecutionClaim
 
+
 @app.post("/api/verify", response_model=VerificationResult)
 async def verify_task(payload: VerifyRequest) -> VerificationResult:
     return verification_engine.evaluate(payload.task, payload.claim)
+
 
 @app.post("/api/plan", response_model=TaskPlan)
 async def create_plan(payload: Union[PlanRequest, Task]) -> TaskPlan:
@@ -241,3 +344,7 @@ async def diagnose_failure(payload: FailureDiagnosisRequest) -> FailureDiagnosis
         repo_diff=payload.repo_diff,
         evidence_list=payload.evidence_list,
     )
+
+# Include integrated project and evidence routers
+app.include_router(projects_router, prefix="/api/projects", tags=["projects"])
+app.include_router(evidence_router, prefix="/api/verify", tags=["verification"])

@@ -1,6 +1,6 @@
 from enum import Enum
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field, model_validator
+from typing import List, Optional, Dict, Any, Union
+from pydantic import BaseModel, Field, field_validator, model_validator
 from datetime import datetime, timezone
 
 class TaskState(str, Enum):
@@ -12,11 +12,31 @@ class TaskState(str, Enum):
     VERIFIED = "VERIFIED"
     FAILED = "FAILED"
     REVIEW_REQUIRED = "REVIEW_REQUIRED"
+    BLOCKED = "BLOCKED"
+    NOT_RUN = "NOT_RUN"
+
 
 class VerificationVerdict(str, Enum):
+    """
+    Verification outcomes distinguishing conclusive results from execution or evidence gaps.
+    - VERIFIED / PASS: All required configured checks passed.
+    - FAILED / FAIL: A required check established a failure.
+    - NOT_RUN: Required checks have not been executed.
+    - BLOCKED: An environment or dependency prevented verification.
+    - REVIEW_REQUIRED / UNKNOWN: Evidence is insufficient to determine the outcome.
+    """
     VERIFIED = "VERIFIED"
     FAILED = "FAILED"
     REVIEW_REQUIRED = "REVIEW_REQUIRED"
+    NOT_RUN = "NOT_RUN"
+    BLOCKED = "BLOCKED"
+
+    # Semantic aliases for verdict compatibility
+    PASS = "VERIFIED"
+    FAIL = "FAILED"
+    UNKNOWN = "REVIEW_REQUIRED"
+
+
 
 class GeneratorStatus(str, Enum):
     AI_ACTIVE = "AI_ACTIVE"
@@ -30,22 +50,45 @@ class EvidenceType(str, Enum):
     FILE_CONTENT = "FILE_CONTENT"
     LOG_OUTPUT = "LOG_OUTPUT"
 
+
 class AcceptanceCriterion(BaseModel):
     id: str
     description: str
     required: bool = True
 
+
 class Task(BaseModel):
     id: str
     title: str
-    description: str
-    acceptance_criteria: List[AcceptanceCriterion]
+    description: Optional[str] = ""
+    acceptance_criteria: List[AcceptanceCriterion] = Field(default_factory=list)
     state: TaskState = TaskState.CREATED
-    project_id: str = "default"
+    project_id: Optional[str] = "default"
     workspace_path: Optional[str] = None
+    status: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     approved_at: Optional[datetime] = None
+
+    @field_validator("acceptance_criteria", mode="before")
+    @classmethod
+    def normalize_acceptance_criteria(cls, v: Any) -> List[Any]:
+        if v is None:
+            return []
+        if isinstance(v, str):
+            return [AcceptanceCriterion(id="AC-1", description=v.strip())]
+        if isinstance(v, list):
+            normalized = []
+            for idx, item in enumerate(v):
+                if isinstance(item, str):
+                    normalized.append(AcceptanceCriterion(id=f"AC-{idx + 1}", description=item.strip()))
+                elif isinstance(item, dict):
+                    normalized.append(item)
+                else:
+                    normalized.append(item)
+            return normalized
+        return v
+
 
 class PlanStep(BaseModel):
     step_number: int
@@ -53,10 +96,12 @@ class PlanStep(BaseModel):
     expected_outcome: str
     associated_criterion_id: Optional[str] = None
 
+
 class MappedCriterion(BaseModel):
     criterion_id: str
     description: str
     verification_method: str
+
 
 class TaskPlan(BaseModel):
     task_id: str
@@ -82,6 +127,7 @@ class TaskPlan(BaseModel):
                 data["summary"] = data["task_summary"]
         return data
 
+
 class EvidenceItem(BaseModel):
     criterion_id: Optional[str] = None
     evidence_type: EvidenceType
@@ -89,6 +135,7 @@ class EvidenceItem(BaseModel):
     exit_code: Optional[int] = None
     file_path: Optional[str] = None
     passed: Optional[bool] = None
+
 
 class ExecutionClaim(BaseModel):
     task_id: str
@@ -98,12 +145,14 @@ class ExecutionClaim(BaseModel):
     git_diff: Optional[str] = None
     evidence_list: List[EvidenceItem] = Field(default_factory=list)
 
+
 class RuleEvaluation(BaseModel):
     rule_name: str
     passed: bool
     verdict_impact: VerificationVerdict
     message: str
     criterion_id: Optional[str] = None
+
 
 class VerificationResult(BaseModel):
     task_id: str
@@ -114,6 +163,7 @@ class VerificationResult(BaseModel):
     verified_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     raw_evidence_count: int
     run_id: Optional[str] = None
+
 
 class FailureDiagnosis(BaseModel):
     task_id: str
@@ -178,6 +228,43 @@ class TaskDetail(BaseModel):
     latest_diagnosis: Optional[FailureDiagnosis] = None
     events: List[ExecutionEvent] = Field(default_factory=list)
 
+    # Flat task attributes for backward compatibility with shallow task consumers
+    id: Optional[str] = None
+    title: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[str] = None
+    project_id: Optional[str] = None
+    state: Optional[TaskState] = None
+    acceptance_criteria: List[AcceptanceCriterion] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def populate_flat_fields(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            task = data.get("task")
+            if task:
+                task_dict = task.model_dump() if hasattr(task, "model_dump") else (task if isinstance(task, dict) else task.__dict__)
+                for key in ["id", "title", "description", "status", "project_id", "state", "acceptance_criteria"]:
+                    if key not in data or data[key] is None:
+                        val = task_dict.get(key)
+                        if key == "status" and not val:
+                            st = task_dict.get("state")
+                            st_val = st.value if hasattr(st, "value") else str(st) if st else "PLANNED"
+                            if st_val in ("CREATED", "PLANNED", "APPROVED"):
+                                val = "PLANNED"
+                            elif st_val in ("RUNNING", "VERIFYING"):
+                                val = "IN_PROGRESS"
+                            elif st_val == "VERIFIED":
+                                val = "COMPLETED"
+                            elif st_val in ("FAILED", "REVIEW_REQUIRED", "BLOCKED"):
+                                val = "FAILED"
+                            else:
+                                val = "PLANNED"
+                        data[key] = val
+        return data
+
+
+
 class PlanRequest(BaseModel):
     task: Task
     repo_context: Optional[str] = None
@@ -190,10 +277,33 @@ class FailureDiagnosisRequest(BaseModel):
 
 class TaskCreateRequest(BaseModel):
     title: str
-    description: str
-    acceptance_criteria: List[AcceptanceCriterion]
+    description: Optional[str] = ""
+    acceptance_criteria: Union[List[AcceptanceCriterion], str, List[Any]] = Field(default_factory=list)
     id: Optional[str] = None
     workspace_path: Optional[str] = None
+    project_id: Optional[str] = "default"
+
+    @field_validator("acceptance_criteria", mode="before")
+    @classmethod
+    def normalize_criteria(cls, v: Any) -> List[AcceptanceCriterion]:
+        if v is None:
+            return []
+        if isinstance(v, str):
+            return [AcceptanceCriterion(id="AC-1", description=v.strip())]
+        if isinstance(v, list):
+            normalized = []
+            for idx, item in enumerate(v):
+                if isinstance(item, str):
+                    normalized.append(AcceptanceCriterion(id=f"AC-{idx + 1}", description=item.strip()))
+                elif isinstance(item, dict):
+                    normalized.append(AcceptanceCriterion(**item))
+                elif isinstance(item, AcceptanceCriterion):
+                    normalized.append(item)
+                else:
+                    normalized.append(item)
+            return normalized
+        return v
+
 
 class TaskApproveRequest(BaseModel):
     approved_by: str = "USER"
@@ -203,3 +313,23 @@ class TaskExecuteRequest(BaseModel):
     command: str
     criterion_id: Optional[str] = None
     timeout_seconds: Optional[float] = 30.0
+
+
+class ClaimVsRealityReport(BaseModel):
+    task_id: str
+    original_task: Task
+    agent_claim: ExecutionClaim
+    verification_result: VerificationResult
+    verdict: VerificationVerdict
+    claim_verified: bool
+    discrepancies: List[str] = Field(default_factory=list)
+    evidence_summary: Dict[str, Any] = Field(default_factory=dict)
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class EvidenceCollectionRequest(BaseModel):
+    repo_path: str
+    criterion_id: Optional[str] = None
+    test_command: Optional[List[str]] = None
+    timeout_seconds: Optional[float] = 30.0
+

@@ -277,8 +277,21 @@ class WorkflowService:
         self.repo.save_verification(verification, run_id=verification.run_id)
 
         # Transition task to final verdict state
-        target_state = TaskState(verification.verdict.value)
+        verdict_val = verification.verdict.value if hasattr(verification.verdict, "value") else str(verification.verdict)
+        if verdict_val in ("PASS", "VERIFIED"):
+            target_state = TaskState.VERIFIED
+        elif verdict_val in ("FAIL", "FAILED"):
+            target_state = TaskState.FAILED
+        elif verdict_val in ("UNKNOWN", "REVIEW_REQUIRED"):
+            target_state = TaskState.REVIEW_REQUIRED
+        elif verdict_val == "BLOCKED":
+            target_state = TaskState.BLOCKED
+        elif verdict_val == "NOT_RUN":
+            target_state = TaskState.NOT_RUN
+        else:
+            target_state = TaskState.FAILED
         self.transition_task_state(task, target_state)
+
 
         self.repo.record_event(
             ExecutionEvent(

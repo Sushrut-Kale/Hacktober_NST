@@ -3,6 +3,7 @@ from backend.app.services.gemma_service import GemmaService
 from backend.app.services.antigravity_adapter import AntigravityAdapter
 from backend.app.services.safe_runner import SafeExecutionRunner
 from backend.app.services.workflow_service import WorkflowService, InvalidStateTransitionError
+from backend.app.services.evidence_collector import EvidenceCollector
 
 __all__ = [
     "DeterministicVerificationEngine",
@@ -11,4 +12,6 @@ __all__ = [
     "SafeExecutionRunner",
     "WorkflowService",
     "InvalidStateTransitionError",
+    "EvidenceCollector",
 ]
+
