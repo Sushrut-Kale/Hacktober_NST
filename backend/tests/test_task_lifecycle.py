@@ -265,3 +265,52 @@ def test_task_status_detail_in_409_error(client):
     detail = resp.json()["detail"]
     # Should mention current state and why the transition is invalid
     assert "PLANNED" in detail or "not permitted" in detail
+
+
+def test_unapproved_task_cannot_execute_database_state_immutable(client):
+    """
+    REGRESSION TEST: Proves that an unapproved task cannot execute under any circumstance.
+    Verifies that rejected transition attempts (409 Conflict) do not modify the task's
+    underlying database state, and that execution only unlocks after explicit approval.
+    """
+    _, tid = _setup_project_and_task(client)
+
+    # 1. Verify initial database state is PLANNED
+    init_resp = client.get(f"/api/tasks/{tid}")
+    assert init_resp.status_code == 200
+    assert init_resp.json()["status"] == "PLANNED"
+
+    # 2. Attempt unauthorized execution (PLANNED -> IN_PROGRESS)
+    exec_attempt = _transition(client, tid, "IN_PROGRESS")
+    assert exec_attempt.status_code == 409
+    assert "not permitted" in exec_attempt.json()["detail"]
+
+    # 3. Verify database state is untouched and remains PLANNED
+    db_check1 = client.get(f"/api/tasks/{tid}")
+    assert db_check1.status_code == 200
+    assert db_check1.json()["status"] == "PLANNED"
+
+    # 4. Attempt premature completion (PLANNED -> COMPLETED)
+    complete_attempt = _transition(client, tid, "COMPLETED")
+    assert complete_attempt.status_code == 409
+
+    # 5. Verify database state is still PLANNED
+    db_check2 = client.get(f"/api/tasks/{tid}")
+    assert db_check2.status_code == 200
+    assert db_check2.json()["status"] == "PLANNED"
+
+    # 6. Explicit approval transition (PLANNED -> PENDING_APPROVAL)
+    approval_resp = _transition(client, tid, "PENDING_APPROVAL")
+    assert approval_resp.status_code == 200
+    assert approval_resp.json()["status"] == "PENDING_APPROVAL"
+
+    # 7. Now execution transition is authorized (PENDING_APPROVAL -> IN_PROGRESS)
+    auth_exec_resp = _transition(client, tid, "IN_PROGRESS")
+    assert auth_exec_resp.status_code == 200
+    assert auth_exec_resp.json()["status"] == "IN_PROGRESS"
+
+    # 8. Verify database reflects execution state
+    db_check3 = client.get(f"/api/tasks/{tid}")
+    assert db_check3.status_code == 200
+    assert db_check3.json()["status"] == "IN_PROGRESS"
+
