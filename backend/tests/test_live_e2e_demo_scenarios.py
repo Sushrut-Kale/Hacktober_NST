@@ -103,15 +103,12 @@ def test_scenario_a_verified_success():
         assert exec_data["source"] == "LOCAL_SAFE_RUNNER"
         assert "SUM_SUCCESS" in exec_data["stdout"]
         run_id = exec_data["run_id"]
-        print("EXEC_DATA EVIDENCE_ITEMS:", exec_data.get("evidence_items"))
-        print("EXEC_DATA GIT_DIFF:", exec_data.get("git_diff"))
+        assert exec_data.get("git_diff") is not None
 
         # 7. Collect Evidence & Deterministic Verification
         verify_res = client.post(f"/api/tasks/{task_id}/verify?run_id={run_id}")
         assert verify_res.status_code == 200, verify_res.text
         verif_data = verify_res.json()
-        if verif_data.get("verdict") not in ("PASS", "VERIFIED"):
-            print("FAILED EVALUATIONS:", verif_data.get("rule_evaluations") or verif_data.get("evaluations"))
         assert verif_data["verdict"] in ("PASS", "VERIFIED"), f"Evaluations: {verif_data.get('rule_evaluations')}"
         assert verif_data["confidence_score"] >= 0.8
 
