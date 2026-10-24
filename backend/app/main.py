@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Dict, Any
+from typing import Dict, Any, Optional, Union
 
 from backend.app.config import settings
 from backend.app.schemas.core import (
@@ -9,6 +9,9 @@ from backend.app.schemas.core import (
     ExecutionClaim,
     VerificationResult,
     TaskPlan,
+    PlanRequest,
+    FailureDiagnosis,
+    FailureDiagnosisRequest,
 )
 from backend.app.services.verification_engine import DeterministicVerificationEngine
 from backend.app.services.gemma_service import GemmaService
@@ -42,6 +45,9 @@ async def health_check() -> Dict[str, Any]:
 
 @app.get("/api/health/ollama")
 async def ollama_health() -> Dict[str, Any]:
+    """
+    Reports live Ollama connection status, model readiness, and active AI generator status.
+    """
     return await gemma_service.check_readiness()
 
 @app.get("/api/health/antigravity")
@@ -61,8 +67,25 @@ async def verify_task(payload: VerifyRequest) -> VerificationResult:
     return verification_engine.evaluate(payload.task, payload.claim)
 
 @app.post("/api/plan", response_model=TaskPlan)
-async def generate_plan(task: Task) -> TaskPlan:
+async def create_plan(payload: Union[PlanRequest, Task]) -> TaskPlan:
     """
-    Uses Gemma to generate a structured verification-first task plan.
+    Generates a structured verification-first task plan using Gemma 4,
+    or falls back cleanly to a deterministic plan if the model is unreachable.
     """
-    return await gemma_service.generate_task_plan(task)
+    if isinstance(payload, PlanRequest):
+        return await gemma_service.generate_plan(task=payload.task, repo_context=payload.repo_context)
+    return await gemma_service.generate_plan(task=payload)
+
+@app.post("/api/diagnosis", response_model=FailureDiagnosis)
+@app.post("/api/explain-failure", response_model=FailureDiagnosis)
+async def diagnose_failure(payload: FailureDiagnosisRequest) -> FailureDiagnosis:
+    """
+    Generates an evidence-grounded diagnosis for a verification failure.
+    Invariant: Deterministic verification verdict is never overridden by AI explanations.
+    """
+    return await gemma_service.explain_failure(
+        task=payload.task,
+        verification_result=payload.verification_result,
+        repo_diff=payload.repo_diff,
+        evidence_list=payload.evidence_list,
+    )
