@@ -1,0 +1,84 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { useProject } from "@/hooks/useProject";
+import { api } from "@/lib/api";
+import { ExecutionRun } from "@/lib/types";
+import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { formatDate, formatDuration } from "@/lib/formatters";
+import { DEMO_RUNS } from "@/fixtures/demo-data";
+import { FileText, ArrowRight, ShieldCheck, Download, Scale } from "lucide-react";
+
+export default function ReportsPage() {
+  const [runs] = useState<ExecutionRun[]>(Object.values(DEMO_RUNS));
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-white">
+            Verification Run Reports
+          </h1>
+          <p className="text-xs text-slate-400">
+            Audit-ready technical verification reports substantiated by deterministic evidence
+          </p>
+        </div>
+      </div>
+
+      {/* Reports List */}
+      <div className="space-y-3">
+        {runs.map((run) => (
+          <Card
+            key={run.run_id}
+            className="p-5 hover:border-white/20 transition-all group"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1.5 flex-1">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-xs font-mono font-bold text-sky-400">
+                    Report: {run.run_id}
+                  </span>
+                  <Badge status={run.status} size="sm" />
+                  <span className="text-xs font-mono text-slate-400">
+                    Task: {run.task_id}
+                  </span>
+                </div>
+
+                <div className="text-sm font-semibold text-white group-hover:text-sky-400 transition-colors">
+                  Verification Report for {run.task_id}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-slate-400">
+                  <span>Timestamp: {formatDate(run.started_at)}</span>
+                  <span>Exit code: {run.exit_code}</span>
+                  <span>Evidence count: {run.evidence_items.length}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <Link href={`/verification/${run.run_id}/claim-vs-reality`}>
+                  <Button variant="outline" size="sm" icon={<Scale className="w-3.5 h-3.5" />}>
+                    Claim vs Reality
+                  </Button>
+                </Link>
+                <Link href={`/reports/${run.run_id}`}>
+                  <Button
+                    variant="brand"
+                    size="sm"
+                    icon={<FileText className="w-3.5 h-3.5" />}
+                  >
+                    View Report
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
