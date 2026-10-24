@@ -25,68 +25,45 @@ export interface NavSection {
 
 export const NAVIGATION_SECTIONS: NavSection[] = [
   {
-    title: "Workspace",
+    title: "Command Center",
     items: [
-      { name: "Dashboard", href: "/dashboard", iconName: "LayoutDashboard" },
-      { name: "All Projects", href: "/projects", iconName: "FolderGit2" },
+      { name: "Overview", href: "/dashboard", iconName: "LayoutDashboard" },
+      { name: "Projects", href: "/projects", iconName: "FolderGit2" },
+      { name: "New Project", href: "/projects/new", iconName: "Sparkles", badge: "INTAKE" },
     ],
   },
   {
-    title: "Development",
+    title: "Intelligence & Planning",
     items: [
-      { name: "Tasks", href: "/tasks", iconName: "CheckSquare" },
-      { name: "Executions", href: "/executions", iconName: "Terminal" },
+      { name: "Tasks & Backlog", href: "/tasks", iconName: "CheckSquare" },
+      { name: "Build Planner", href: "/planner", iconName: "Layers", badge: "CORE" },
     ],
   },
   {
-    title: "Verification",
+    title: "Execution & Runner",
     items: [
-      {
-        name: "Claim vs Reality",
-        href: "/verification",
-        iconName: "Scale",
-        badge: "CORE",
-      },
-      {
-        name: "Verification Results",
-        href: "/verification",
-        iconName: "ShieldCheck",
-      },
-      {
-        name: "Failure Diagnosis",
-        href: "/verification",
-        iconName: "AlertTriangle",
-      },
-      {
-        name: "Replay Runs",
-        href: "/executions",
-        iconName: "History",
-      },
-      {
-        name: "Security Tests",
-        href: "/security",
-        iconName: "Lock",
-      },
+      { name: "Build Center", href: "/executions", iconName: "Terminal" },
+      { name: "Agent Runtime", href: "/model", iconName: "Cpu" },
     ],
   },
   {
-    title: "Reports",
+    title: "Verification & Audit",
     items: [
+      { name: "Verification Hub", href: "/verification", iconName: "ShieldCheck", badge: "DETERMINISTIC" },
+      { name: "Security Audit", href: "/security", iconName: "Lock" },
       { name: "Run Reports", href: "/reports", iconName: "FileText" },
-      { name: "Audit History", href: "/model", iconName: "Cpu" },
     ],
   },
   {
-    title: "Settings",
+    title: "System",
     items: [
       { name: "Settings", href: "/settings", iconName: "Settings" },
     ],
   },
 ];
 
-
 export const STATUS_CONFIG: Record<
-  VerificationVerdict | TaskState | ExecutionStatus,
+  string,
   { label: string; color: string; bg: string; border: string; text: string }
 > = {
   VERIFIED: {
@@ -95,6 +72,41 @@ export const STATUS_CONFIG: Record<
     bg: "bg-emerald-500/10",
     border: "border-emerald-500/30",
     text: "text-emerald-400",
+  },
+  PASSED: {
+    label: "Passed",
+    color: "#10b981",
+    bg: "bg-emerald-500/10",
+    border: "border-emerald-500/30",
+    text: "text-emerald-400",
+  },
+  IMPLEMENTED: {
+    label: "Implemented",
+    color: "#10b981",
+    bg: "bg-emerald-500/10",
+    border: "border-emerald-500/30",
+    text: "text-emerald-400",
+  },
+  INFERRED: {
+    label: "Inferred",
+    color: "#8b5cf6",
+    bg: "bg-purple-500/10",
+    border: "border-purple-500/30",
+    text: "text-purple-400",
+  },
+  MISSING: {
+    label: "Missing",
+    color: "#ef4444",
+    bg: "bg-rose-500/10",
+    border: "border-rose-500/30",
+    text: "text-rose-400",
+  },
+  NOT_CHECKED: {
+    label: "Not Checked",
+    color: "#64748b",
+    bg: "bg-slate-500/10",
+    border: "border-slate-500/30",
+    text: "text-slate-400",
   },
   FAILED: {
     label: "Failed",

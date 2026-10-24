@@ -17,6 +17,7 @@ import {
   Cpu,
   Settings,
   Layers,
+  Sparkles,
 } from "lucide-react";
 import { NAVIGATION_SECTIONS } from "@/lib/constants";
 import { BrandLogo } from "@/components/ui/Logo";
@@ -34,6 +35,8 @@ const ICON_MAP: Record<string, React.ReactNode> = {
   FileText: <FileText className="w-4 h-4" />,
   Cpu: <Cpu className="w-4 h-4" />,
   Settings: <Settings className="w-4 h-4" />,
+  Layers: <Layers className="w-4 h-4" />,
+  Sparkles: <Sparkles className="w-4 h-4" />,
 };
 
 interface SidebarProps {
@@ -46,8 +49,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const isItemActive = (href: string): boolean => {
     if (href === "/dashboard") return pathname === "/dashboard";
-    if (href === "/projects") return pathname === "/projects" || (pathname.startsWith("/projects") && !pathname.startsWith("/projects/new"));
+    if (href === "/projects") return pathname === "/projects";
+    if (href === "/projects/new") return pathname === "/projects/new";
     if (href === "/tasks") return pathname === "/tasks" || (pathname.startsWith("/tasks") && !pathname.startsWith("/tasks/new"));
+    if (href === "/planner") return pathname.startsWith("/planner");
     if (href === "/executions") return pathname.startsWith("/executions");
     if (href === "/verification") return pathname.startsWith("/verification");
     if (href === "/security") return pathname.startsWith("/security");
