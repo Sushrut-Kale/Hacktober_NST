@@ -1,16 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { useProject } from "@/hooks/useProject";
-import { api } from "@/lib/api";
 import { ExecutionRun } from "@/lib/types";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { formatDate, formatDuration } from "@/lib/formatters";
+import { formatDate } from "@/lib/formatters";
 import { DEMO_RUNS } from "@/fixtures/demo-data";
-import { FileText, ArrowRight, ShieldCheck, Download, Scale } from "lucide-react";
+import { FileText, Scale } from "lucide-react";
 
 export default function ReportsPage() {
   const [runs] = useState<ExecutionRun[]>(Object.values(DEMO_RUNS));
@@ -20,10 +18,10 @@ export default function ReportsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
+          <h1 className="text-2xl font-bold tracking-tight text-[#F1F4F8]">
             Verification Run Reports
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-[#718198] mt-1">
             Audit-ready technical verification reports substantiated by deterministic evidence
           </p>
         </div>
@@ -39,20 +37,20 @@ export default function ReportsPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1.5 flex-1">
                 <div className="flex items-center gap-2.5">
-                  <span className="text-xs font-mono font-bold text-sky-400">
+                  <span className="text-xs font-mono font-bold text-[#58AAE1]">
                     Report: {run.run_id}
                   </span>
                   <Badge status={run.status} size="sm" />
-                  <span className="text-xs font-mono text-slate-400">
+                  <span className="text-xs font-mono text-[#718198]">
                     Task: {run.task_id}
                   </span>
                 </div>
 
-                <div className="text-sm font-semibold text-white group-hover:text-sky-400 transition-colors">
+                <div className="text-sm font-semibold text-[#F1F4F8] group-hover:text-[#9EDCFF] transition-colors">
                   Verification Report for {run.task_id}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-slate-400">
+                <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-[#718198]">
                   <span>Timestamp: {formatDate(run.started_at)}</span>
                   <span>Exit code: {run.exit_code}</span>
                   <span>Evidence count: {run.evidence_items.length}</span>

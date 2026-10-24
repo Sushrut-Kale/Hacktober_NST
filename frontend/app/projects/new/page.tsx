@@ -5,14 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useProject } from "@/hooks/useProject";
 import { api } from "@/lib/api";
-import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/Card";
+import { Card, CardContent, CardFooter } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import {
-  FolderGit2,
-  GitBranch,
   Upload,
-  FileCode,
-  AlertTriangle,
   CheckCircle2,
   ArrowLeft,
   Info,
@@ -65,15 +61,15 @@ export default function NewProjectPage() {
       <div className="flex items-center gap-3">
         <Link
           href="/projects"
-          className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
+          className="p-2 text-[#A4B2C5] hover:text-[#F1F4F8] rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
+          <h1 className="text-2xl font-bold tracking-tight text-[#F1F4F8]">
             Register Project
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-[#718198] mt-0.5">
             Connect a repository or workspace for AI intelligence and deterministic verification
           </p>
         </div>
@@ -84,12 +80,12 @@ export default function NewProjectPage() {
           <CardContent className="space-y-5">
             {/* Project Details */}
             <div className="space-y-4">
-              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-[#718198] font-mono">
                 General Information
               </h2>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                <label className="block text-xs font-medium text-[#F1F4F8] mb-1.5">
                   Project Name <span className="text-rose-400">*</span>
                 </label>
                 <input
@@ -98,12 +94,12 @@ export default function NewProjectPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. VIKASA Auth Microservice"
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-surface-100 border border-white/10 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-500/50"
+                  className="w-full px-3.5 py-2.5 rounded-lg bg-[#0B1423] border border-white/10 text-sm text-[#F1F4F8] placeholder:text-[#718198] focus:outline-none focus:border-[#58AAE1]/50 transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                <label className="block text-xs font-medium text-[#F1F4F8] mb-1.5">
                   Description
                 </label>
                 <textarea
@@ -111,20 +107,20 @@ export default function NewProjectPage() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Summary of the codebase, business domain, and verification scope..."
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-surface-100 border border-white/10 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-500/50 resize-none"
+                  className="w-full px-3.5 py-2.5 rounded-lg bg-[#0B1423] border border-white/10 text-sm text-[#F1F4F8] placeholder:text-[#718198] focus:outline-none focus:border-[#58AAE1]/50 resize-none transition-colors"
                 />
               </div>
             </div>
 
             {/* Git & Workspace Integration */}
             <div className="space-y-4 pt-4 border-t border-white/5">
-              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-[#718198] font-mono">
                 Repository Configuration
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                  <label className="block text-xs font-medium text-[#F1F4F8] mb-1.5">
                     Git Remote URL
                   </label>
                   <input
@@ -132,12 +128,12 @@ export default function NewProjectPage() {
                     value={gitUrl}
                     onChange={(e) => setGitUrl(e.target.value)}
                     placeholder="https://github.com/org/repo.git"
-                    className="w-full px-3.5 py-2 rounded-lg bg-surface-100 border border-white/10 text-xs font-mono text-slate-100 focus:outline-none focus:border-sky-500/50"
+                    className="w-full px-3.5 py-2 rounded-lg bg-[#0B1423] border border-white/10 text-xs font-mono text-[#F1F4F8] focus:outline-none focus:border-[#58AAE1]/50 transition-colors"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                  <label className="block text-xs font-medium text-[#F1F4F8] mb-1.5">
                     Target Branch
                   </label>
                   <input
@@ -145,13 +141,13 @@ export default function NewProjectPage() {
                     value={branch}
                     onChange={(e) => setBranch(e.target.value)}
                     placeholder="e.g. main, feature-x"
-                    className="w-full px-3.5 py-2 rounded-lg bg-surface-100 border border-white/10 text-xs font-mono text-slate-100 focus:outline-none focus:border-sky-500/50"
+                    className="w-full px-3.5 py-2 rounded-lg bg-[#0B1423] border border-white/10 text-xs font-mono text-[#F1F4F8] focus:outline-none focus:border-[#58AAE1]/50 transition-colors"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                <label className="block text-xs font-medium text-[#F1F4F8] mb-1.5">
                   Local Workspace Path (Server filesystem)
                 </label>
                 <input
@@ -159,16 +155,19 @@ export default function NewProjectPage() {
                   value={repoPath}
                   onChange={(e) => setRepoPath(e.target.value)}
                   placeholder="e.g. /home/user/repo or e:/Hacktober_ADYPU"
-                  className="w-full px-3.5 py-2 rounded-lg bg-surface-100 border border-white/10 text-xs font-mono text-slate-100 focus:outline-none focus:border-sky-500/50"
+                  className="w-full px-3.5 py-2 rounded-lg bg-[#0B1423] border border-white/10 text-xs font-mono text-[#F1F4F8] focus:outline-none focus:border-[#58AAE1]/50 transition-colors"
                 />
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Note: Web browsers cannot browse or mount arbitrary local directories directly due to browser security boundaries. Execution runners operate on paths registered on the backend runner.
+                <p className="text-[11px] text-[#718198] mt-1.5 flex items-center gap-1.5">
+                  <Info className="w-3.5 h-3.5 shrink-0 text-[#58AAE1]" />
+                  <span>
+                    Execution runners operate on paths registered on the backend runner.
+                  </span>
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                  <label className="block text-xs font-medium text-[#F1F4F8] mb-1.5">
                     Primary Language
                   </label>
                   <input
@@ -176,12 +175,12 @@ export default function NewProjectPage() {
                     value={language}
                     onChange={(e) => setLanguage(e.target.value)}
                     placeholder="Python, TypeScript, Go"
-                    className="w-full px-3.5 py-2 rounded-lg bg-surface-100 border border-white/10 text-xs text-slate-100 focus:outline-none focus:border-sky-500/50"
+                    className="w-full px-3.5 py-2 rounded-lg bg-[#0B1423] border border-white/10 text-xs text-[#F1F4F8] focus:outline-none focus:border-[#58AAE1]/50 transition-colors"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                  <label className="block text-xs font-medium text-[#F1F4F8] mb-1.5">
                     Framework
                   </label>
                   <input
@@ -189,29 +188,29 @@ export default function NewProjectPage() {
                     value={framework}
                     onChange={(e) => setFramework(e.target.value)}
                     placeholder="FastAPI, Next.js, Django"
-                    className="w-full px-3.5 py-2 rounded-lg bg-surface-100 border border-white/10 text-xs text-slate-100 focus:outline-none focus:border-sky-500/50"
+                    className="w-full px-3.5 py-2 rounded-lg bg-[#0B1423] border border-white/10 text-xs text-[#F1F4F8] focus:outline-none focus:border-[#58AAE1]/50 transition-colors"
                   />
                 </div>
               </div>
             </div>
 
-            {/* ZIP / Documentation Upload Section (Clearly labelled as Unsupported in current backend phase) */}
+            {/* Direct Archive Upload */}
             <div className="space-y-3 pt-4 border-t border-white/5">
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-[#718198] font-mono">
                   Direct Archive / Documentation Upload
                 </h2>
-                <span className="px-2 py-0.5 text-[10px] font-mono uppercase bg-amber-500/20 text-amber-400 rounded border border-amber-500/30">
+                <span className="px-2 py-0.5 text-[10px] font-mono uppercase bg-amber-500/10 text-amber-400 rounded border border-amber-500/25">
                   Backend Pending
                 </span>
               </div>
 
-              <div className="p-4 rounded-xl border border-dashed border-white/10 bg-surface-100/30 text-center opacity-60 pointer-events-none">
-                <Upload className="w-6 h-6 mx-auto mb-2 text-slate-400" />
-                <p className="text-xs font-medium text-slate-300">
+              <div className="p-4 rounded-xl border border-dashed border-white/10 bg-[#0B1423]/50 text-center opacity-70">
+                <Upload className="w-6 h-6 mx-auto mb-2 text-[#718198]" />
+                <p className="text-xs font-medium text-[#A4B2C5]">
                   ZIP Archive & Documentation Upload
                 </p>
-                <p className="text-[11px] text-slate-400 mt-1">
+                <p className="text-[11px] text-[#718198] mt-1">
                   Multipart file upload endpoints will be supported in backend Phase 3. Please register via Git URL or server workspace path.
                 </p>
               </div>

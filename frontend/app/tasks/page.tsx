@@ -4,24 +4,17 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useProject } from "@/hooks/useProject";
 import { api } from "@/lib/api";
-import { Task, TaskState } from "@/lib/types";
+import { Task } from "@/lib/types";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { formatDate } from "@/lib/formatters";
 import {
   CheckSquare,
   Plus,
   Search,
-  Filter,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  ArrowRight,
   ShieldCheck,
   AlertTriangle,
   Play,
-  FileText,
 } from "lucide-react";
 
 export default function TasksPage() {
@@ -85,10 +78,10 @@ export default function TasksPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
+          <h1 className="text-2xl font-bold tracking-tight text-[#F1F4F8]">
             Tasks Board
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-[#718198] mt-1">
             Lifecycle state machine: Created → Planned → Approved → Running → Verifying → Verified / Failed
           </p>
         </div>
@@ -102,31 +95,31 @@ export default function TasksPage() {
       {/* Search & Filter Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#718198]" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search tasks by ID, title, or requirement..."
-            className="w-full pl-10 pr-4 py-2 rounded-xl bg-surface-100 border border-white/10 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-sky-500/50"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#0B1423] border border-white/10 text-sm text-[#F1F4F8] placeholder:text-[#718198] focus:outline-none focus:border-[#58AAE1]/50 transition-colors"
           />
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex items-center gap-1 overflow-x-auto p-1 rounded-xl bg-surface-100 border border-white/10">
+        <div className="flex items-center gap-1 overflow-x-auto p-1 rounded-xl bg-[#0B1423] border border-white/10">
           {filterTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setStateFilter(tab.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 cursor-pointer ${
                 stateFilter === tab.id
-                  ? "bg-white/10 text-white shadow-sm"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+                  ? "bg-[#58AAE1]/20 text-[#9EDCFF] border border-[#58AAE1]/30 shadow-sm"
+                  : "text-[#718198] hover:text-[#F1F4F8] hover:bg-white/5 border border-transparent"
               }`}
             >
               <span>{tab.label}</span>
               {tab.count !== undefined && (
-                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-white/10 text-slate-300">
+                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-white/10 text-[#A4B2C5]">
                   {tab.count}
                 </span>
               )}
@@ -137,8 +130,16 @@ export default function TasksPage() {
 
       {/* Task List */}
       <div className="space-y-3">
-        {filteredTasks.length === 0 ? (
-          <div className="p-12 text-center rounded-2xl border border-dashed border-white/10 bg-surface-100/40 text-slate-400">
+        {loading ? (
+          Array.from({ length: 3 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-28 rounded-xl shimmer"
+              style={{ border: "1px solid rgba(255, 255, 255, 0.08)" }}
+            />
+          ))
+        ) : filteredTasks.length === 0 ? (
+          <div className="p-12 text-center rounded-2xl border border-dashed border-white/10 bg-[#0B1423]/40 text-[#718198]">
             <CheckSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
             <p className="text-sm font-medium">No tasks found matching criteria.</p>
           </div>
@@ -151,11 +152,11 @@ export default function TasksPage() {
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div className="space-y-1.5 flex-1">
                   <div className="flex flex-wrap items-center gap-2.5">
-                    <span className="text-xs font-mono font-bold text-sky-400">
+                    <span className="text-xs font-mono font-bold text-[#58AAE1]">
                       {task.id}
                     </span>
                     <Badge status={task.state} size="sm" />
-                    <span className="text-[11px] text-slate-400 font-mono">
+                    <span className="text-[11px] text-[#718198] font-mono">
                       Project: {task.project_id}
                     </span>
                     {task.approved_by && (
@@ -167,18 +168,18 @@ export default function TasksPage() {
 
                   <Link
                     href={`/tasks/${task.id}`}
-                    className="text-base font-bold text-white group-hover:text-sky-400 transition-colors block"
+                    className="text-base font-bold text-[#F1F4F8] group-hover:text-[#9EDCFF] transition-colors block"
                   >
                     {task.title}
                   </Link>
 
-                  <p className="text-xs text-slate-400 line-clamp-2 max-w-3xl">
+                  <p className="text-xs text-[#A4B2C5] line-clamp-2 max-w-3xl leading-relaxed">
                     {task.description}
                   </p>
 
                   {/* Criteria badges */}
                   <div className="flex flex-wrap items-center gap-2 pt-2">
-                    <span className="text-[11px] font-mono text-slate-400">
+                    <span className="text-[11px] font-mono text-[#718198]">
                       Criteria ({task.acceptance_criteria.length}):
                     </span>
                     {task.acceptance_criteria.map((c) => (
@@ -189,7 +190,7 @@ export default function TasksPage() {
                             ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
                             : c.satisfied === false
                             ? "bg-rose-500/10 border-rose-500/20 text-rose-400"
-                            : "bg-white/5 border-white/10 text-slate-400"
+                            : "bg-white/5 border-white/10 text-[#718198]"
                         }`}
                         title={c.description}
                       >

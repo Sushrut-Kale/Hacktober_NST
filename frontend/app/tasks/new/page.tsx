@@ -11,11 +11,7 @@ import {
   ArrowLeft,
   Plus,
   Trash2,
-  CheckCircle2,
   Sparkles,
-  Info,
-  Shield,
-  FileCode,
 } from "lucide-react";
 
 interface CriterionInput {
@@ -119,15 +115,15 @@ export default function NewTaskPage() {
       <div className="flex items-center gap-3">
         <Link
           href="/tasks"
-          className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
+          className="p-2 text-[#A4B2C5] hover:text-[#F1F4F8] rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
+          <h1 className="text-2xl font-bold tracking-tight text-[#F1F4F8]">
             Create Verification Task
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-[#718198] mt-0.5">
             Define requirements and explicit acceptance criteria before plan generation
           </p>
         </div>
@@ -139,16 +135,16 @@ export default function NewTaskPage() {
             {/* Task Info */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-[#718198] font-mono">
                   Task Specification
                 </h2>
-                <div className="text-xs font-mono text-slate-400">
-                  ID: <span className="text-sky-400">{taskId}</span>
+                <div className="text-xs font-mono text-[#718198]">
+                  ID: <span className="text-[#58AAE1] font-bold">{taskId}</span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                <label className="block text-xs font-medium text-[#F1F4F8] mb-1.5">
                   Task Title <span className="text-rose-400">*</span>
                 </label>
                 <input
@@ -157,12 +153,12 @@ export default function NewTaskPage() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Implement JWT authentication middleware"
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-surface-100 border border-white/10 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-500/50"
+                  className="w-full px-3.5 py-2.5 rounded-lg bg-[#0B1423] border border-white/10 text-sm text-[#F1F4F8] placeholder:text-[#718198] focus:outline-none focus:border-[#58AAE1]/50 transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                <label className="block text-xs font-medium text-[#F1F4F8] mb-1.5">
                   Requirement Details & Scope
                 </label>
                 <textarea
@@ -170,13 +166,13 @@ export default function NewTaskPage() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Describe the expected functionality, edge cases, expected HTTP response formats..."
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-surface-100 border border-white/10 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-500/50 resize-none"
+                  className="w-full px-3.5 py-2.5 rounded-lg bg-[#0B1423] border border-white/10 text-sm text-[#F1F4F8] placeholder:text-[#718198] focus:outline-none focus:border-[#58AAE1]/50 resize-none transition-colors"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                  <label className="block text-xs font-medium text-[#F1F4F8] mb-1.5">
                     Relevant Files (Optional)
                   </label>
                   <input
@@ -184,12 +180,12 @@ export default function NewTaskPage() {
                     value={relevantFiles}
                     onChange={(e) => setRelevantFiles(e.target.value)}
                     placeholder="backend/app/main.py, tests/test_auth.py"
-                    className="w-full px-3.5 py-2 rounded-lg bg-surface-100 border border-white/10 text-xs font-mono text-slate-100 focus:outline-none focus:border-sky-500/50"
+                    className="w-full px-3.5 py-2 rounded-lg bg-[#0B1423] border border-white/10 text-xs font-mono text-[#F1F4F8] focus:outline-none focus:border-[#58AAE1]/50 transition-colors"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                  <label className="block text-xs font-medium text-[#F1F4F8] mb-1.5">
                     Constraints & Policies
                   </label>
                   <input
@@ -197,7 +193,7 @@ export default function NewTaskPage() {
                     value={constraints}
                     onChange={(e) => setConstraints(e.target.value)}
                     placeholder="e.g. No new external dependencies, exit code 0 required"
-                    className="w-full px-3.5 py-2 rounded-lg bg-surface-100 border border-white/10 text-xs text-slate-100 focus:outline-none focus:border-sky-500/50"
+                    className="w-full px-3.5 py-2 rounded-lg bg-[#0B1423] border border-white/10 text-xs text-[#F1F4F8] focus:outline-none focus:border-[#58AAE1]/50 transition-colors"
                   />
                 </div>
               </div>
@@ -207,17 +203,17 @@ export default function NewTaskPage() {
             <div className="space-y-4 pt-4 border-t border-white/5">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300">
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-[#718198] font-mono">
                     Acceptance Criteria
                   </h2>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-[11px] text-[#718198] mt-0.5">
                     Deterministic verification checks evidence against each required criterion.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={addCriterion}
-                  className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-sky-400 hover:text-sky-300 rounded border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 transition-colors"
+                  className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-[#58AAE1] hover:text-[#9EDCFF] rounded border border-[#58AAE1]/30 bg-[#58AAE1]/10 hover:bg-[#58AAE1]/20 transition-colors cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Add Criterion</span>
@@ -228,9 +224,9 @@ export default function NewTaskPage() {
                 {criteria.map((crit, idx) => (
                   <div
                     key={crit.id}
-                    className="flex items-start gap-2.5 p-3 rounded-lg bg-surface-100 border border-white/5"
+                    className="flex items-start gap-2.5 p-3 rounded-lg bg-[#0B1423] border border-white/5"
                   >
-                    <span className="px-2 py-1 text-xs font-mono font-bold text-sky-400 rounded bg-white/5 shrink-0 mt-0.5">
+                    <span className="px-2 py-1 text-xs font-mono font-bold text-[#58AAE1] rounded bg-white/5 shrink-0 mt-0.5">
                       {crit.id}
                     </span>
                     <input
@@ -239,12 +235,12 @@ export default function NewTaskPage() {
                       value={crit.description}
                       onChange={(e) => updateCriterion(idx, e.target.value)}
                       placeholder="e.g. Valid token returns HTTP 200 with decoded user payload"
-                      className="flex-1 px-3 py-1.5 rounded bg-surface-200 border border-white/10 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-500/50"
+                      className="flex-1 px-3 py-1.5 rounded bg-[#101D30] border border-white/10 text-xs text-[#F1F4F8] placeholder:text-[#718198] focus:outline-none focus:border-[#58AAE1]/50 transition-colors"
                     />
                     <button
                       type="button"
                       onClick={() => removeCriterion(idx)}
-                      className="p-1.5 text-slate-500 hover:text-rose-400 rounded transition-colors"
+                      className="p-1.5 text-[#718198] hover:text-rose-400 rounded transition-colors cursor-pointer"
                       title="Remove criterion"
                     >
                       <Trash2 className="w-4 h-4" />

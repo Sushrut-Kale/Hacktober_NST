@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useProject } from "@/hooks/useProject";
 import { api } from "@/lib/api";
 import { VerificationResult } from "@/lib/types";
-import { Card, CardHeader, CardContent } from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { formatDate } from "@/lib/formatters";
@@ -17,18 +17,13 @@ import {
   ArrowLeft,
   CheckCircle2,
   XCircle,
-  FileText,
   Terminal,
-  Activity,
-  Layers,
-  Sparkles,
 } from "lucide-react";
 
 export default function VerificationResultsPage() {
   const params = useParams();
   const runId = (params?.runId as string) || "run-b8f3e21a";
 
-  const { showToast } = useProject();
   const [result, setResult] = useState<VerificationResult | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -49,7 +44,7 @@ export default function VerificationResultsPage() {
 
   if (loading || !result) {
     return (
-      <div className="p-12 text-center text-slate-400">
+      <div className="p-12 text-center text-[#718198] font-mono text-sm">
         Loading deterministic verification outcomes...
       </div>
     );
@@ -64,21 +59,21 @@ export default function VerificationResultsPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/executions"
-            className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
+            className="p-2 text-[#A4B2C5] hover:text-[#F1F4F8] rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="text-xs font-mono font-bold text-sky-400">
+              <span className="text-xs font-mono font-bold text-[#58AAE1]">
                 {runId}
               </span>
               <Badge status={result.verdict} size="sm" />
-              <span className="text-xs font-mono text-slate-400">
-                Task: <strong className="text-slate-200">{result.task_id}</strong>
+              <span className="text-xs font-mono text-[#718198]">
+                Task: <strong className="text-[#F1F4F8]">{result.task_id}</strong>
               </span>
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-white mt-1">
+            <h1 className="text-2xl font-bold tracking-tight text-[#F1F4F8] mt-1">
               Deterministic Verification Results
             </h1>
           </div>
@@ -111,22 +106,22 @@ export default function VerificationResultsPage() {
       {/* Top Metric Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card borderVariant={isVerified ? "emerald" : "rose"} className="p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase">
+          <div className="text-[10px] font-bold text-[#718198] uppercase font-mono">
             Final Verdict
           </div>
           <div className="mt-1">
             <Badge status={result.verdict} size="lg" />
           </div>
-          <div className="text-[10px] text-slate-500 font-mono mt-2">
+          <div className="text-[10px] text-[#718198] font-mono mt-2">
             Non-negotiable rule evaluation
           </div>
         </Card>
 
         <Card className="p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase">
+          <div className="text-[10px] font-bold text-[#718198] uppercase font-mono">
             Confidence Score
           </div>
-          <div className="text-2xl font-extrabold font-mono text-white mt-1">
+          <div className="text-2xl font-extrabold font-mono text-[#F1F4F8] mt-1">
             {(result.confidence_score * 100).toFixed(0)}%
           </div>
           <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden mt-2">
@@ -138,7 +133,7 @@ export default function VerificationResultsPage() {
         </Card>
 
         <Card className="p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase">
+          <div className="text-[10px] font-bold text-[#718198] uppercase font-mono">
             Build & Lint
           </div>
           <div className="flex items-center gap-2 mt-2">
@@ -152,13 +147,13 @@ export default function VerificationResultsPage() {
         </Card>
 
         <Card className="p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase">
+          <div className="text-[10px] font-bold text-[#718198] uppercase font-mono">
             Evidence Items
           </div>
-          <div className="text-2xl font-extrabold font-mono text-sky-400 mt-1">
+          <div className="text-2xl font-extrabold font-mono text-[#58AAE1] mt-1">
             {result.raw_evidence_count}
           </div>
-          <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+          <div className="text-[10px] text-[#718198] font-mono mt-0.5">
             Verified at {formatDate(result.verified_at).split(",")[1]}
           </div>
         </Card>
@@ -166,21 +161,21 @@ export default function VerificationResultsPage() {
 
       {/* Summary Narrative */}
       <Card className="p-5">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+        <h2 className="text-[10px] font-bold uppercase tracking-wider text-[#718198] font-mono mb-2">
           Engine Evaluation Summary
         </h2>
-        <p className="text-sm text-slate-200 leading-relaxed font-sans">
+        <p className="text-sm text-[#F1F4F8] leading-relaxed font-sans">
           {result.summary}
         </p>
-        <div className="mt-3 text-xs font-mono text-slate-400">
-          Scope: <span className="text-slate-300">{result.verification_scope || "Full Deterministic Rule Engine"}</span>
+        <div className="mt-3 text-xs font-mono text-[#718198]">
+          Scope: <span className="text-[#A4B2C5]">{result.verification_scope || "Full Deterministic Rule Engine"}</span>
         </div>
       </Card>
 
       {/* Rule Evaluations Table */}
       <Card className="p-6 space-y-4">
-        <h2 className="text-base font-bold text-white flex items-center gap-2">
-          <ShieldCheck className="w-5 h-5 text-sky-400" />
+        <h2 className="text-base font-bold text-[#F1F4F8] flex items-center gap-2">
+          <ShieldCheck className="w-5 h-5 text-[#58AAE1]" />
           <span>Rule Evaluations ({result.rule_evaluations.length})</span>
         </h2>
 
@@ -188,20 +183,20 @@ export default function VerificationResultsPage() {
           {result.rule_evaluations.map((rule, idx) => (
             <div
               key={idx}
-              className="p-4 rounded-xl bg-surface-100 border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+              className="p-4 rounded-xl bg-[#0B1423] border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
             >
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono font-bold text-slate-200">
+                  <span className="text-xs font-mono font-bold text-[#F1F4F8]">
                     {rule.rule_name}
                   </span>
                   {rule.criterion_id && (
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-slate-400">
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-[#718198]">
                       Target: {rule.criterion_id}
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-slate-400">{rule.message}</p>
+                <p className="text-xs text-[#A4B2C5]">{rule.message}</p>
               </div>
 
               <div className="shrink-0 self-end sm:self-center">
@@ -225,14 +220,14 @@ export default function VerificationResultsPage() {
       {/* Test Results Table */}
       {result.test_results && result.test_results.length > 0 && (
         <Card className="p-6 space-y-4">
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
+          <h2 className="text-base font-bold text-[#F1F4F8] flex items-center gap-2">
             <Terminal className="w-5 h-5 text-emerald-400" />
             <span>Test Cases Breakdown ({result.test_results.length})</span>
           </h2>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-mono">
-              <thead className="bg-surface-100 text-slate-400 uppercase text-[10px] border-b border-white/5">
+              <thead className="bg-[#0B1423] text-[#718198] uppercase text-[10px] border-b border-white/5">
                 <tr>
                   <th className="px-4 py-2.5">Test Name</th>
                   <th className="px-4 py-2.5">Suite File</th>
@@ -243,7 +238,7 @@ export default function VerificationResultsPage() {
               <tbody className="divide-y divide-white/5">
                 {result.test_results.map((t, idx) => (
                   <tr key={idx} className="hover:bg-white/[0.02]">
-                    <td className="px-4 py-3 font-semibold text-slate-200">
+                    <td className="px-4 py-3 font-semibold text-[#F1F4F8]">
                       {t.name}
                       {t.message && (
                         <span className="block text-[11px] text-rose-400 font-sans mt-0.5">
@@ -251,8 +246,8 @@ export default function VerificationResultsPage() {
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-slate-400">{t.suite}</td>
-                    <td className="px-4 py-3 text-slate-400">{t.duration_ms} ms</td>
+                    <td className="px-4 py-3 text-[#718198]">{t.suite}</td>
+                    <td className="px-4 py-3 text-[#718198]">{t.duration_ms} ms</td>
                     <td className="px-4 py-3 text-right">
                       <Badge status={t.status} isTestStatus size="sm" />
                     </td>

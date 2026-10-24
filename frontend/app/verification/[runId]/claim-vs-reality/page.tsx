@@ -5,8 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useProject } from "@/hooks/useProject";
 import { api } from "@/lib/api";
-import { ClaimVsRealityComparison, VerificationVerdict } from "@/lib/types";
-import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/Card";
+import { ClaimVsRealityComparison } from "@/lib/types";
+import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import {
@@ -17,16 +17,10 @@ import {
   CheckCircle2,
   XCircle,
   FileCode,
-  Terminal,
   ArrowLeft,
   Sparkles,
   RefreshCw,
   FileText,
-  Clock,
-  Layers,
-  Code2,
-  Check,
-  Copy,
   Info,
 } from "lucide-react";
 
@@ -89,7 +83,7 @@ export default function ClaimVsRealityPage() {
 
   if (loading || !data) {
     return (
-      <div className="p-12 text-center text-slate-400">
+      <div className="p-12 text-center text-[#718198] font-mono text-sm">
         Loading Claim vs Reality comparison...
       </div>
     );
@@ -105,24 +99,24 @@ export default function ClaimVsRealityPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/executions"
-            className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
+            className="p-2 text-[#A4B2C5] hover:text-[#F1F4F8] rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="text-xs font-mono font-bold text-sky-400">
+              <span className="text-xs font-mono font-bold text-[#58AAE1]">
                 {runId}
               </span>
-              <span className="text-xs font-mono text-slate-400">
-                Task: <strong className="text-slate-200">{data.task_id}</strong>
+              <span className="text-xs font-mono text-[#718198]">
+                Task: <strong className="text-[#F1F4F8]">{data.task_id}</strong>
               </span>
-              <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase rounded bg-sky-500/20 text-sky-400 border border-sky-500/30">
+              <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase rounded bg-[#58AAE1]/15 text-[#9EDCFF] border border-[#58AAE1]/30">
                 Core Invariant Evaluation
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mt-1 flex items-center gap-2.5">
-              <Scale className="w-7 h-7 text-sky-400" />
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#F1F4F8] mt-1 flex items-center gap-2.5">
+              <Scale className="w-7 h-7 text-[#58AAE1]" />
               <span>Claim vs Reality</span>
             </h1>
           </div>
@@ -130,8 +124,8 @@ export default function ClaimVsRealityPage() {
 
         {/* Global Verdict Banner & Actions */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-surface-100 px-3.5 py-1.5 rounded-xl border border-white/10">
-            <span className="text-xs font-semibold text-slate-400 uppercase">
+          <div className="flex items-center gap-2 bg-[#0B1423] px-3.5 py-1.5 rounded-xl border border-white/10">
+            <span className="text-xs font-semibold text-[#718198] uppercase">
               Backend Verdict:
             </span>
             <Badge status={verdict} size="lg" />
@@ -150,10 +144,10 @@ export default function ClaimVsRealityPage() {
       </div>
 
       {/* Invariant Explanation Banner */}
-      <div className="p-4 rounded-xl border border-white/10 bg-surface-200/60 backdrop-blur-sm flex items-start gap-3 text-xs text-slate-300">
-        <Info className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+      <div className="p-4 rounded-xl border border-[#58AAE1]/20 bg-[#0B1423] backdrop-blur-sm flex items-start gap-3 text-xs text-[#A4B2C5]">
+        <Info className="w-4 h-4 text-[#58AAE1] shrink-0 mt-0.5" />
         <div>
-          <strong className="text-sky-300">Deterministic Invariant:</strong> The left panel represents what the AI coding agent declared in its completion message. The right panel represents what VIKASA's deterministic engine actually observed in git status, command exit codes, and test assertions. The verdict is never invented by the agent.
+          <strong className="text-[#9EDCFF]">Deterministic Invariant:</strong> The left panel represents what the AI coding agent declared in its completion message. The right panel represents what VIKASA&apos;s deterministic engine actually observed in git status, command exit codes, and test assertions. The verdict is never invented by the agent.
         </div>
       </div>
 
@@ -164,58 +158,58 @@ export default function ClaimVsRealityPage() {
         {/* ============================================================ */}
         <div className="space-y-4">
           <div className="flex items-center justify-between px-1">
-            <div className="flex items-center gap-2 text-sm font-bold text-purple-300">
-              <Bot className="w-5 h-5 text-purple-400" />
+            <div className="flex items-center gap-2 text-sm font-bold text-[#9EDCFF]">
+              <Bot className="w-5 h-5 text-[#58AAE1]" />
               <span>Agent Claim</span>
             </div>
-            <span className="text-[11px] font-mono text-purple-400/80 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
+            <span className="text-[11px] font-mono text-[#9EDCFF] bg-[#58AAE1]/10 px-2 py-0.5 rounded border border-[#58AAE1]/20">
               Self-Reported Message
             </span>
           </div>
 
-          <Card borderVariant="default" className="p-5 space-y-4 border-purple-500/30">
+          <Card borderVariant="default" className="p-5 space-y-4 border-[#58AAE1]/25">
             {/* Original Requirement */}
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#718198] font-mono block mb-1">
                 Original Requirement
               </span>
-              <p className="text-xs text-slate-200 bg-surface-100 p-3 rounded-lg border border-white/5">
+              <p className="text-xs text-[#F1F4F8] bg-[#05080F] p-3 rounded-lg border border-white/5">
                 {claim.original_requirement}
               </p>
             </div>
 
             {/* Exact Agent Claim */}
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-purple-400 block mb-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#58AAE1] font-mono block mb-1">
                 Exact Completion Claim
               </span>
-              <div className="p-3.5 rounded-lg bg-purple-500/5 border border-purple-500/20 text-xs text-purple-200 leading-relaxed font-mono">
-                "{claim.exact_claim}"
+              <div className="p-3.5 rounded-lg bg-[#05080F] border border-[#58AAE1]/25 text-xs text-[#9EDCFF] leading-relaxed font-mono">
+                &ldquo;{claim.exact_claim}&rdquo;
               </div>
             </div>
 
             {/* Claimed Behavior */}
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#718198] font-mono block mb-1">
                 Claimed Behavior
               </span>
-              <p className="text-xs text-slate-300 bg-surface-100 p-3 rounded-lg border border-white/5">
+              <p className="text-xs text-[#A4B2C5] bg-[#05080F] p-3 rounded-lg border border-white/5">
                 {claim.claimed_behavior}
               </p>
             </div>
 
             {/* Claimed Changed Files */}
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#718198] font-mono block mb-1.5">
                 Claimed Changed Files ({claim.claimed_changed_files.length})
               </span>
               <div className="space-y-1 font-mono text-xs">
                 {claim.claimed_changed_files.map((file, i) => (
                   <div
                     key={i}
-                    className="flex items-center gap-2 p-2 rounded bg-surface-100 border border-white/5 text-slate-300"
+                    className="flex items-center gap-2 p-2 rounded bg-[#05080F] border border-white/5 text-[#A4B2C5]"
                   >
-                    <FileCode className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                    <FileCode className="w-3.5 h-3.5 text-[#58AAE1] shrink-0" />
                     <span className="truncate">{file}</span>
                   </div>
                 ))}
@@ -224,25 +218,25 @@ export default function ClaimVsRealityPage() {
 
             {/* Agent Metadata */}
             <div className="pt-3 border-t border-white/5">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#718198] font-mono block mb-2">
                 Agent Metadata
               </span>
               <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                <div className="p-2 rounded bg-surface-100 border border-white/5">
-                  <span className="text-slate-400 block text-[10px]">Model</span>
-                  <span className="text-slate-200 font-semibold">{claim.agent_metadata.model}</span>
+                <div className="p-2 rounded bg-[#05080F] border border-white/5">
+                  <span className="text-[#718198] block text-[10px]">Model</span>
+                  <span className="text-[#F1F4F8] font-semibold">{claim.agent_metadata.model}</span>
                 </div>
-                <div className="p-2 rounded bg-surface-100 border border-white/5">
-                  <span className="text-slate-400 block text-[10px]">Agent ID</span>
-                  <span className="text-slate-200 font-semibold truncate">{claim.agent_metadata.agent_id}</span>
+                <div className="p-2 rounded bg-[#05080F] border border-white/5">
+                  <span className="text-[#718198] block text-[10px]">Agent ID</span>
+                  <span className="text-[#F1F4F8] font-semibold truncate">{claim.agent_metadata.agent_id}</span>
                 </div>
-                <div className="p-2 rounded bg-surface-100 border border-white/5">
-                  <span className="text-slate-400 block text-[10px]">Execution Time</span>
-                  <span className="text-slate-200 font-semibold">{claim.agent_metadata.duration_seconds}s</span>
+                <div className="p-2 rounded bg-[#05080F] border border-white/5">
+                  <span className="text-[#718198] block text-[10px]">Execution Time</span>
+                  <span className="text-[#F1F4F8] font-semibold">{claim.agent_metadata.duration_seconds}s</span>
                 </div>
-                <div className="p-2 rounded bg-surface-100 border border-white/5">
-                  <span className="text-slate-400 block text-[10px]">Temperature</span>
-                  <span className="text-slate-200 font-semibold">{claim.agent_metadata.temperature ?? 0.2}</span>
+                <div className="p-2 rounded bg-[#05080F] border border-white/5">
+                  <span className="text-[#718198] block text-[10px]">Temperature</span>
+                  <span className="text-[#F1F4F8] font-semibold">{claim.agent_metadata.temperature ?? 0.2}</span>
                 </div>
               </div>
             </div>
@@ -254,11 +248,11 @@ export default function ClaimVsRealityPage() {
         {/* ============================================================ */}
         <div className="space-y-4">
           <div className="flex items-center justify-between px-1">
-            <div className="flex items-center gap-2 text-sm font-bold text-sky-300">
-              <ShieldCheck className="w-5 h-5 text-sky-400" />
+            <div className="flex items-center gap-2 text-sm font-bold text-[#58AAE1]">
+              <ShieldCheck className="w-5 h-5 text-[#58AAE1]" />
               <span>Observed Evidence</span>
             </div>
-            <span className="text-[11px] font-mono text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">
+            <span className="text-[11px] font-mono text-[#58AAE1] bg-[#58AAE1]/10 px-2 py-0.5 rounded border border-[#58AAE1]/20">
               Deterministic Facts
             </span>
           </div>
@@ -267,7 +261,7 @@ export default function ClaimVsRealityPage() {
             borderVariant={isVerified ? "emerald" : "rose"}
             className="p-5 space-y-4"
           >
-            {/* Discrepancies Alert (if any exist) */}
+            {/* Discrepancies Alert */}
             {reality.discrepancies.length > 0 && (
               <div className="p-3.5 rounded-lg bg-rose-500/10 border border-rose-500/30 space-y-2">
                 <div className="flex items-center gap-2 text-xs font-bold text-rose-400 uppercase">
@@ -282,8 +276,8 @@ export default function ClaimVsRealityPage() {
                         {disc.severity}
                       </span>
                     </div>
-                    <div className="text-slate-300">
-                      Claimed: <span className="line-through text-slate-500">{disc.claim}</span>
+                    <div className="text-[#718198]">
+                      Claimed: <span className="line-through text-[#718198]">{disc.claim}</span>
                     </div>
                     <div className="text-rose-200 font-bold">
                       Reality: {disc.reality}
@@ -295,17 +289,17 @@ export default function ClaimVsRealityPage() {
 
             {/* Actual Changed Files */}
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#718198] font-mono block mb-1.5">
                 Actual Modified Files ({reality.actual_changed_files.length})
               </span>
               <div className="space-y-1 font-mono text-xs">
                 {reality.actual_changed_files.map((file, i) => (
                   <div
                     key={i}
-                    className="flex items-center justify-between p-2 rounded bg-surface-100 border border-white/5 text-slate-200"
+                    className="flex items-center justify-between p-2 rounded bg-[#05080F] border border-white/5 text-[#F1F4F8]"
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <FileCode className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                      <FileCode className="w-3.5 h-3.5 text-[#58AAE1] shrink-0" />
                       <span className="truncate">{file}</span>
                     </div>
                     <span className="text-[10px] font-bold text-emerald-400 uppercase shrink-0">
@@ -316,19 +310,19 @@ export default function ClaimVsRealityPage() {
               </div>
             </div>
 
-            {/* Code Evidence with line ranges & snippets */}
+            {/* Code Evidence */}
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#718198] font-mono block mb-1.5">
                 Code Evidence & AST Inspect
               </span>
               <div className="space-y-2 text-xs">
                 {reality.code_evidence.map((ev, i) => (
                   <div
                     key={i}
-                    className="p-3 rounded-lg bg-surface-100 border border-white/5 space-y-1.5"
+                    className="p-3 rounded-lg bg-[#05080F] border border-white/5 space-y-1.5"
                   >
                     <div className="flex items-center justify-between font-mono text-[11px]">
-                      <span className="text-sky-300 font-bold">
+                      <span className="text-[#58AAE1] font-bold">
                         {ev.file}:{ev.line_range}
                       </span>
                       {ev.verified ? (
@@ -341,9 +335,9 @@ export default function ClaimVsRealityPage() {
                         </span>
                       )}
                     </div>
-                    <p className="text-slate-300 text-[11px]">{ev.summary}</p>
+                    <p className="text-[#A4B2C5] text-[11px]">{ev.summary}</p>
                     {ev.snippet && (
-                      <pre className="p-2 rounded bg-[#07090e] border border-white/5 font-mono text-[11px] text-slate-300 overflow-x-auto">
+                      <pre className="p-2 rounded bg-[#0B1423] border border-white/5 font-mono text-[11px] text-[#A4B2C5] overflow-x-auto">
                         {ev.snippet}
                       </pre>
                     )}
@@ -352,23 +346,23 @@ export default function ClaimVsRealityPage() {
               </div>
             </div>
 
-            {/* Test / Build Results */}
+            {/* Test Results */}
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#718198] font-mono block mb-1.5">
                 Test Suite Outcomes
               </span>
               <div className="space-y-1.5 font-mono text-xs">
                 {reality.test_results.map((test, i) => (
                   <div
                     key={i}
-                    className="flex items-center justify-between p-2 rounded bg-surface-100 border border-white/5"
+                    className="flex items-center justify-between p-2 rounded bg-[#05080F] border border-white/5"
                   >
                     <div className="truncate">
-                      <span className="text-slate-200 font-medium">{test.name}</span>
-                      <span className="text-slate-500 text-[10px] block">{test.suite}</span>
+                      <span className="text-[#F1F4F8] font-medium">{test.name}</span>
+                      <span className="text-[#718198] text-[10px] block">{test.suite}</span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-[10px] text-slate-400">{test.duration_ms}ms</span>
+                      <span className="text-[10px] text-[#718198]">{test.duration_ms}ms</span>
                       <span
                         className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                           test.status === "PASS"
@@ -386,17 +380,17 @@ export default function ClaimVsRealityPage() {
 
             {/* Acceptance Criteria Coverage */}
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#718198] font-mono block mb-1.5">
                 Criteria Verification Status
               </span>
               <div className="space-y-1 text-xs">
                 {reality.criteria_satisfied.map((c) => (
                   <div
                     key={c.id}
-                    className="flex items-center justify-between p-2 rounded bg-surface-100 border border-white/5"
+                    className="flex items-center justify-between p-2 rounded bg-[#05080F] border border-white/5"
                   >
-                    <span className="text-slate-300 truncate">
-                      <strong className="text-sky-400 mr-2 font-mono">{c.id}:</strong>
+                    <span className="text-[#A4B2C5] truncate">
+                      <strong className="text-[#58AAE1] mr-2 font-mono">{c.id}:</strong>
                       {c.description}
                     </span>
                     <span className="shrink-0 ml-2">
@@ -415,10 +409,10 @@ export default function ClaimVsRealityPage() {
               </div>
             </div>
 
-            {/* Missing Requirements (if any) */}
+            {/* Missing Requirements */}
             {reality.missing_requirements.length > 0 && (
               <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 space-y-1">
-                <strong className="block uppercase text-[10px] text-amber-400">
+                <strong className="block uppercase text-[10px] text-amber-400 font-mono">
                   Missing Requirements:
                 </strong>
                 <ul className="list-disc pl-4 space-y-0.5">
@@ -432,35 +426,35 @@ export default function ClaimVsRealityPage() {
         </div>
       </div>
 
-      {/* Suggested Correction Section (When Verification Fails) */}
+      {/* Suggested Correction Section */}
       {suggested_correction && (
         <Card borderVariant="brand" className="p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-sky-400" />
-              <h2 className="text-base font-bold text-white">
+              <Sparkles className="w-5 h-5 text-[#58AAE1]" />
+              <h2 className="text-base font-bold text-[#F1F4F8]">
                 Deterministic Suggested Correction (Gemma 4)
               </h2>
             </div>
-            <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20">
+            <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-[#58AAE1]/10 text-[#9EDCFF] border border-[#58AAE1]/20">
               Automated Patch Recommendation
             </span>
           </div>
 
-          <p className="text-xs text-slate-300">
+          <p className="text-xs text-[#A4B2C5]">
             {suggested_correction.summary}
           </p>
 
           {suggested_correction.patch && (
-            <div className="p-3 rounded-lg bg-[#07090e] border border-white/10 font-mono text-xs text-slate-300 overflow-x-auto">
+            <div className="p-3 rounded-lg bg-[#05080F] border border-white/10 font-mono text-xs text-[#A4B2C5] overflow-x-auto">
               <pre className="text-emerald-400">{suggested_correction.patch}</pre>
             </div>
           )}
 
           {suggested_correction.command_to_run && (
-            <div className="flex items-center justify-between p-3 rounded-lg bg-surface-100 border border-white/5 font-mono text-xs">
-              <span className="text-slate-300">
-                Retest Command: <strong>{suggested_correction.command_to_run}</strong>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-[#0B1423] border border-white/5 font-mono text-xs">
+              <span className="text-[#A4B2C5]">
+                Retest Command: <strong className="text-[#F1F4F8]">{suggested_correction.command_to_run}</strong>
               </span>
             </div>
           )}
@@ -480,10 +474,10 @@ export default function ClaimVsRealityPage() {
       )}
 
       {/* Bottom Sticky Action Bar */}
-      <div className="sticky bottom-4 z-20 p-4 rounded-xl bg-surface-200/95 border border-white/10 shadow-2xl backdrop-blur-md flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="sticky bottom-4 z-20 p-4 rounded-xl bg-[#081426]/95 border border-white/10 shadow-2xl backdrop-blur-md flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Badge status={verdict} size="md" />
-          <span className="text-xs text-slate-400 font-mono hidden sm:inline">
+          <span className="text-xs text-[#718198] font-mono hidden sm:inline">
             Run: {runId}
           </span>
         </div>

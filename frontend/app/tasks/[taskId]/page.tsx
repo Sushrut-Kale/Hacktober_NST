@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useProject } from "@/hooks/useProject";
 import { api } from "@/lib/api";
 import { Task, TaskPlan, ExecutionRun, VerificationResult, ExecutionEvent } from "@/lib/types";
-import { Card, CardHeader, CardContent } from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { formatDate } from "@/lib/formatters";
@@ -14,17 +14,9 @@ import {
   ArrowLeft,
   Play,
   Sparkles,
-  ShieldCheck,
   AlertTriangle,
   Scale,
   Terminal,
-  FileCode,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  Layers,
-  History,
-  Info,
 } from "lucide-react";
 
 export default function TaskDetailsPage() {
@@ -96,7 +88,7 @@ export default function TaskDetailsPage() {
 
   if (loading || !task) {
     return (
-      <div className="p-12 text-center text-slate-400">
+      <div className="p-12 text-center text-[#718198] font-mono text-sm">
         Loading task details...
       </div>
     );
@@ -112,21 +104,21 @@ export default function TaskDetailsPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/tasks"
-            className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
+            className="p-2 text-[#A4B2C5] hover:text-[#F1F4F8] rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="text-xs font-mono font-bold text-sky-400">
+              <span className="text-xs font-mono font-bold text-[#58AAE1]">
                 {task.id}
               </span>
               <Badge status={task.state} size="sm" />
-              <span className="text-[11px] text-slate-400 font-mono">
+              <span className="text-[11px] text-[#718198] font-mono">
                 Project: {task.project_id}
               </span>
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-white mt-1">
+            <h1 className="text-2xl font-bold tracking-tight text-[#F1F4F8] mt-1">
               {task.title}
             </h1>
           </div>
@@ -137,7 +129,7 @@ export default function TaskDetailsPage() {
             <Button
               variant="outline"
               size="sm"
-              icon={<Sparkles className="w-4 h-4 text-sky-400" />}
+              icon={<Sparkles className="w-4 h-4 text-[#58AAE1]" />}
             >
               Plan & Approval
             </Button>
@@ -159,22 +151,22 @@ export default function TaskDetailsPage() {
         {/* Left 2 Cols: Description & Criteria */}
         <div className="lg:col-span-2 space-y-6">
           <Card className="p-6 space-y-4">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-[#718198] font-mono">
               Requirement Description
             </h2>
-            <p className="text-sm text-slate-300 leading-relaxed">
+            <p className="text-sm text-[#A4B2C5] leading-relaxed">
               {task.description}
             </p>
 
             <div className="pt-4 border-t border-white/5">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#718198] mb-3 font-mono">
                 Explicit Acceptance Criteria ({task.acceptance_criteria.length})
               </h3>
               <div className="space-y-2.5">
                 {task.acceptance_criteria.map((c) => (
                   <div
                     key={c.id}
-                    className="p-3 rounded-lg bg-surface-100/70 border border-white/5 flex items-start gap-3"
+                    className="p-3 rounded-lg bg-[#0B1423] border border-white/5 flex items-start gap-3"
                   >
                     <span
                       className={`px-2 py-0.5 text-xs font-mono font-bold rounded ${
@@ -182,15 +174,15 @@ export default function TaskDetailsPage() {
                           ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                           : c.satisfied === false
                           ? "bg-rose-500/10 text-rose-400 border border-rose-500/20"
-                          : "bg-white/5 text-slate-300 border border-white/10"
+                          : "bg-white/5 text-[#A4B2C5] border border-white/10"
                       }`}
                     >
                       {c.id}
                     </span>
                     <div className="flex-1 text-xs">
-                      <p className="text-slate-200">{c.description}</p>
+                      <p className="text-[#F1F4F8]">{c.description}</p>
                       {c.verification_method && (
-                        <p className="text-[11px] font-mono text-slate-400 mt-1">
+                        <p className="text-[11px] font-mono text-[#718198] mt-1">
                           Test: {c.verification_method}
                         </p>
                       )}
@@ -202,15 +194,15 @@ export default function TaskDetailsPage() {
           </Card>
 
           {/* Safe Execution Console */}
-          <Card className="p-6 space-y-4 border-sky-500/20">
+          <Card className="p-6 space-y-4 border-[#58AAE1]/25">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Terminal className="w-5 h-5 text-sky-400" />
-                <h2 className="text-base font-bold text-white">
+                <Terminal className="w-5 h-5 text-[#58AAE1]" />
+                <h2 className="text-base font-bold text-[#F1F4F8]">
                   Safe Execution Runner
                 </h2>
               </div>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded uppercase bg-sky-500/10 text-sky-400 border border-sky-500/20">
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded uppercase bg-[#58AAE1]/10 text-[#9EDCFF] border border-[#58AAE1]/20">
                 Allowlisted: python, pytest, git
               </span>
             </div>
@@ -225,7 +217,7 @@ export default function TaskDetailsPage() {
             )}
 
             <div className="space-y-2">
-              <label className="block text-xs font-medium text-slate-300">
+              <label className="block text-xs font-medium text-[#F1F4F8]">
                 Command to Execute in Workspace:
               </label>
               <div className="flex gap-2">
@@ -234,7 +226,7 @@ export default function TaskDetailsPage() {
                   value={command}
                   onChange={(e) => setCommand(e.target.value)}
                   disabled={!isExecutionAllowed || isExecuting}
-                  className="flex-1 px-3 py-2 rounded-lg bg-surface-100 border border-white/10 text-xs font-mono text-slate-100 focus:outline-none focus:border-sky-500/50 disabled:opacity-50"
+                  className="flex-1 px-3 py-2 rounded-lg bg-[#0B1423] border border-white/10 text-xs font-mono text-[#F1F4F8] focus:outline-none focus:border-[#58AAE1]/50 disabled:opacity-50 transition-colors"
                 />
                 <Button
                   variant="brand"
@@ -255,27 +247,27 @@ export default function TaskDetailsPage() {
         <div className="space-y-6">
           {/* Metadata Card */}
           <Card className="p-5 space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#718198] font-mono">
               Task Metadata
             </h3>
             <div className="space-y-2 text-xs font-mono">
               <div className="flex justify-between py-1 border-b border-white/5">
-                <span className="text-slate-400">Created</span>
-                <span className="text-slate-200">{formatDate(task.created_at)}</span>
+                <span className="text-[#718198]">Created</span>
+                <span className="text-[#F1F4F8]">{formatDate(task.created_at)}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-white/5">
-                <span className="text-slate-400">Updated</span>
-                <span className="text-slate-200">{formatDate(task.updated_at)}</span>
+                <span className="text-[#718198]">Updated</span>
+                <span className="text-[#F1F4F8]">{formatDate(task.updated_at)}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-white/5">
-                <span className="text-slate-400">Approved</span>
-                <span className="text-slate-200">
+                <span className="text-[#718198]">Approved</span>
+                <span className="text-[#F1F4F8]">
                   {task.approved_at ? formatDate(task.approved_at) : "Pending"}
                 </span>
               </div>
               <div className="flex justify-between py-1">
-                <span className="text-slate-400">Reviewer</span>
-                <span className="text-slate-200">{task.approved_by || "—"}</span>
+                <span className="text-[#718198]">Reviewer</span>
+                <span className="text-[#F1F4F8]">{task.approved_by || "—"}</span>
               </div>
             </div>
           </Card>
@@ -287,21 +279,21 @@ export default function TaskDetailsPage() {
               className="p-5 space-y-3"
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#718198] font-mono">
                   Latest Verdict
                 </span>
                 <Badge status={verification.verdict} size="sm" />
               </div>
-              <p className="text-xs text-slate-300 leading-snug">
+              <p className="text-xs text-[#A4B2C5] leading-snug">
                 {verification.summary}
               </p>
               <div className="pt-2 flex items-center justify-between text-xs">
-                <span className="text-slate-400 font-mono">
+                <span className="text-[#718198] font-mono">
                   Confidence: {(verification.confidence_score * 100).toFixed(0)}%
                 </span>
                 <Link
                   href="/verification/run-b8f3e21a"
-                  className="text-sky-400 hover:text-sky-300 font-semibold"
+                  className="text-[#58AAE1] hover:text-[#9EDCFF] font-semibold"
                 >
                   View Details →
                 </Link>
@@ -311,19 +303,19 @@ export default function TaskDetailsPage() {
 
           {/* Task Events Timeline */}
           <Card className="p-5 space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#718198] font-mono">
               Audit Trail
             </h3>
             <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
               {events.map((evt) => (
                 <div key={evt.id} className="text-xs space-y-0.5">
-                  <div className="flex items-center justify-between font-mono text-[10px] text-slate-400">
-                    <span className="font-semibold text-slate-300">
+                  <div className="flex items-center justify-between font-mono text-[10px] text-[#718198]">
+                    <span className="font-semibold text-[#F1F4F8]">
                       {evt.event_type}
                     </span>
                     <span>{formatDate(evt.timestamp).split(",")[1]}</span>
                   </div>
-                  <p className="text-slate-400 text-[11px] leading-tight">
+                  <p className="text-[#A4B2C5] text-[11px] leading-tight">
                     {evt.message}
                   </p>
                 </div>

@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useProject } from "@/hooks/useProject";
-import { api } from "@/lib/api";
 import { ExecutionRun } from "@/lib/types";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -12,31 +11,22 @@ import { formatDate, formatDuration } from "@/lib/formatters";
 import { DEMO_RUNS } from "@/fixtures/demo-data";
 import {
   Terminal,
-  Play,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  ArrowRight,
   History,
-  FileCode,
   Scale,
-  RefreshCw,
 } from "lucide-react";
 
 export default function ExecutionsPage() {
-  const { currentProjectId } = useProject();
-  const [runs, setRuns] = useState<ExecutionRun[]>(Object.values(DEMO_RUNS));
-  const [loading, setLoading] = useState(false);
+  const [runs] = useState<ExecutionRun[]>(Object.values(DEMO_RUNS));
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
+          <h1 className="text-2xl font-bold tracking-tight text-[#F1F4F8]">
             Execution Console & History
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-[#718198] mt-1">
             Audit log of commands executed under the safe runner with stdout, stderr, and captured evidence
           </p>
         </div>
@@ -64,11 +54,11 @@ export default function ExecutionsPage() {
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div className="space-y-2 flex-1">
                 <div className="flex flex-wrap items-center gap-2.5">
-                  <span className="text-xs font-mono font-bold text-sky-400">
+                  <span className="text-xs font-mono font-bold text-[#58AAE1]">
                     {run.run_id}
                   </span>
                   <Badge status={run.status} size="sm" />
-                  <span className="text-xs font-mono text-slate-400">
+                  <span className="text-xs font-mono text-[#718198]">
                     Task: {run.task_id}
                   </span>
                   <span
@@ -81,19 +71,19 @@ export default function ExecutionsPage() {
                     Exit code: {run.exit_code}
                   </span>
                   {run.model_name && (
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-slate-400">
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-[#718198]">
                       {run.model_name}
                     </span>
                   )}
                 </div>
 
                 {/* Command executed */}
-                <div className="flex items-center gap-2 font-mono text-xs text-slate-200 bg-surface-100 px-3 py-2 rounded-lg border border-white/5">
-                  <Terminal className="w-4 h-4 text-sky-400 shrink-0" />
+                <div className="flex items-center gap-2 font-mono text-xs text-[#F1F4F8] bg-[#0B1423] px-3 py-2 rounded-lg border border-white/5">
+                  <Terminal className="w-4 h-4 text-[#58AAE1] shrink-0" />
                   <span className="truncate">{run.command}</span>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-slate-400">
+                <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-[#718198]">
                   <span>Started: {formatDate(run.started_at)}</span>
                   <span>Duration: {formatDuration(run.runtime_metadata?.duration_ms)}</span>
                   <span>Evidence records: {run.evidence_items.length}</span>

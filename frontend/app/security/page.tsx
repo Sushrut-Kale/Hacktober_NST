@@ -3,18 +3,13 @@
 import React, { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { SecurityTestResult } from "@/lib/types";
-import { Card, CardHeader, CardContent } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { formatDate } from "@/lib/formatters";
 import {
-  ShieldCheck,
-  ShieldAlert,
   Lock,
-  Terminal,
   CheckCircle2,
   XCircle,
-  FileCode,
   Info,
   RefreshCw,
 } from "lucide-react";
@@ -45,7 +40,7 @@ export default function SecurityTestResultsPage() {
 
   if (loading) {
     return (
-      <div className="p-12 text-center text-slate-400">
+      <div className="p-12 text-center text-[#718198] font-mono text-sm">
         Loading safe runner security test results...
       </div>
     );
@@ -60,12 +55,12 @@ export default function SecurityTestResultsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight text-[#F1F4F8] flex items-center gap-2">
               <Lock className="w-6 h-6 text-emerald-400" />
               <span>Safe Execution Runner Security Tests</span>
             </h1>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-[#718198] mt-1">
             Verification of sandbox containment, shell injection prevention, and allowlisted binaries
           </p>
         </div>
@@ -82,7 +77,7 @@ export default function SecurityTestResultsPage() {
       </div>
 
       {/* Security Invariant Alert */}
-      <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-xs text-slate-300 flex items-start gap-3">
+      <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-xs text-[#A4B2C5] flex items-start gap-3">
         <Info className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
         <div>
           <strong className="text-emerald-300">Sandbox Invariant:</strong> The Safe Execution Runner strictly rejects arbitrary command strings. Compound operators (<code>&&</code>, <code>||</code>, <code>;</code>, <code>|</code>) and unallowlisted binaries trigger immediate HTTP 400 Bad Request before child process spawning.
@@ -92,37 +87,37 @@ export default function SecurityTestResultsPage() {
       {/* Overview Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card borderVariant="emerald" className="p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase">
+          <div className="text-[10px] font-bold text-[#718198] uppercase font-mono">
             Tests Passing
           </div>
           <div className="text-3xl font-extrabold font-mono text-emerald-400 mt-1">
             {passedCount} / {tests.length}
           </div>
-          <div className="text-[10px] text-slate-500 font-mono mt-1">
+          <div className="text-[10px] text-[#718198] font-mono mt-1">
             Zero security compromises
           </div>
         </Card>
 
         <Card borderVariant={failedCount > 0 ? "rose" : "default"} className="p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase">
+          <div className="text-[10px] font-bold text-[#718198] uppercase font-mono">
             Security Violations
           </div>
-          <div className={`text-3xl font-extrabold font-mono mt-1 ${failedCount > 0 ? "text-rose-400" : "text-white"}`}>
+          <div className={`text-3xl font-extrabold font-mono mt-1 ${failedCount > 0 ? "text-rose-400" : "text-[#F1F4F8]"}`}>
             {failedCount}
           </div>
-          <div className="text-[10px] text-slate-500 font-mono mt-1">
+          <div className="text-[10px] text-[#718198] font-mono mt-1">
             Sandbox escapes / leaks
           </div>
         </Card>
 
         <Card className="p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase">
+          <div className="text-[10px] font-bold text-[#718198] uppercase font-mono">
             Binary Allowlist
           </div>
-          <div className="text-xs font-mono text-sky-400 font-semibold mt-2">
+          <div className="text-xs font-mono text-[#58AAE1] font-semibold mt-2">
             python, pytest, git
           </div>
-          <div className="text-[10px] text-slate-500 font-mono mt-1">
+          <div className="text-[10px] text-[#718198] font-mono mt-1">
             All other executables blocked
           </div>
         </Card>
@@ -138,13 +133,13 @@ export default function SecurityTestResultsPage() {
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-2.5">
-                <span className="text-xs font-mono font-bold text-sky-400">
+                <span className="text-xs font-mono font-bold text-[#58AAE1]">
                   {test.id}
                 </span>
-                <span className="text-sm font-bold text-white">
+                <span className="text-sm font-bold text-[#F1F4F8]">
                   {test.test_name}
                 </span>
-                <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-white/5 border border-white/10 text-slate-400">
+                <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[#718198]">
                   {test.category}
                 </span>
               </div>
@@ -170,24 +165,24 @@ export default function SecurityTestResultsPage() {
               </div>
             </div>
 
-            <p className="text-xs text-slate-300">
+            <p className="text-xs text-[#A4B2C5]">
               {test.description}
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-mono pt-2">
-              <div className="p-3 rounded-lg bg-surface-100 border border-white/5 space-y-1">
-                <span className="text-slate-400 block text-[10px]">EXPECTED OUTCOME</span>
-                <span className="text-slate-200">{test.expected_result}</span>
+              <div className="p-3 rounded-lg bg-[#0B1423] border border-white/5 space-y-1">
+                <span className="text-[#718198] block text-[10px]">EXPECTED OUTCOME</span>
+                <span className="text-[#F1F4F8]">{test.expected_result}</span>
               </div>
-              <div className="p-3 rounded-lg bg-surface-100 border border-white/5 space-y-1">
-                <span className="text-slate-400 block text-[10px]">ACTUAL OUTCOME</span>
+              <div className="p-3 rounded-lg bg-[#0B1423] border border-white/5 space-y-1">
+                <span className="text-emerald-400 block text-[10px]">ACTUAL OUTCOME</span>
                 <span className="text-emerald-400 font-semibold">{test.actual_result}</span>
               </div>
             </div>
 
-            <div className="p-3 rounded-lg bg-[#07090e] border border-white/10 font-mono text-xs flex items-center justify-between text-slate-300">
+            <div className="p-3 rounded-lg bg-[#05080F] border border-white/10 font-mono text-xs flex items-center justify-between text-[#A4B2C5]">
               <span className="truncate">Evidence: {test.evidence}</span>
-              <span className="text-[10px] text-slate-500 shrink-0 ml-2">
+              <span className="text-[10px] text-[#718198] shrink-0 ml-2">
                 {formatDate(test.timestamp)}
               </span>
             </div>

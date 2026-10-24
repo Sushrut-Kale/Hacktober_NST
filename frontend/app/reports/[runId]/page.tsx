@@ -6,10 +6,9 @@ import Link from "next/link";
 import { useProject } from "@/hooks/useProject";
 import { api } from "@/lib/api";
 import { RunReport } from "@/lib/types";
-import { Card, CardHeader, CardContent } from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { DiffViewer } from "@/components/ui/DiffViewer";
 import { formatDate, formatDuration } from "@/lib/formatters";
 import {
   ArrowLeft,
@@ -17,16 +16,9 @@ import {
   Download,
   Check,
   FileCode,
-  Terminal,
-  ShieldCheck,
   Scale,
-  Sparkles,
-  Layers,
-  Cpu,
   CheckCircle2,
   XCircle,
-  FileText,
-  AlertTriangle,
 } from "lucide-react";
 
 export default function ReportDetailsPage() {
@@ -55,7 +47,7 @@ export default function ReportDetailsPage() {
 
   const generateMarkdown = () => {
     if (!report) return "";
-    const { run, task, plan, verification, comparison } = report;
+    const { run, task, verification, comparison } = report;
 
     return `# VIKASA Technical Verification Report
 **Run ID:** ${run.run_id}  
@@ -130,13 +122,13 @@ ${run.command}
 
   if (loading || !report) {
     return (
-      <div className="p-12 text-center text-slate-400">
+      <div className="p-12 text-center text-[#718198] font-mono text-sm">
         Generating technical verification report...
       </div>
     );
   }
 
-  const { run, task, plan, verification, diagnosis, comparison } = report;
+  const { run, task, verification, diagnosis, comparison } = report;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -145,18 +137,18 @@ ${run.command}
         <div className="flex items-center gap-3">
           <Link
             href="/reports"
-            className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
+            className="p-2 text-[#A4B2C5] hover:text-[#F1F4F8] rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="text-xs font-mono font-bold text-sky-400">
+              <span className="text-xs font-mono font-bold text-[#58AAE1]">
                 {run.run_id}
               </span>
               <Badge status={verification?.verdict || "NOT_RUN"} size="sm" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-white mt-1">
+            <h1 className="text-2xl font-bold tracking-tight text-[#F1F4F8] mt-1">
               Technical Verification Report
             </h1>
           </div>
@@ -193,36 +185,36 @@ ${run.command}
       </div>
 
       {/* Main Report Document */}
-      <Card className="p-8 space-y-8 bg-surface-200/90 border-white/10 font-sans">
+      <Card className="p-8 space-y-8 bg-[#0B1423] border-white/10 font-sans">
         {/* Section 1: Project & Task */}
         <div className="space-y-2 pb-6 border-b border-white/5">
-          <div className="text-xs font-mono text-sky-400 font-semibold uppercase tracking-wider">
+          <div className="text-xs font-mono text-[#58AAE1] font-semibold uppercase tracking-wider">
             1. Project & Task Specification
           </div>
-          <h2 className="text-xl font-bold text-white">{task.title}</h2>
-          <p className="text-xs text-slate-300 leading-relaxed max-w-2xl">
+          <h2 className="text-xl font-bold text-[#F1F4F8]">{task.title}</h2>
+          <p className="text-xs text-[#A4B2C5] leading-relaxed max-w-2xl">
             {task.description}
           </p>
-          <div className="flex flex-wrap gap-4 text-xs font-mono text-slate-400 pt-2">
-            <span>Project: <strong className="text-slate-200">{task.project_id}</strong></span>
-            <span>Task ID: <strong className="text-slate-200">{task.id}</strong></span>
-            <span>Report Date: <strong className="text-slate-200">{formatDate(run.started_at)}</strong></span>
+          <div className="flex flex-wrap gap-4 text-xs font-mono text-[#718198] pt-2">
+            <span>Project: <strong className="text-[#F1F4F8]">{task.project_id}</strong></span>
+            <span>Task ID: <strong className="text-[#F1F4F8]">{task.id}</strong></span>
+            <span>Report Date: <strong className="text-[#F1F4F8]">{formatDate(run.started_at)}</strong></span>
           </div>
         </div>
 
         {/* Section 2: Acceptance Criteria */}
         <div className="space-y-3 pb-6 border-b border-white/5">
-          <div className="text-xs font-mono text-sky-400 font-semibold uppercase tracking-wider">
+          <div className="text-xs font-mono text-[#58AAE1] font-semibold uppercase tracking-wider">
             2. Verified Acceptance Criteria
           </div>
           <div className="space-y-2">
             {task.acceptance_criteria.map((c) => (
               <div
                 key={c.id}
-                className="flex items-start gap-3 p-3 rounded-lg bg-surface-100 border border-white/5 text-xs"
+                className="flex items-start gap-3 p-3 rounded-lg bg-[#05080F] border border-white/5 text-xs"
               >
-                <span className="font-mono font-bold text-sky-400">{c.id}:</span>
-                <span className="text-slate-200 flex-1">{c.description}</span>
+                <span className="font-mono font-bold text-[#58AAE1]">{c.id}:</span>
+                <span className="text-[#F1F4F8] flex-1">{c.description}</span>
                 <span className="shrink-0">
                   {c.satisfied ? (
                     <span className="text-emerald-400 font-bold flex items-center gap-1 font-mono text-[11px]">
@@ -241,27 +233,27 @@ ${run.command}
 
         {/* Section 3: Agent Claim */}
         <div className="space-y-2 pb-6 border-b border-white/5">
-          <div className="text-xs font-mono text-purple-400 font-semibold uppercase tracking-wider">
+          <div className="text-xs font-mono text-[#9EDCFF] font-semibold uppercase tracking-wider">
             3. AI Agent Claim
           </div>
-          <blockquote className="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20 text-xs font-mono text-purple-200 leading-relaxed">
-            "{comparison?.claim?.exact_claim || "No completion claim recorded."}"
+          <blockquote className="p-4 rounded-xl bg-[#05080F] border border-white/5 text-xs font-mono text-[#9EDCFF] leading-relaxed">
+            &ldquo;{comparison?.claim?.exact_claim || "No completion claim recorded."}&rdquo;
           </blockquote>
         </div>
 
         {/* Section 4: Changed Files */}
         <div className="space-y-3 pb-6 border-b border-white/5">
-          <div className="text-xs font-mono text-sky-400 font-semibold uppercase tracking-wider">
+          <div className="text-xs font-mono text-[#58AAE1] font-semibold uppercase tracking-wider">
             4. Changed Files & Evidence
           </div>
           <div className="space-y-2 font-mono text-xs">
             {run.evidence_items.map((e, idx) => (
               <div
                 key={idx}
-                className="p-3 rounded-lg bg-surface-100 border border-white/5 flex items-center justify-between text-slate-300"
+                className="p-3 rounded-lg bg-[#05080F] border border-white/5 flex items-center justify-between text-[#A4B2C5]"
               >
                 <div className="flex items-center gap-2 truncate">
-                  <FileCode className="w-4 h-4 text-sky-400 shrink-0" />
+                  <FileCode className="w-4 h-4 text-[#58AAE1] shrink-0" />
                   <span className="truncate">{e.content}</span>
                 </div>
                 <span className="text-[10px] uppercase font-bold text-emerald-400 shrink-0 ml-2">
@@ -274,29 +266,29 @@ ${run.command}
 
         {/* Section 5: Commands & Test Outcomes */}
         <div className="space-y-3 pb-6 border-b border-white/5">
-          <div className="text-xs font-mono text-sky-400 font-semibold uppercase tracking-wider">
+          <div className="text-xs font-mono text-[#58AAE1] font-semibold uppercase tracking-wider">
             5. Commands & Safe Runner Outcomes
           </div>
-          <div className="p-3 rounded-lg bg-[#07090e] border border-white/10 font-mono text-xs text-slate-200">
+          <div className="p-3 rounded-lg bg-[#05080F] border border-white/10 font-mono text-xs text-[#F1F4F8]">
             $ {run.command}
           </div>
-          <div className="flex gap-4 text-xs font-mono text-slate-400">
+          <div className="flex gap-4 text-xs font-mono text-[#718198]">
             <span>Exit code: <strong className={run.exit_code === 0 ? "text-emerald-400" : "text-rose-400"}>{run.exit_code}</strong></span>
-            <span>Duration: <strong className="text-slate-200">{formatDuration(run.runtime_metadata?.duration_ms)}</strong></span>
+            <span>Duration: <strong className="text-[#F1F4F8]">{formatDuration(run.runtime_metadata?.duration_ms)}</strong></span>
           </div>
         </div>
 
         {/* Section 6: Verified Behavior & Limitations */}
         <div className="space-y-3 pb-6 border-b border-white/5">
-          <div className="text-xs font-mono text-sky-400 font-semibold uppercase tracking-wider">
+          <div className="text-xs font-mono text-[#58AAE1] font-semibold uppercase tracking-wider">
             6. Verified Behavior & Limitations
           </div>
-          <p className="text-xs text-slate-300 leading-relaxed">
+          <p className="text-xs text-[#A4B2C5] leading-relaxed">
             {verification?.summary || "Deterministic verification executed against allowlisted test suites."}
           </p>
           {diagnosis && (
             <div className="p-3.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-xs text-rose-300">
-              <strong className="block mb-1">Identified Limitation / Defect:</strong>
+              <strong className="block mb-1 font-mono">Identified Limitation / Defect:</strong>
               {diagnosis.failure_summary}
             </div>
           )}
@@ -304,21 +296,21 @@ ${run.command}
 
         {/* Section 7: Model & Runtime Transparency */}
         <div className="space-y-3">
-          <div className="text-xs font-mono text-sky-400 font-semibold uppercase tracking-wider">
+          <div className="text-xs font-mono text-[#58AAE1] font-semibold uppercase tracking-wider">
             7. Model & Runtime Transparency
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs font-mono">
-            <div className="p-3 rounded bg-surface-100 border border-white/5">
-              <span className="text-slate-400 block text-[10px]">Model</span>
-              <span className="text-slate-200 font-semibold">{run.model_name || "gemma4:e4b"}</span>
+            <div className="p-3 rounded bg-[#05080F] border border-white/5">
+              <span className="text-[#718198] block text-[10px]">Model</span>
+              <span className="text-[#F1F4F8] font-semibold">{run.model_name || "gemma4:e4b"}</span>
             </div>
-            <div className="p-3 rounded bg-surface-100 border border-white/5">
-              <span className="text-slate-400 block text-[10px]">Host</span>
-              <span className="text-slate-200 font-semibold">{run.runtime_metadata?.host || "localhost"}</span>
+            <div className="p-3 rounded bg-[#05080F] border border-white/5">
+              <span className="text-[#718198] block text-[10px]">Host</span>
+              <span className="text-[#F1F4F8] font-semibold">{run.runtime_metadata?.host || "localhost"}</span>
             </div>
-            <div className="p-3 rounded bg-surface-100 border border-white/5">
-              <span className="text-slate-400 block text-[10px]">Runner</span>
-              <span className="text-slate-200 font-semibold">{run.source}</span>
+            <div className="p-3 rounded bg-[#05080F] border border-white/5">
+              <span className="text-[#718198] block text-[10px]">Runner</span>
+              <span className="text-[#F1F4F8] font-semibold">{run.source}</span>
             </div>
           </div>
         </div>

@@ -13,16 +13,7 @@ import { DiffViewer } from "@/components/ui/DiffViewer";
 import { formatDate, formatDuration } from "@/lib/formatters";
 import {
   ArrowLeft,
-  History,
   Scale,
-  FileCode,
-  Terminal,
-  ShieldCheck,
-  CheckCircle2,
-  XCircle,
-  FileText,
-  Clock,
-  Layers,
   Bot,
 } from "lucide-react";
 
@@ -50,13 +41,13 @@ export default function ReplayPage() {
 
   if (loading || !report) {
     return (
-      <div className="p-12 text-center text-slate-400">
+      <div className="p-12 text-center text-[#718198] font-mono text-sm">
         Loading recorded snapshot for replay...
       </div>
     );
   }
 
-  const { run, task, plan, verification, events, comparison } = report;
+  const { run, task, verification, events, comparison } = report;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -65,15 +56,15 @@ export default function ReplayPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/executions"
-            className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
+            className="p-2 text-[#A4B2C5] hover:text-[#F1F4F8] rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white">
+            <h1 className="text-2xl font-bold tracking-tight text-[#F1F4F8]">
               Deterministic Run Replay
             </h1>
-            <p className="text-xs text-slate-400 font-mono">
+            <p className="text-xs text-[#718198] font-mono mt-0.5">
               Immutable recorded snapshot: {run.run_id}
             </p>
           </div>
@@ -92,31 +83,31 @@ export default function ReplayPage() {
       {/* Overview Cards (Recorded Data Only) */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase">
+          <div className="text-[10px] font-bold text-[#718198] uppercase font-mono">
             Recorded Task
           </div>
-          <div className="text-sm font-bold text-white mt-1 truncate">
+          <div className="text-sm font-bold text-[#F1F4F8] mt-1 truncate">
             {task?.title || "Not recorded"}
           </div>
-          <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+          <div className="text-[10px] text-[#718198] font-mono mt-0.5">
             ID: {task?.id || "Not recorded"}
           </div>
         </Card>
 
         <Card className="p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase">
+          <div className="text-[10px] font-bold text-[#718198] uppercase font-mono">
             Recorded Verdict
           </div>
           <div className="mt-1">
             <Badge status={verification?.verdict || "NOT_RUN"} size="md" />
           </div>
-          <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+          <div className="text-[10px] text-[#718198] font-mono mt-0.5">
             Snapshot evaluation
           </div>
         </Card>
 
         <Card className="p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase">
+          <div className="text-[10px] font-bold text-[#718198] uppercase font-mono">
             Exit Code
           </div>
           <div
@@ -128,21 +119,21 @@ export default function ReplayPage() {
               ? run.exit_code
               : "Not recorded"}
           </div>
-          <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+          <div className="text-[10px] text-[#718198] font-mono mt-0.5">
             Terminal status
           </div>
         </Card>
 
         <Card className="p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase">
+          <div className="text-[10px] font-bold text-[#718198] uppercase font-mono">
             Duration
           </div>
-          <div className="text-xl font-mono font-bold text-white mt-1">
+          <div className="text-xl font-mono font-bold text-[#F1F4F8] mt-1">
             {run.runtime_metadata?.duration_ms
               ? formatDuration(run.runtime_metadata.duration_ms)
               : "Not recorded"}
           </div>
-          <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+          <div className="text-[10px] text-[#718198] font-mono mt-0.5">
             Captured sandbox time
           </div>
         </Card>
@@ -150,13 +141,13 @@ export default function ReplayPage() {
 
       {/* Recorded Agent Claim */}
       {comparison?.claim && (
-        <Card className="p-6 space-y-3 border-purple-500/30">
-          <div className="flex items-center gap-2 text-sm font-bold text-purple-300">
-            <Bot className="w-5 h-5 text-purple-400" />
+        <Card className="p-6 space-y-3 border-[#58AAE1]/30">
+          <div className="flex items-center gap-2 text-sm font-bold text-[#9EDCFF]">
+            <Bot className="w-5 h-5 text-[#58AAE1]" />
             <span>Recorded Agent Claim</span>
           </div>
-          <div className="p-3.5 rounded-lg bg-purple-500/5 border border-purple-500/20 font-mono text-xs text-purple-200">
-            "{comparison.claim.exact_claim}"
+          <div className="p-3.5 rounded-lg bg-[#0B1423] border border-white/5 font-mono text-xs text-[#F1F4F8]">
+            &ldquo;{comparison.claim.exact_claim}&rdquo;
           </div>
         </Card>
       )}
@@ -170,18 +161,18 @@ export default function ReplayPage() {
       {/* Recorded Test Results */}
       {verification?.test_results && (
         <Card className="p-6 space-y-3">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-[#718198] font-mono">
             Recorded Test Assertions ({verification.test_results.length})
           </h2>
           <div className="space-y-2 font-mono text-xs">
             {verification.test_results.map((t, idx) => (
               <div
                 key={idx}
-                className="p-3 rounded-lg bg-surface-100 border border-white/5 flex items-center justify-between"
+                className="p-3 rounded-lg bg-[#0B1423] border border-white/5 flex items-center justify-between"
               >
-                <span className="text-slate-300 font-semibold">{t.name}</span>
+                <span className="text-[#F1F4F8] font-semibold">{t.name}</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-500">{t.duration_ms} ms</span>
+                  <span className="text-[#718198]">{t.duration_ms} ms</span>
                   <Badge status={t.status} isTestStatus size="sm" />
                 </div>
               </div>
@@ -192,20 +183,20 @@ export default function ReplayPage() {
 
       {/* Recorded Timeline */}
       <Card className="p-6 space-y-3">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-[#718198] font-mono">
           Recorded Event Timeline
         </h2>
         <div className="space-y-3">
           {events.map((evt) => (
             <div
               key={evt.id}
-              className="p-3 rounded-lg bg-surface-100/60 border border-white/5 flex items-center justify-between text-xs"
+              className="p-3 rounded-lg bg-[#0B1423] border border-white/5 flex items-center justify-between text-xs"
             >
               <div className="space-y-0.5 font-mono">
-                <span className="font-bold text-sky-400">{evt.event_type}</span>
-                <p className="text-slate-300 font-sans">{evt.message}</p>
+                <span className="font-bold text-[#58AAE1]">{evt.event_type}</span>
+                <p className="text-[#A4B2C5] font-sans">{evt.message}</p>
               </div>
-              <span className="text-[10px] text-slate-500 font-mono shrink-0 ml-4">
+              <span className="text-[10px] text-[#718198] font-mono shrink-0 ml-4">
                 {formatDate(evt.timestamp)}
               </span>
             </div>
