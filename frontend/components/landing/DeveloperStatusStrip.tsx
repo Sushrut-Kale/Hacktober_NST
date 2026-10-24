@@ -3,14 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { useProject } from "@/hooks/useProject";
 import { api } from "@/lib/api";
-import {
-  Cpu,
-  Activity,
-  FolderGit2,
-  CheckSquare,
-  ShieldCheck,
-  Zap,
-} from "lucide-react";
 import { RevealOnScroll } from "./RevealOnScroll";
 
 export function DeveloperStatusStrip() {
@@ -73,10 +65,8 @@ export function DeveloperStatusStrip() {
     >
       <div className="p-3 sm:p-4 rounded-2xl glass-panel-subtle border border-white/10 flex flex-wrap items-center justify-between gap-3 sm:gap-4 text-xs font-mono text-slate-300">
         {/* Metric 1: AI Model */}
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-[#58AAE1]/15 text-[#9EDCFF] flex items-center justify-center border border-[#58AAE1]/25">
-            <Cpu className="w-3.5 h-3.5" />
-          </div>
+        <div className="flex items-center gap-2.5">
+          <span className="w-2 h-2 rounded-full bg-[#58AAE1] shrink-0" />
           <div>
             <div className="text-[10px] text-slate-400 uppercase tracking-wider">
               AI Model
@@ -88,10 +78,8 @@ export function DeveloperStatusStrip() {
         <div className="hidden sm:block w-[1px] h-7 bg-white/10" />
 
         {/* Metric 2: Runtime Status */}
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center border border-emerald-500/25">
-            <Activity className="w-3.5 h-3.5" />
-          </div>
+        <div className="flex items-center gap-2.5">
+          <span className={`w-2 h-2 rounded-full shrink-0 ${isBackendOnline ? "bg-emerald-400" : "bg-amber-400"}`} />
           <div>
             <div className="text-[10px] text-slate-400 uppercase tracking-wider">
               Runtime
@@ -108,10 +96,8 @@ export function DeveloperStatusStrip() {
         <div className="hidden md:block w-[1px] h-7 bg-white/10" />
 
         {/* Metric 3: Imported Projects */}
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-sky-500/15 text-[#9EDCFF] flex items-center justify-center border border-sky-500/25">
-            <FolderGit2 className="w-3.5 h-3.5" />
-          </div>
+        <div className="flex items-center gap-2.5">
+          <span className="w-2 h-2 rounded-full bg-[#9EDCFF] shrink-0" />
           <div>
             <div className="text-[10px] text-slate-400 uppercase tracking-wider">
               Workspaces
@@ -125,16 +111,14 @@ export function DeveloperStatusStrip() {
         <div className="hidden lg:block w-[1px] h-7 bg-white/10" />
 
         {/* Metric 4: Active Tasks */}
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-blue-500/15 text-[#58AAE1] flex items-center justify-center border border-blue-500/25">
-            <CheckSquare className="w-3.5 h-3.5" />
-          </div>
+        <div className="flex items-center gap-2.5">
+          <span className="w-2 h-2 rounded-full bg-[#58AAE1] shrink-0" />
           <div>
             <div className="text-[10px] text-slate-400 uppercase tracking-wider">
               Tasks
             </div>
             <div className="text-white font-medium">
-              {taskCount !== null ? `${taskCount} Active` : "Loading..."}
+              {taskCount !== null ? `${taskCount} Active` : "0 Active"}
             </div>
           </div>
         </div>
@@ -142,17 +126,14 @@ export function DeveloperStatusStrip() {
         <div className="hidden sm:block w-[1px] h-7 bg-white/10" />
 
         {/* Metric 5: Verification Engine Status */}
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-[#58AAE1]/15 text-[#9EDCFF] flex items-center justify-center border border-[#58AAE1]/25">
-            <ShieldCheck className="w-3.5 h-3.5" />
-          </div>
+        <div className="flex items-center gap-2.5">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
           <div>
             <div className="text-[10px] text-slate-400 uppercase tracking-wider">
               Verification Engine
             </div>
-            <div className="text-emerald-400 font-medium flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-              <span>Evidence Deterministic</span>
+            <div className="text-emerald-400 font-medium">
+              Deterministic 100%
             </div>
           </div>
         </div>

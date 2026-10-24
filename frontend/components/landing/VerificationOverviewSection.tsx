@@ -2,17 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import {
-  Scale,
-  Bot,
-  ShieldCheck,
-  CheckCircle2,
-  Terminal,
-  ArrowRight,
-  Sparkles,
-  Check,
-  ExternalLink,
-} from "lucide-react";
+import { CheckCircle2, ArrowRight } from "lucide-react";
 import { RevealOnScroll } from "./RevealOnScroll";
 
 export function VerificationOverviewSection() {
@@ -23,8 +13,7 @@ export function VerificationOverviewSection() {
       <RevealOnScroll delayMs={0} durationMs={650}>
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-12">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full glass-panel-subtle text-[11px] font-mono tracking-widest text-emerald-400 uppercase mb-2">
-              <Scale className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center px-3 py-1 rounded-full glass-panel-subtle text-[11px] font-mono tracking-widest text-emerald-400 uppercase mb-2">
               <span>Deterministic Ground Truth</span>
             </div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white font-tight">
@@ -52,7 +41,7 @@ export function VerificationOverviewSection() {
         <div className="rounded-3xl glass-panel p-6 sm:p-8 border border-white/15 shadow-[0_20px_70px_rgba(0,0,0,0.5)]">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
             <div className="flex items-center gap-3">
-              <span className="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_12px_#10b981]" />
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_12px_#10b981]" />
               <div>
                 <div className="text-sm font-bold text-white font-tight flex items-center gap-2">
                   <span>Task: Implement JWT Authentication Middleware</span>
@@ -79,9 +68,8 @@ export function VerificationOverviewSection() {
             {/* Left Column: What AI Claimed */}
             <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-5 space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-300">
-                  <Bot className="w-4 h-4 text-[#58AAE1]" />
-                  <span>AI Agent Stated Claim</span>
+                <div className="text-xs font-bold uppercase tracking-wider text-slate-300 font-mono">
+                  AI Agent Stated Claim
                 </div>
                 <span className="text-[10px] font-mono text-slate-500">
                   Unverified Model Output
@@ -116,9 +104,8 @@ export function VerificationOverviewSection() {
             {/* Right Column: Ground Truth Reality & Actual Evidence */}
             <div className="rounded-2xl bg-white/[0.02] border border-emerald-500/30 p-5 space-y-4 shadow-[0_0_30px_rgba(16,185,129,0.08)]">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-400">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  <span>Deterministic Evidence (Reality)</span>
+                <div className="text-xs font-bold uppercase tracking-wider text-emerald-400 font-mono">
+                  Deterministic Evidence (Reality)
                 </div>
                 <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                   Exit Code 0
