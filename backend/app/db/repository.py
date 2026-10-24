@@ -63,12 +63,14 @@ class DatabaseRepository:
                 title TEXT NOT NULL,
                 description TEXT NOT NULL,
                 state TEXT NOT NULL,
+                status TEXT DEFAULT 'PLANNED',
                 acceptance_criteria TEXT NOT NULL,
                 workspace_path TEXT,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
                 approved_at TEXT
             );
+
 
             CREATE TABLE IF NOT EXISTS plans (
                 task_id TEXT PRIMARY KEY,
@@ -163,19 +165,26 @@ class DatabaseRepository:
             CREATE INDEX IF NOT EXISTS idx_events_task ON execution_events (task_id);
             """)
 
+            try:
+                cursor.execute("ALTER TABLE tasks ADD COLUMN status TEXT DEFAULT 'PLANNED'")
+            except Exception:
+                pass
+
     def save_task(self, task: Task) -> Task:
         with self._get_connection() as conn:
             cursor = conn.cursor()
             criteria_json = json.dumps([c.model_dump() for c in task.acceptance_criteria])
+            status_val = task.status or ("PLANNED" if task.state.value in ("CREATED", "PLANNED", "APPROVED") else task.state.value)
             cursor.execute(
                 """
-                INSERT INTO tasks (id, project_id, title, description, state, acceptance_criteria, workspace_path, created_at, updated_at, approved_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO tasks (id, project_id, title, description, state, status, acceptance_criteria, workspace_path, created_at, updated_at, approved_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     project_id=excluded.project_id,
                     title=excluded.title,
                     description=excluded.description,
                     state=excluded.state,
+                    status=excluded.status,
                     acceptance_criteria=excluded.acceptance_criteria,
                     workspace_path=excluded.workspace_path,
                     updated_at=excluded.updated_at,
@@ -187,6 +196,7 @@ class DatabaseRepository:
                     task.title,
                     task.description,
                     task.state.value if isinstance(task.state, TaskState) else str(task.state),
+                    status_val,
                     criteria_json,
                     task.workspace_path,
                     task.created_at.isoformat(),
@@ -196,6 +206,19 @@ class DatabaseRepository:
             )
         return task
 
+    def _parse_criteria(self, raw: Any) -> List[AcceptanceCriterion]:
+        if not raw:
+            return []
+        if isinstance(raw, list):
+            return [c if isinstance(c, AcceptanceCriterion) else AcceptanceCriterion(**c) for c in raw]
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, list):
+                return [AcceptanceCriterion(**c) for c in parsed]
+            return [AcceptanceCriterion(id="AC-1", description=str(parsed))]
+        except Exception:
+            return [AcceptanceCriterion(id="AC-1", description=str(raw))]
+
     def get_task(self, task_id: str) -> Optional[Task]:
         with self._get_connection() as conn:
             cursor = conn.cursor()
@@ -203,13 +226,15 @@ class DatabaseRepository:
             row = cursor.fetchone()
             if not row:
                 return None
-            criteria = [AcceptanceCriterion(**c) for c in json.loads(row["acceptance_criteria"])]
+            criteria = self._parse_criteria(row["acceptance_criteria"])
+            status_val = row["status"] if "status" in row.keys() and row["status"] else None
             return Task(
                 id=row["id"],
                 project_id=row["project_id"],
                 title=row["title"],
                 description=row["description"],
                 state=TaskState(row["state"]),
+                status=status_val,
                 acceptance_criteria=criteria,
                 workspace_path=row["workspace_path"],
                 created_at=datetime.fromisoformat(row["created_at"]),
@@ -217,16 +242,29 @@ class DatabaseRepository:
                 approved_at=datetime.fromisoformat(row["approved_at"]) if row["approved_at"] else None,
             )
 
-    def list_tasks(self, project_id: Optional[str] = None) -> List[Task]:
+    def list_tasks(
+        self,
+        project_id: Optional[str] = None,
+        limit: Optional[int] = None,
+        offset: int = 0,
+    ) -> List[Task]:
         with self._get_connection() as conn:
             cursor = conn.cursor()
+            query = "SELECT * FROM tasks"
+            params: List[Any] = []
             if project_id:
-                cursor.execute("SELECT * FROM tasks WHERE project_id = ? ORDER BY created_at DESC", (project_id,))
-            else:
-                cursor.execute("SELECT * FROM tasks ORDER BY created_at DESC")
+                query += " WHERE project_id = ?"
+                params.append(project_id)
+            query += " ORDER BY created_at DESC, id DESC"
+            if limit is not None:
+                query += " LIMIT ? OFFSET ?"
+                params.extend([limit, offset])
+
+            cursor.execute(query, tuple(params))
             tasks = []
             for row in cursor.fetchall():
-                criteria = [AcceptanceCriterion(**c) for c in json.loads(row["acceptance_criteria"])]
+                criteria = self._parse_criteria(row["acceptance_criteria"])
+                status_val = row["status"] if "status" in row.keys() and row["status"] else None
                 tasks.append(
                     Task(
                         id=row["id"],
@@ -234,6 +272,7 @@ class DatabaseRepository:
                         title=row["title"],
                         description=row["description"],
                         state=TaskState(row["state"]),
+                        status=status_val,
                         acceptance_criteria=criteria,
                         workspace_path=row["workspace_path"],
                         created_at=datetime.fromisoformat(row["created_at"]),
@@ -242,6 +281,7 @@ class DatabaseRepository:
                     )
                 )
             return tasks
+
 
     def update_task_state(self, task_id: str, state: TaskState, approved_at: Optional[datetime] = None) -> Optional[Task]:
         task = self.get_task(task_id)

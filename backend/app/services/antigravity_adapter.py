@@ -19,8 +19,12 @@ class AntigravityAdapter:
         """
         Deterministically verifies which Antigravity interfaces are accessible in the current runtime.
         """
-        sdk_available = importlib.util.find_spec("google.antigravity") is not None
+        try:
+            sdk_available = importlib.util.find_spec("google.antigravity") is not None
+        except (ModuleNotFoundError, ValueError, AttributeError):
+            sdk_available = False
         cli_path = shutil.which("agy")
+
         
         return {
             "sdk_installed": sdk_available,

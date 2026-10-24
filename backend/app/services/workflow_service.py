@@ -35,9 +35,17 @@ VALID_TRANSITIONS: Dict[TaskState, set] = {
     TaskState.PLANNED: {TaskState.APPROVED, TaskState.PLANNED},
     TaskState.APPROVED: {TaskState.RUNNING},
     TaskState.RUNNING: {TaskState.VERIFYING, TaskState.FAILED},
-    TaskState.VERIFYING: {TaskState.VERIFIED, TaskState.FAILED, TaskState.REVIEW_REQUIRED},
+    TaskState.VERIFYING: {
+        TaskState.VERIFIED,
+        TaskState.FAILED,
+        TaskState.REVIEW_REQUIRED,
+        TaskState.BLOCKED,
+        TaskState.NOT_RUN,
+    },
     TaskState.FAILED: {TaskState.PLANNED, TaskState.APPROVED},
     TaskState.REVIEW_REQUIRED: {TaskState.PLANNED, TaskState.APPROVED},
+    TaskState.BLOCKED: {TaskState.PLANNED, TaskState.APPROVED},
+    TaskState.NOT_RUN: {TaskState.PLANNED, TaskState.APPROVED},
     TaskState.VERIFIED: set(),
 }
 
@@ -119,8 +127,15 @@ class WorkflowService:
         if not task:
             raise KeyError(f"Task '{task_id}' not found.")
 
-        # Task can be planned from CREATED, or re-planned from FAILED/REVIEW_REQUIRED/PLANNED
-        if task.state not in [TaskState.CREATED, TaskState.PLANNED, TaskState.FAILED, TaskState.REVIEW_REQUIRED]:
+        # Task can be planned from CREATED, or re-planned from FAILED/REVIEW_REQUIRED/BLOCKED/NOT_RUN/PLANNED
+        if task.state not in [
+            TaskState.CREATED,
+            TaskState.PLANNED,
+            TaskState.FAILED,
+            TaskState.REVIEW_REQUIRED,
+            TaskState.BLOCKED,
+            TaskState.NOT_RUN,
+        ]:
             raise InvalidStateTransitionError(
                 f"Cannot generate plan while task is in '{task.state.value}' state."
             )
@@ -158,9 +173,15 @@ class WorkflowService:
         if not plan:
             raise ValueError(f"Task '{task_id}' has no generated plan to approve.")
 
-        if task.state not in [TaskState.PLANNED, TaskState.FAILED, TaskState.REVIEW_REQUIRED]:
+        if task.state not in [
+            TaskState.PLANNED,
+            TaskState.FAILED,
+            TaskState.REVIEW_REQUIRED,
+            TaskState.BLOCKED,
+            TaskState.NOT_RUN,
+        ]:
             raise InvalidStateTransitionError(
-                f"Cannot approve task in state '{task.state.value}'. Must be in PLANNED state."
+                f"Cannot approve task in state '{task.state.value}'. Must be in PLANNED or recoverable state."
             )
 
         approved_at = datetime.now(timezone.utc)
@@ -197,6 +218,12 @@ class WorkflowService:
                 f"Cannot execute task '{task_id}' in state '{task.state.value}'. Explicit user approval is required."
             )
 
+        # Pre-validate workspace and command BEFORE transitioning task state to RUNNING.
+        # This prevents leaving the task stuck in RUNNING if the command is malformed or forbidden.
+        workspace = task.workspace_path or self.runner.default_workspace
+        self.runner.validate_workspace(workspace)
+        self.runner.validate_command(command)
+
         # Transition to RUNNING
         self.transition_task_state(task, TaskState.RUNNING)
 
@@ -210,7 +237,6 @@ class WorkflowService:
         )
 
         # Run command safely
-        workspace = task.workspace_path or self.runner.default_workspace
         run = self.runner.execute_command(
             task_id=task.id,
             command=command,
@@ -272,8 +298,21 @@ class WorkflowService:
         self.repo.save_verification(verification, run_id=verification.run_id)
 
         # Transition task to final verdict state
-        target_state = TaskState(verification.verdict.value)
+        verdict_val = verification.verdict.value if hasattr(verification.verdict, "value") else str(verification.verdict)
+        if verdict_val in ("PASS", "VERIFIED"):
+            target_state = TaskState.VERIFIED
+        elif verdict_val in ("FAIL", "FAILED"):
+            target_state = TaskState.FAILED
+        elif verdict_val in ("UNKNOWN", "REVIEW_REQUIRED"):
+            target_state = TaskState.REVIEW_REQUIRED
+        elif verdict_val == "BLOCKED":
+            target_state = TaskState.BLOCKED
+        elif verdict_val == "NOT_RUN":
+            target_state = TaskState.NOT_RUN
+        else:
+            target_state = TaskState.FAILED
         self.transition_task_state(task, target_state)
+
 
         self.repo.record_event(
             ExecutionEvent(
@@ -289,8 +328,15 @@ class WorkflowService:
             )
         )
 
-        # If failed or review required, generate and persist Gemma failure diagnosis
-        if verification.verdict in [VerificationVerdict.FAILED, VerificationVerdict.REVIEW_REQUIRED]:
+        # If failed, blocked, or review required, generate and persist Gemma failure diagnosis
+        non_passing_verdicts = {
+            VerificationVerdict.FAILED,
+            VerificationVerdict.FAIL,
+            VerificationVerdict.REVIEW_REQUIRED,
+            VerificationVerdict.UNKNOWN,
+            VerificationVerdict.BLOCKED,
+        }
+        if verification.verdict in non_passing_verdicts:
             diagnosis = await self.gemma.explain_failure(
                 task=task,
                 verification_result=verification,
@@ -328,6 +374,7 @@ class WorkflowService:
             latest_run=self.repo.get_latest_execution_run(task_id),
             latest_verification=self.repo.get_latest_verification(task_id),
             latest_diagnosis=self.repo.get_latest_diagnosis(task_id),
+            events=self.repo.list_events(task_id),
         )
 
     def get_run_report(self, run_id: str) -> RunReport:
@@ -345,7 +392,7 @@ class WorkflowService:
         verifications = self.repo.list_verifications(run.task_id)
         matched_verification = next((v for v in reversed(verifications) if v.run_id == run_id), None)
         latest_diagnosis = self.repo.get_latest_diagnosis(run.task_id)
-        events = [e for e in self.repo.list_events(run.task_id) if e.run_id == run_id]
+        events = [e for e in self.repo.list_events(run.task_id) if e.run_id == run_id or e.run_id is None]
 
         return RunReport(
             run=run,
