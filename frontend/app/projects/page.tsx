@@ -85,6 +85,20 @@ export default function ProjectsPage() {
               style={{ border: "1px solid rgba(255, 255, 255, 0.08)" }}
             />
           ))
+        ) : filteredProjects.length === 0 ? (
+          <div className="col-span-full p-12 text-center rounded-2xl border border-dashed border-white/10 bg-[#0B1423]/40 text-[#718198]">
+            <h3 className="text-base font-semibold text-[#F1F4F8] mb-1">
+              No Projects Registered
+            </h3>
+            <p className="text-xs text-[#718198] max-w-md mx-auto mb-5 leading-relaxed">
+              Register your codebase repository to configure autonomous coding task generation and deterministic test verification.
+            </p>
+            <Link href="/projects/new">
+              <Button variant="brand" size="sm" icon={<Plus className="w-4 h-4" />}>
+                Register Project
+              </Button>
+            </Link>
+          </div>
         ) : (
           filteredProjects.map((project) => {
             const isSelected = project.id === currentProjectId;
@@ -97,18 +111,12 @@ export default function ProjectsPage() {
               >
                 <div>
                   <div className="flex items-start justify-between gap-3 mb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 rounded-xl bg-[#58AAE1]/10 text-[#58AAE1] border border-[#58AAE1]/20">
-                        <FolderGit2 className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h2 className="text-base font-bold text-[#F1F4F8]">
-                          {project.name}
-                        </h2>
-                        <div className="flex items-center gap-2 text-xs font-mono text-[#718198] mt-0.5">
-                          <GitBranch className="w-3.5 h-3.5 text-[#9EDCFF]" />
-                          <span>{project.branch}</span>
-                        </div>
+                    <div>
+                      <h2 className="text-base font-bold text-[#F1F4F8]">
+                        {project.name}
+                      </h2>
+                      <div className="flex items-center gap-2 text-xs font-mono text-[#718198] mt-0.5">
+                        <span className="text-[#9EDCFF]">branch: {project.branch}</span>
                       </div>
                     </div>
 
