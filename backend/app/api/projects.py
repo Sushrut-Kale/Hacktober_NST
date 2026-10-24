@@ -16,7 +16,7 @@ logger = logging.getLogger("vikasa.api.projects")
 
 # Pagination constants
 _DEFAULT_LIMIT: int = 50
-_MAX_LIMIT: int = 200
+_MAX_LIMIT: int = 100
 
 router = APIRouter()
 

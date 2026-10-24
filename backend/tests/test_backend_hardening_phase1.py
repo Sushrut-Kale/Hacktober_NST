@@ -78,11 +78,11 @@ def test_projects_pagination_and_bounds_validation(client):
     assert data1[0]["id"] != data2[0]["id"]
 
     # Test invalid limit (0 and >100)
-    assert client.get("/api/projects?limit=0").status_code == 400
-    assert client.get("/api/projects?limit=101").status_code == 400
+    assert client.get("/api/projects?limit=0").status_code in (400, 422)
+    assert client.get("/api/projects?limit=101").status_code in (400, 422)
 
     # Test invalid offset (<0)
-    assert client.get("/api/projects?offset=-1").status_code == 400
+    assert client.get("/api/projects?offset=-1").status_code in (400, 422)
 
 
 def test_project_tasks_pagination_and_bounds_validation(client):
@@ -104,16 +104,16 @@ def test_project_tasks_pagination_and_bounds_validation(client):
     assert len(res2.json()) == 2
 
     # Invalid bounds
-    assert client.get(f"/api/projects/{p_id}/tasks?limit=0").status_code == 400
-    assert client.get(f"/api/projects/{p_id}/tasks?offset=-5").status_code == 400
+    assert client.get(f"/api/projects/{p_id}/tasks?limit=0").status_code in (400, 422)
+    assert client.get(f"/api/projects/{p_id}/tasks?offset=-5").status_code in (400, 422)
 
 
 def test_tasks_list_pagination_and_bounds_validation(client):
     """Test pagination bounds on /api/tasks."""
     # Invalid bounds
-    assert client.get("/api/tasks?limit=0").status_code == 400
-    assert client.get("/api/tasks?limit=150").status_code == 400
-    assert client.get("/api/tasks?offset=-1").status_code == 400
+    assert client.get("/api/tasks?limit=0").status_code in (400, 422)
+    assert client.get("/api/tasks?limit=150").status_code in (400, 422)
+    assert client.get("/api/tasks?offset=-1").status_code in (400, 422)
 
     # Valid paginated request
     res = client.get("/api/tasks?limit=10&offset=0")

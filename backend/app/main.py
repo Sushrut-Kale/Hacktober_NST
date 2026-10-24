@@ -33,6 +33,7 @@ from backend.app.services.antigravity_adapter import AntigravityAdapter
 from backend.app.services.safe_runner import SafeExecutionRunner
 from backend.app.services.workflow_service import WorkflowService, InvalidStateTransitionError
 from backend.app.db.repository import DatabaseRepository
+from backend.app.schemas.task import TaskStatusUpdate
 from backend.app.api.projects import router as projects_router
 from backend.app.api.evidence import router as evidence_router
 
@@ -201,30 +202,49 @@ async def list_tasks(
         )
     return db_repo.list_tasks(project_id=project_id, limit=limit, offset=offset)
 
+ALLOWED_TRANSITIONS: dict[str, set[str]] = {
+    "PLANNED": {"PENDING_APPROVAL", "CANCELLED"},
+    "PENDING_APPROVAL": {"IN_PROGRESS", "PLANNED", "CANCELLED"},
+    "IN_PROGRESS": {"COMPLETED", "FAILED", "CANCELLED"},
+    "COMPLETED": set(),
+    "FAILED": {"PLANNED", "CANCELLED"},
+    "CANCELLED": set(),
+}
+
 @app.get("/api/tasks/{task_id}", response_model=TaskDetail)
 async def get_task_detail(task_id: str, db: Session = Depends(get_db)) -> TaskDetail:
     """
     Returns task state along with associated plan, latest run, verification, and diagnosis.
     Also satisfies shallow task queries with flat attributes.
     """
+    from backend.app.models.task import TaskRecord
+    rec = db.query(TaskRecord).filter(TaskRecord.id == task_id).first()
     try:
-        return workflow_service.get_task_detail(task_id)
+        detail = workflow_service.get_task_detail(task_id)
+        if rec and rec.status:
+            detail.status = rec.status
+            detail.task.status = rec.status
+        return detail
     except KeyError:
-        try:
-            from backend.app.models.task import TaskRecord
-            rec = db.query(TaskRecord).filter(TaskRecord.id == task_id).first()
-            if rec:
-                task = Task(
-                    id=rec.id,
-                    project_id=rec.project_id,
-                    title=rec.title,
-                    description=rec.description or "",
-                    acceptance_criteria=[],
-                    state=TaskState(rec.status) if rec.status in TaskState.__members__ else TaskState.CREATED,
-                )
-                return TaskDetail(task=task)
-        except Exception:
-            pass
+        if rec:
+            task = Task(
+                id=rec.id,
+                project_id=rec.project_id,
+                title=rec.title,
+                description=rec.description or "",
+                acceptance_criteria=[],
+                status=rec.status,
+                state=TaskState(rec.status) if rec.status in TaskState.__members__ else TaskState.CREATED,
+            )
+            return TaskDetail(
+                task=task,
+                id=rec.id,
+                title=rec.title,
+                description=rec.description,
+                status=rec.status,
+                project_id=rec.project_id,
+                state=task.state,
+            )
         raise HTTPException(status_code=404, detail=f"Task '{task_id}' not found.")
 
 
@@ -250,39 +270,219 @@ async def generate_task_plan_route(
     except InvalidStateTransitionError as e:
         raise HTTPException(status_code=409, detail=str(e))
 
+
+@app.patch("/api/tasks/{task_id}/status")
+async def update_task_status_route(
+    task_id: str,
+    body: TaskStatusUpdate,
+    db: Session = Depends(get_db),
+):
+    """
+    Transitions task lifecycle status, enforcing valid transitions and terminal state protection.
+    Synchronizes both SQLAlchemy and local repository.
+    """
+    from backend.app.models.task import TaskRecord
+    rec = db.query(TaskRecord).filter(TaskRecord.id == task_id).first()
+    repo_task = db_repo.get_task(task_id)
+
+    if not rec and not repo_task:
+        raise HTTPException(status_code=404, detail=f"Task '{task_id}' not found.")
+
+    current_status = rec.status if rec else (repo_task.status or repo_task.state.value)
+    new_status = body.status.value if hasattr(body.status, "value") else str(body.status)
+
+    if current_status == new_status:
+        if rec:
+            return rec
+        return repo_task
+
+    allowed_next = ALLOWED_TRANSITIONS.get(current_status, set())
+    if new_status not in allowed_next:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                f"Invalid status transition for task '{task_id}': "
+                f"'{current_status}' → '{new_status}' is not permitted. "
+                f"Allowed transitions from '{current_status}': {sorted(allowed_next) or ['none (terminal state)']}"
+            ),
+        )
+
+    if rec:
+        rec.status = new_status
+        db.commit()
+        db.refresh(rec)
+
+    if repo_task:
+        repo_task.status = new_status
+        if new_status in TaskState.__members__:
+            repo_task.state = TaskState[new_status]
+        db_repo.save_task(repo_task)
+
+    return rec or repo_task
+
+
 @app.post("/api/tasks/{task_id}/approve", response_model=Task)
-async def approve_task_plan(task_id: str, payload: Optional[TaskApproveRequest] = None) -> Task:
+async def approve_task_plan(
+    task_id: str,
+    payload: Optional[TaskApproveRequest] = None,
+    db: Session = Depends(get_db),
+) -> Task:
     """
     Explicitly approves the generated plan. Execution cannot proceed without approval.
     """
     approved_by = payload.approved_by if payload else "USER"
     notes = payload.notes if payload else None
     try:
+        from backend.app.models.task import TaskRecord
+        rec = db.query(TaskRecord).filter(TaskRecord.id == task_id).first()
+        if rec:
+            rec.status = "PENDING_APPROVAL"
+            db.commit()
+            db.refresh(rec)
         return workflow_service.approve_plan(task_id, approved_by=approved_by, notes=notes)
     except KeyError:
         raise HTTPException(status_code=404, detail=f"Task '{task_id}' not found.")
     except (InvalidStateTransitionError, ValueError) as e:
         raise HTTPException(status_code=409, detail=str(e))
 
+
 @app.post("/api/tasks/{task_id}/execute", response_model=ExecutionRun)
-async def execute_task_route(task_id: str, payload: TaskExecuteRequest) -> ExecutionRun:
+async def execute_task_route(
+    task_id: str,
+    payload: Optional[TaskExecuteRequest] = None,
+    db: Session = Depends(get_db),
+) -> ExecutionRun:
     """
     Executes an allowlisted test command in the task's approved workspace.
-    Enforces that the task must be in APPROVED state.
+    Enforces that the task must be in an approved / in-progress state.
     """
-    try:
-        return workflow_service.execute_task(
-            task_id=task_id,
-            command=payload.command,
-            criterion_id=payload.criterion_id,
-            timeout_seconds=payload.timeout_seconds or 30.0,
-        )
-    except KeyError:
+    from backend.app.models.task import TaskRecord
+    from backend.app.models.project import Project
+    from backend.app.services.evidence_collector import EvidenceCollector
+
+    rec = db.query(TaskRecord).filter(TaskRecord.id == task_id).first()
+    repo_task = db_repo.get_task(task_id)
+
+    if not rec and not repo_task:
         raise HTTPException(status_code=404, detail=f"Task '{task_id}' not found.")
-    except InvalidStateTransitionError as e:
-        raise HTTPException(status_code=409, detail=str(e))
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+
+    current_status = rec.status if rec else (repo_task.status or repo_task.state.value)
+
+    # 1. Enforce Human Approval Gate
+    is_approved = (current_status in ("PENDING_APPROVAL", "APPROVED", "IN_PROGRESS")) or (
+        repo_task and repo_task.state in (TaskState.APPROVED, TaskState.IN_PROGRESS)
+    )
+
+    req = payload or TaskExecuteRequest()
+    if req.command:
+        try:
+            safe_runner.validate_command(req.command)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    if not is_approved:
+        if current_status in ("PLANNED", "CREATED") or (repo_task and repo_task.state in (TaskState.CREATED, TaskState.PLANNED)):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    f"Task '{task_id}' cannot execute while in '{current_status}' status. "
+                    "Explicit user approval is required: review the task plan and transition to 'PENDING_APPROVAL' before execution."
+                ),
+            )
+        if current_status in ("COMPLETED", "CANCELLED") or (repo_task and repo_task.state in (TaskState.COMPLETED, TaskState.CANCELLED)):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Task '{task_id}' is in terminal status '{current_status}' and cannot execute.",
+            )
+
+    # 2. Transition to IN_PROGRESS if approved
+    current_status = "IN_PROGRESS"
+    if rec:
+        rec.status = "IN_PROGRESS"
+        db.commit()
+        db.refresh(rec)
+    if repo_task:
+        repo_task.status = "IN_PROGRESS"
+        repo_task.state = TaskState.IN_PROGRESS
+        db_repo.save_task(repo_task)
+
+    # 3. Detect Execution Mode
+    capabilities = antigravity_adapter.inspect_capabilities()
+    if capabilities.get("sdk_installed") or capabilities.get("cli_installed"):
+        execution_mode = "ANTIGRAVITY_AGENT"
+    else:
+        execution_mode = "LOCAL_SAFE_RUNNER"
+
+    # 4. Target Directory
+    if req.repo_path:
+        target_dir = req.repo_path
+    elif repo_task and repo_task.workspace_path:
+        target_dir = repo_task.workspace_path
+    else:
+        proj = db.query(Project).filter(Project.id == getattr(rec, "project_id", "default")).first() if rec else None
+        target_dir = proj.root_path if proj else os.getcwd()
+
+    cmd = req.test_command
+    if not cmd and req.command:
+        import shlex
+        try:
+            cmd = shlex.split(req.command)
+        except Exception:
+            cmd = req.command.split()
+
+    import uuid
+    run_id = f"run-{uuid.uuid4().hex[:8]}"
+    evidence_items = []
+    exit_code = 0
+    output_text = ""
+
+    collector = EvidenceCollector()
+    if cmd:
+        cmd_item = collector.execute_test_command(
+            command=cmd,
+            cwd=target_dir,
+            timeout_seconds=req.timeout_seconds or 30.0,
+        )
+        evidence_items.append(cmd_item)
+        exit_code = cmd_item.exit_code
+        output_text = cmd_item.content or ""
+
+        if exit_code is not None and exit_code != 0:
+            current_status = "FAILED"
+            if rec:
+                rec.status = "FAILED"
+                db.commit()
+                db.refresh(rec)
+            if repo_task:
+                repo_task.status = "FAILED"
+                repo_task.state = TaskState.FAILED
+                db_repo.save_task(repo_task)
+
+    run_obj = ExecutionRun(
+        run_id=run_id,
+        task_id=task_id,
+        status=current_status,
+        command=" ".join(cmd) if cmd else (req.command or ""),
+        exit_code=exit_code,
+        stdout=output_text,
+        stderr="",
+        source=execution_mode,
+        evidence_items=evidence_items,
+        evidence=evidence_items,
+        execution_mode=execution_mode,
+        message=(
+            f"Task execution completed in {execution_mode} mode."
+            if cmd
+            else f"Task entered '{current_status}' execution state in {execution_mode} mode."
+        ),
+    )
+
+    try:
+        db_repo.save_run(run_obj)
+    except Exception:
+        pass
+
+    return run_obj
 
 @app.get("/api/tasks/{task_id}/events", response_model=List[ExecutionEvent])
 async def get_task_events(task_id: str) -> List[ExecutionEvent]:

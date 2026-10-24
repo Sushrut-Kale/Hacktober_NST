@@ -217,10 +217,21 @@ def execute_task(
     exit_code = None
     output_text = None
 
+    cmd = body.test_command
+    if not cmd and body.command:
+        import shlex
+        try:
+            cmd = shlex.split(body.command)
+        except Exception:
+            cmd = body.command.split()
+
+    import uuid
+    run_id = f"run-{uuid.uuid4().hex[:8]}"
+
     # 5. Execute Command if provided (enforcing allowlist, no shell, timeout)
-    if body.test_command:
+    if cmd:
         cmd_item = collector.execute_test_command(
-            command=body.test_command,
+            command=cmd,
             cwd=target_dir,
             timeout_seconds=body.timeout_seconds or 30.0,
         )
@@ -236,15 +247,16 @@ def execute_task(
 
     return TaskExecuteResponse(
         task_id=task.id,
+        run_id=run_id,
         status=task.status,
         execution_mode=execution_mode,
-        command=body.test_command,
+        command=cmd or body.command,
         exit_code=exit_code,
-        stdout=output_text,
+        stdout=output_text or "",
         evidence=evidence_items,
         message=(
             f"Task execution completed in {execution_mode} mode."
-            if body.test_command
+            if cmd
             else f"Task entered '{task.status}' execution state in {execution_mode} mode."
         ),
     )

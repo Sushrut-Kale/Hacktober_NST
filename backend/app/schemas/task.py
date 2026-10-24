@@ -73,8 +73,10 @@ class TaskStatusUpdate(BaseModel):
 class TaskExecuteRequest(BaseModel):
     """Request body for POST /api/tasks/{task_id}/execute."""
 
+    command: Optional[str] = Field(default=None, description="Optional command string")
     test_command: Optional[List[str]] = Field(default=None, description="Optional whitelisted verification command to run")
     repo_path: Optional[str] = Field(default=None, description="Target repository directory path")
+    criterion_id: Optional[str] = Field(default=None, description="Optional associated acceptance criterion")
     timeout_seconds: Optional[float] = Field(default=30.0, ge=1.0, le=120.0, description="Execution timeout in seconds")
 
 
@@ -82,9 +84,10 @@ class TaskExecuteResponse(BaseModel):
     """Response body for POST /api/tasks/{task_id}/execute."""
 
     task_id: str
+    run_id: Optional[str] = None
     status: str
     execution_mode: str
-    command: Optional[List[str]] = None
+    command: Optional[Union[List[str], str]] = None
     exit_code: Optional[int] = None
     stdout: Optional[str] = None
     evidence: List[Any] = Field(default_factory=list)

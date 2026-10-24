@@ -34,7 +34,14 @@ VALID_TRANSITIONS: Dict[TaskState, set] = {
     TaskState.CREATED: {TaskState.PLANNED},
     TaskState.PLANNED: {TaskState.APPROVED, TaskState.PLANNED},
     TaskState.APPROVED: {TaskState.RUNNING},
-    TaskState.RUNNING: {TaskState.VERIFYING, TaskState.FAILED},
+    TaskState.RUNNING: {
+        TaskState.VERIFYING,
+        TaskState.VERIFIED,
+        TaskState.FAILED,
+        TaskState.REVIEW_REQUIRED,
+        TaskState.BLOCKED,
+        TaskState.NOT_RUN,
+    },
     TaskState.VERIFYING: {
         TaskState.VERIFIED,
         TaskState.FAILED,

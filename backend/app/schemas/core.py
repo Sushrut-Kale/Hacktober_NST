@@ -8,6 +8,7 @@ class TaskState(str, Enum):
     PLANNED = "PLANNED"
     APPROVED = "APPROVED"
     RUNNING = "RUNNING"
+    IN_PROGRESS = "RUNNING"
     VERIFYING = "VERIFYING"
     VERIFIED = "VERIFIED"
     FAILED = "FAILED"
@@ -19,22 +20,34 @@ class TaskState(str, Enum):
 class VerificationVerdict(str, Enum):
     """
     Verification outcomes distinguishing conclusive results from execution or evidence gaps.
-    - VERIFIED / PASS: All required configured checks passed.
-    - FAILED / FAIL: A required check established a failure.
+    - PASS / VERIFIED: All required configured checks passed.
+    - FAIL / FAILED: A required check established a failure.
     - NOT_RUN: Required checks have not been executed.
     - BLOCKED: An environment or dependency prevented verification.
-    - REVIEW_REQUIRED / UNKNOWN: Evidence is insufficient to determine the outcome.
+    - UNKNOWN / REVIEW_REQUIRED: Evidence is insufficient to determine the outcome.
     """
-    VERIFIED = "VERIFIED"
-    FAILED = "FAILED"
+    PASS = "PASS"
+    FAIL = "FAIL"
     REVIEW_REQUIRED = "REVIEW_REQUIRED"
     NOT_RUN = "NOT_RUN"
     BLOCKED = "BLOCKED"
 
     # Semantic aliases for verdict compatibility
-    PASS = "VERIFIED"
-    FAIL = "FAILED"
+    VERIFIED = "PASS"
+    FAILED = "FAIL"
     UNKNOWN = "REVIEW_REQUIRED"
+
+    @classmethod
+    def _missing_(cls, value: object):
+        if isinstance(value, str):
+            v = value.strip().upper()
+            if v in ("VERIFIED", "PASS"):
+                return cls.PASS
+            if v in ("FAILED", "FAIL"):
+                return cls.FAIL
+            if v in ("REVIEW_REQUIRED", "UNKNOWN"):
+                return cls.UNKNOWN
+        return None
 
 
 
@@ -196,13 +209,16 @@ class ExecutionRun(BaseModel):
     started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     completed_at: Optional[datetime] = None
     status: str = "COMPLETED"
-    command: str
+    command: Optional[str] = ""
     exit_code: Optional[int] = None
-    stdout: str = ""
-    stderr: str = ""
+    stdout: Optional[str] = ""
+    stderr: Optional[str] = ""
     source: str = "LOCAL_EXECUTION_RUNNER"
     git_diff: Optional[str] = None
     evidence_items: List[EvidenceItem] = Field(default_factory=list)
+    execution_mode: Optional[str] = "LOCAL_SAFE_RUNNER"
+    evidence: List[Any] = Field(default_factory=list)
+    message: Optional[str] = None
 
 class ExecutionEvent(BaseModel):
     id: Optional[int] = None
@@ -310,7 +326,9 @@ class TaskApproveRequest(BaseModel):
     notes: Optional[str] = None
 
 class TaskExecuteRequest(BaseModel):
-    command: str
+    command: Optional[str] = None
+    test_command: Optional[List[str]] = None
+    repo_path: Optional[str] = None
     criterion_id: Optional[str] = None
     timeout_seconds: Optional[float] = 30.0
 

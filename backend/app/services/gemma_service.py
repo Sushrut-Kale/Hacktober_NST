@@ -405,4 +405,7 @@ class GemmaService:
         self, task: Task, verification_result: VerificationResult
     ) -> Dict[str, Any]:
         diagnosis = await self.explain_failure(task, verification_result)
-        return diagnosis.model_dump()
+        res = diagnosis.model_dump()
+        failed_count = sum(1 for r in getattr(verification_result, "rule_evaluations", []) if not r.passed)
+        res["failed_rule_count"] = failed_count
+        return res

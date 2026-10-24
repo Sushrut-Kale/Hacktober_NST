@@ -187,6 +187,7 @@ class DatabaseRepository:
                     status=excluded.status,
                     acceptance_criteria=excluded.acceptance_criteria,
                     workspace_path=excluded.workspace_path,
+                    created_at=excluded.created_at,
                     updated_at=excluded.updated_at,
                     approved_at=excluded.approved_at
                 """,
