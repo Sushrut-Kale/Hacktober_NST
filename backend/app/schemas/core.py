@@ -367,6 +367,7 @@ class AntigravityCapability(BaseModel):
     conversation_id: Optional[str] = None
     available_modes: List[str] = Field(default_factory=lambda: ["LOCAL_SAFE_RUNNER", "ANTIGRAVITY_MANUAL_HANDOFF"])
     supported_integrations: Dict[str, Any] = Field(default_factory=dict)
+    missing_prerequisites: List[str] = Field(default_factory=list)
     notes: Optional[str] = None
 
 

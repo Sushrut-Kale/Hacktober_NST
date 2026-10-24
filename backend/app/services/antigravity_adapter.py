@@ -87,6 +87,12 @@ class AntigravityAdapter:
             },
         }
 
+        missing_prereqs = []
+        if not sdk_available:
+            missing_prereqs.append("google-antigravity (PyPI SDK package)")
+        if not cli_path:
+            missing_prereqs.append("agy (Antigravity CLI in system PATH)")
+
         return {
             "status": status,
             "sdk_installed": sdk_available,
@@ -98,6 +104,7 @@ class AntigravityAdapter:
             "mcp_enabled": True,  # IDE context provides MCP & tool hooks
             "available_modes": available_modes,
             "supported_integrations": supported_integrations,
+            "missing_prerequisites": missing_prereqs,
             "notes": (
                 "google-antigravity 0.1.22 is available on PyPI ('pip install google-antigravity'). "
                 "Local runner adapter handles execution with full deterministic evidence capture. "
@@ -380,3 +387,7 @@ Workspace: {workspace}
             "execution_mode": "VERIFIED_EVIDENCE_RECORDING",
             "message": "Task run initialized. All tool calls, exit codes, and diffs will be captured for verification.",
         }
+
+
+antigravity_adapter = AntigravityAdapter()
+

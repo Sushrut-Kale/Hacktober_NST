@@ -399,6 +399,59 @@ export default function DashboardPage() {
               All verdicts are governed by deterministic rule evaluation — never by AI inference.
             </p>
           </div>
+
+          {/* Antigravity Integration & Execution Modes */}
+          <div
+            className="p-4 rounded-xl space-y-3"
+            style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Bot className="w-4 h-4 text-sky-400" />
+                <span className="text-xs font-semibold text-white">Antigravity & Runner Capabilities</span>
+              </div>
+              <span
+                className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold"
+                style={{
+                  background: antigravityCap?.status === "READY" ? "rgba(52,211,153,0.1)" : "rgba(251,191,36,0.1)",
+                  color: antigravityCap?.status === "READY" ? "#34d399" : "#fbbf24",
+                  border: `1px solid ${antigravityCap?.status === "READY" ? "rgba(52,211,153,0.25)" : "rgba(251,191,36,0.25)"}`,
+                }}
+              >
+                {antigravityCap?.status || "NEEDS_INSTALLATION"}
+              </span>
+            </div>
+
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              {antigravityCap?.notes || "Truthful capability status reporting for local and agent execution environments."}
+            </p>
+
+            <div className="space-y-1.5 text-xs font-mono">
+              <div className="flex items-center justify-between p-2 rounded bg-white/5 border border-white/5">
+                <span className="text-slate-300">LOCAL_SAFE_RUNNER</span>
+                <span className="text-emerald-400 text-[10px] uppercase font-bold">Enabled</span>
+              </div>
+              <div className="flex items-center justify-between p-2 rounded bg-white/5 border border-white/5">
+                <span className="text-slate-300">ANTIGRAVITY_MANUAL_HANDOFF</span>
+                <span className="text-sky-400 text-[10px] uppercase font-bold">Available</span>
+              </div>
+              <div className="flex items-center justify-between p-2 rounded bg-white/5 border border-white/5">
+                <span className="text-slate-500">ANTIGRAVITY_AGENT (Automated)</span>
+                <span className="text-amber-400 text-[10px] uppercase font-bold">
+                  {antigravityCap?.cli_installed || antigravityCap?.sdk_installed ? "Enabled" : "Missing Prereq"}
+                </span>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px]">
+              <span className="text-slate-500">
+                IDE Host: {antigravityCap?.ide_host_detected ? "Detected (Active)" : "Standalone"}
+              </span>
+              <Link href="/tasks" className="text-sky-400 hover:text-sky-300 font-medium">
+                Execute Task →
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
 
