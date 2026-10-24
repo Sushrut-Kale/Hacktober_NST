@@ -4,15 +4,22 @@ This guide walks you through deploying the VIKASA Next.js Frontend to **Vercel**
 
 ---
 
-## 1. Quick Summary of Vercel Configuration
+## 1. Single Supported Vercel Architecture
 
-The repository includes pre-configured Vercel configurations:
-- **`frontend/vercel.json`**: For when your Vercel project's Root Directory is set to `frontend`.
-- **`vercel.json`** (Root): For when your Vercel project is deployed from the repository root.
+In monorepo and split backend/frontend repositories, Vercel natively deploys Next.js applications when the **Project Root Directory** is configured to point directly to the Next.js directory.
+
+- **Canonical Configuration:** [`frontend/vercel.json`](file:///S:/Hacktober_NST/frontend/vercel.json)
+- **Framework Preset:** `Next.js`
+- **Install Command:** `npm install`
+- **Build Command:** `npm run build`
+- **Output Directory:** Managed automatically by Next.js and Vercel (no custom override needed).
+
+> [!NOTE]
+> The repository's root `vercel.json` was intentionally retired during the pre-deployment release audit. Overriding `outputDirectory: "frontend/.next"` at the repository root violates Next.js deployment conventions and breaks serverless function compilation for dynamic routes. Setting the Vercel Root Directory to `frontend` is the single supported deployment method.
 
 ---
 
-## 2. Option A: Deploy via Vercel Web Dashboard (Recommended)
+## 2. Deploying via Vercel Web Console (Recommended)
 
 ### Step 1: Import Repository
 1. Navigate to [vercel.com](https://vercel.com) and log in with your GitHub account.
@@ -24,10 +31,8 @@ In the Project Configuration screen:
 
 1. **Framework Preset:** `Next.js` (Automatically detected).
 2. **Root Directory:** Click **Edit** and select **`frontend`**.
-   *(If you leave it at the repository root, the root `vercel.json` will automatically route the build to `frontend`)*.
-3. **Build and Output Settings:**
+3. **Build and Output Settings:** Leave default (automatically detected via `frontend/package.json` and `frontend/vercel.json`):
    - **Build Command:** `npm run build`
-   - **Output Directory:** `.next`
    - **Install Command:** `npm install`
 
 ### Step 3: Add Environment Variables
@@ -35,30 +40,27 @@ Expand the **Environment Variables** section and add:
 
 | Key | Value | Description |
 | :--- | :--- | :--- |
-| `NEXT_PUBLIC_API_URL` | `https://your-vikasa-backend.onrender.com` | URL of your deployed FastAPI backend service. |
+| `NEXT_PUBLIC_API_URL` | `https://your-vikasa-backend.onrender.com` | HTTPS URL of your deployed FastAPI backend service. |
 
-> **Note for Local Testing:** If testing Vercel preview while running the backend locally via ngrok or Cloudflare tunnel, set `NEXT_PUBLIC_API_URL` to your tunnel URL (e.g. `https://xxxx.ngrok-free.app`).
+*(Note: The frontend also supports `NEXT_PUBLIC_API_BASE_URL` as a fallback. Both variables point to the backend).*
 
 ### Step 4: Click Deploy
 Click **"Deploy"**. Vercel will:
 1. Install dependencies (`three`, `@types/three`, `lucide-react`, `tailwindcss`, etc.).
-2. Run `next build` across all 16 routes.
-3. Provide a live production URL: `https://your-project.vercel.app`.
+2. Run `next build` across all 16 static and dynamic routes.
+3. Provision your live production URL: `https://your-project.vercel.app`.
 
 ---
 
-## 3. Option B: Deploy via Vercel CLI
+## 3. Deploying via Vercel CLI
 
-If you have the Vercel CLI installed (`npm i -g vercel`):
+If deploying via the command line:
 
 ```powershell
-# Navigate to frontend directory
-cd s:\Hacktober_NST\frontend
+# Navigate to the frontend directory (mandatory)
+cd frontend
 
-# Log in to Vercel
-vercel login
-
-# Link and deploy preview
+# Deploy preview
 vercel
 
 # Deploy to production
@@ -67,36 +69,35 @@ vercel --prod
 
 When prompted:
 - **Set up and deploy?** `yes`
-- **Which scope?** Your personal or team account
-- **Link to existing project?** `no` (or `yes` if already created)
-- **What’s your project’s name?** `vikasa-frontend`
 - **In which directory is your code located?** `./` (when run from inside `frontend/`)
-- **Want to modify settings?** `no`
+- **Framework Preset:** `Next.js`
 
 ---
 
-## 4. Backend Deployment (Render / Railway / Fly.io)
+## 4. Backend Deployment & CORS Alignment
 
-For the frontend on Vercel to fetch real repository intelligence, your FastAPI backend needs to be accessible over HTTPS.
+For the frontend on Vercel to communicate with the backend, your FastAPI backend must be deployed with HTTPS (e.g. Render, Railway, or Fly.io).
 
-### Deploying the Backend on Render:
-1. Go to [render.com](https://render.com) and click **"New Web Service"**.
+### Backend Setup on Render:
+1. Go to [render.com](https://render.com) and create a **"New Web Service"**.
 2. Connect `Sushrut-Kale/Hacktober_NST`.
-3. Set:
+3. Configure settings:
    - **Environment:** `Python 3`
-   - **Build Command:** `pip install -r requirements.txt`
+   - **Build Command:** `pip install -r requirements.txt` *(works cleanly from root or backend)*
    - **Start Command:** `uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT`
-4. In **Environment Variables**:
-   - `CORS_ORIGINS`: `https://your-project.vercel.app`
+4. Add Environment Variables:
+   - `DATABASE_URL`: Your persistent PostgreSQL connection URL (e.g. `postgresql://...`).
+   - `CORS_ORIGINS`: `https://your-project.vercel.app` (your Vercel domain).
    - `ENVIRONMENT`: `production`
-5. Copy your Render service URL (e.g., `https://vikasa-api.onrender.com`) and paste it as `NEXT_PUBLIC_API_URL` in your Vercel project settings!
+5. Copy your live Render URL and paste it as `NEXT_PUBLIC_API_URL` in your Vercel project settings.
 
 ---
 
-## 5. Verification Checklist After Deployment
+## 5. Post-Deployment Verification Checklist
 
 Once deployed:
-1. **Landing Page (`/`):** Open the Vercel URL. You will see Shourya's interactive 3D DNA Helix canvas, glowing glassmorphism cards, and real-time developer telemetry.
-2. **Start New Project (`/projects/new`):** Input a public GitHub URL (e.g. `https://github.com/Sushrut-Kale/Hacktober_NST.git`) or an idea.
-3. **Claim vs Reality Matrix (`/projects/[projectId]`):** View deterministic green (`PRESENT`), red (`MISSING`), amber (`PARTIAL`), and gray (`UNVERIFIED`) feature findings backed by repository evidence.
-4. **Build Further:** Click on any missing or partial feature and generate an engineering task with explicit acceptance criteria.
+1. **Landing Page (`/`):** Open the Vercel URL. Confirm the interactive 3D DNA Helix background canvas, developer status telemetry strip, and feature showcase render without errors.
+2. **Settings Connection Test (`/settings`):** Navigate to `/settings`, verify the detected backend URL, and click **"Test Connection"** to verify live connectivity with your backend `/api/health`.
+3. **Start New Project (`/projects/new`):** Test intake flow with an idea prompt or local repo inspection.
+4. **Claim vs Reality Matrix (`/projects/[projectId]`):** View deterministic green (`PRESENT`), red (`MISSING`), amber (`PARTIAL`), and gray (`UNVERIFIED`) feature findings backed by repository evidence.
+5. **Build Further Task Flow:** Generate a task plan, verify that execution remains blocked before explicit human approval, approve the task, and inspect the verification verdict.
