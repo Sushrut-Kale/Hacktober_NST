@@ -4,6 +4,7 @@ from backend.app.schemas.core import VerificationVerdict
 
 client = TestClient(app)
 
+
 def test_health_check_endpoint():
     response = client.get("/health")
     assert response.status_code == 200
@@ -11,12 +12,22 @@ def test_health_check_endpoint():
     assert data["status"] == "healthy"
     assert data["service"] == "VIKASA API"
 
+
+def test_api_health_check_endpoint():
+    response = client.get("/api/health")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] in ("healthy", "degraded")
+    assert "database" in data
+
+
 def test_antigravity_health_endpoint():
     response = client.get("/api/health/antigravity")
     assert response.status_code == 200
     data = response.json()
     assert "sdk_package" in data
     assert "status" in data
+
 
 def test_verify_endpoint_rejects_unsubstantiated_claim():
     payload = {
@@ -40,3 +51,49 @@ def test_verify_endpoint_rejects_unsubstantiated_claim():
     assert response.status_code == 200
     data = response.json()
     assert data["verdict"] == VerificationVerdict.FAILED.value
+
+
+def test_verify_claim_vs_reality_endpoint():
+    payload = {
+        "task": {
+            "id": "t2",
+            "title": "Claim vs Reality Check",
+            "description": "Evaluate discrepancies",
+            "acceptance_criteria": [
+                {"id": "AC1", "description": "Command passes", "required": True}
+            ]
+        },
+        "claim": {
+            "task_id": "t2",
+            "agent_name": "DemoAgent",
+            "claimed_success": True,
+            "statement": "Completed AC1 successfully",
+            "evidence_list": [
+                {
+                    "criterion_id": "AC1",
+                    "evidence_type": "COMMAND_EXIT_CODE",
+                    "content": "exit code 1 error",
+                    "exit_code": 1,
+                    "passed": False,
+                }
+            ]
+        }
+    }
+    response = client.post("/api/verify/claim-vs-reality", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["verdict"] == "FAIL"
+    assert data["claim_verified"] is False
+    assert len(data["discrepancies"]) >= 1
+
+
+def test_evidence_collect_endpoint(tmp_path):
+    payload = {
+        "repo_path": str(tmp_path),
+        "test_command": ["python", "-c", "print('collect-check')"]
+    }
+    response = client.post("/api/verify/collect", json=payload)
+    assert response.status_code == 200
+    items = response.json()
+    assert isinstance(items, list)
+    assert any(i["evidence_type"] == "COMMAND_EXIT_CODE" and i["exit_code"] == 0 for i in items)
