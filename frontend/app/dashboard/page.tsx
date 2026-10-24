@@ -22,7 +22,11 @@ import {
   Terminal,
   ShieldCheck,
   Scale,
+  Bot,
+  Cpu,
+  Sparkles,
 } from "lucide-react";
+import { AntigravityCapabilityInfo } from "@/lib/types";
 
 // ------------------------------------------------------------------
 // Compact metric card
@@ -136,6 +140,7 @@ export default function DashboardPage() {
   const { currentProject, isMockMode, isBackendOnline } = useProject();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [events, setEvents] = useState<ExecutionEvent[]>([]);
+  const [antigravityCap, setAntigravityCap] = useState<AntigravityCapabilityInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -143,13 +148,15 @@ export default function DashboardPage() {
     async function load() {
       setLoading(true);
       try {
-        const [tasksRes, eventsRes] = await Promise.all([
+        const [tasksRes, eventsRes, agRes] = await Promise.all([
           api.getTasks(currentProject?.id),
           api.getEvents("task-user-auth"),
+          api.getAntigravityHealth(),
         ]);
         if (!cancelled) {
           setTasks(tasksRes.data);
           setEvents(eventsRes.data);
+          setAntigravityCap(agRes.data);
         }
       } catch (e) {
         console.error("Dashboard load error", e);

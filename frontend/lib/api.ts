@@ -10,6 +10,9 @@ import {
   SecurityTestResult,
   ModelTransparencyInfo,
   RunReport,
+  AntigravityCapabilityInfo,
+  HandoffPrompt,
+  HandoffSubmissionRequest,
 } from "./types";
 import {
   DEMO_PROJECTS,
@@ -288,6 +291,49 @@ export const api = {
       {
         method: "POST",
         body: JSON.stringify({ command, criterion_id: criterionId, timeout_seconds: timeoutSeconds }),
+      },
+      fallback
+    );
+  },
+
+  async getHandoffPrompt(taskId: string) {
+    const fallback: HandoffPrompt = {
+      task_id: taskId,
+      project_id: "default",
+      prompt: `# TASK HANDOFF: ${taskId}\nRun tests and return verified output.`,
+      target_files: [],
+      acceptance_criteria: [],
+      suggested_command: "pytest",
+      workspace_path: null,
+      instructions: "Run prompt in Antigravity chat and submit results.",
+      missing_prerequisite: "google-antigravity SDK or agy CLI",
+      next_step: "Run 'pip install google-antigravity' or install agy CLI.",
+    };
+    return fetchWithFallback<HandoffPrompt>(
+      `/api/tasks/${taskId}/handoff`,
+      {},
+      fallback
+    );
+  },
+
+  async submitHandoff(taskId: string, payload: HandoffSubmissionRequest) {
+    const fallback = DEMO_RUNS["run-b8f3e21a"];
+    return fetchWithFallback<ExecutionRun>(
+      `/api/tasks/${taskId}/handoff`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+      fallback
+    );
+  },
+
+  async dispatchAgent(taskId: string) {
+    const fallback = DEMO_RUNS["run-b8f3e21a"];
+    return fetchWithFallback<ExecutionRun>(
+      `/api/tasks/${taskId}/dispatch`,
+      {
+        method: "POST",
       },
       fallback
     );
