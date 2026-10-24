@@ -33,7 +33,7 @@ export function LandingNav() {
         return "Qwen2.5-Coder Active";
       case "FALLBACK_ACTIVE":
         return "Deterministic Fallback";
-      case "OLLAMA_OFFLINE":
+      case "AI_UNAVAILABLE":
         return "Model Offline";
       default:
         return "Deterministic AI";

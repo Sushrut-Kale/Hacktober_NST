@@ -30,7 +30,7 @@ export function DeveloperStatusStrip() {
         if (isMounted && res.data) {
           setTaskCount(res.data.length);
           const verified = res.data.filter(
-            (t) => t.verification_status === "VERIFIED"
+            (t) => t.state === "VERIFIED"
           ).length;
           setVerificationStats({
             verified,
@@ -56,7 +56,7 @@ export function DeveloperStatusStrip() {
         return "Qwen2.5-Coder (Ollama)";
       case "FALLBACK_ACTIVE":
         return "Deterministic Fallback";
-      case "OLLAMA_OFFLINE":
+      case "AI_UNAVAILABLE":
         return "Offline";
       default:
         return "Deterministic AI";
