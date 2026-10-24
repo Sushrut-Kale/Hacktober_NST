@@ -478,7 +478,16 @@ async def execute_task_route(
     )
 
     try:
-        db_repo.save_run(run_obj)
+        db_repo.save_execution_run(run_obj)
+        db_repo.record_event(
+            ExecutionEvent(
+                task_id=task_id,
+                run_id=run_id,
+                event_type="COMMAND_EXECUTED",
+                message=f"Executed '{run_obj.command}' (exit code: {exit_code})",
+                details={"exit_code": exit_code, "command": run_obj.command},
+            )
+        )
     except Exception:
         pass
 

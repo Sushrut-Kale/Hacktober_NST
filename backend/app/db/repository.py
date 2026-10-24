@@ -408,6 +408,8 @@ class DatabaseRepository:
                     ),
                 )
 
+    save_run = save_execution_run
+
     def get_execution_run(self, run_id: str) -> Optional[ExecutionRun]:
         with self._get_connection() as conn:
             cursor = conn.cursor()
