@@ -36,6 +36,50 @@ export function Header({ onToggleSidebar }: HeaderProps) {
 
   const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = React.useRef(0);
+  const ticking = React.useRef(false);
+
+  React.useEffect(() => {
+    const threshold = 8;
+    const topThreshold = 20;
+
+    const handleScroll = () => {
+      if (!ticking.current) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = Math.max(0, window.scrollY);
+
+          if (currentScrollY <= topThreshold) {
+            setIsVisible(true);
+            lastScrollY.current = currentScrollY;
+            ticking.current = false;
+            return;
+          }
+
+          const delta = currentScrollY - lastScrollY.current;
+
+          if (Math.abs(delta) > threshold) {
+            if (delta > 0 && currentScrollY > 70) {
+              // Scrolling down: hide header only if project dropdown is not open
+              if (!projectDropdownOpen) {
+                setIsVisible(false);
+              }
+            } else if (delta < 0) {
+              // Scrolling up: reveal header
+              setIsVisible(true);
+            }
+            lastScrollY.current = currentScrollY;
+          }
+
+          ticking.current = false;
+        });
+        ticking.current = true;
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [projectDropdownOpen]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -45,9 +89,11 @@ export function Header({ onToggleSidebar }: HeaderProps) {
 
   return (
     <header
-      className="sticky top-0 z-30 h-16 px-4 sm:px-6 flex items-center justify-between"
+      className={`sticky top-0 z-30 h-16 px-4 sm:px-6 flex items-center justify-between transition-transform duration-300 ease-in-out ${
+        isVisible ? "translate-y-0" : "-translate-y-full"
+      }`}
       style={{
-        background: "rgba(8, 20, 38, 0.88)",
+        background: "rgba(8, 20, 38, 0.92)",
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
         borderBottom: "1px solid rgba(255, 255, 255, 0.10)",

@@ -68,7 +68,7 @@ export function LandingNav() {
     { label: "Projects", href: "/projects" },
     { label: "Tasks", href: "/tasks" },
     { label: "Executions", href: "/executions" },
-    { label: "Verification", href: "/verification" },
+    { label: "Verification", href: "/verification/run-b8f3e21a" },
   ];
 
   const getModelLabel = () => {

@@ -39,7 +39,7 @@ export function LandingFooter() {
           <Link href="/executions" className="hover:text-white transition-colors">
             Executions
           </Link>
-          <Link href="/verification" className="hover:text-white transition-colors">
+          <Link href="/verification/run-b8f3e21a" className="hover:text-white transition-colors">
             Verification
           </Link>
           <Link href="/settings" className="hover:text-white transition-colors">

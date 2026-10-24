@@ -1,14 +1,7 @@
 "use client";
 
 import React from "react";
-import {
-  Sparkles,
-  FolderGit2,
-  Plus,
-  ArrowRight,
-  ShieldCheck,
-  Terminal,
-} from "lucide-react";
+import { FolderGit2, Plus } from "lucide-react";
 import { RevealOnScroll } from "./RevealOnScroll";
 
 interface HeroSectionProps {
@@ -71,16 +64,13 @@ export function HeroSection({
         <div className="mt-8 sm:mt-12 w-full max-w-3xl grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 text-left">
           {/* Card A: Create a New Task */}
           <RevealOnScroll delayMs={100} durationMs={650} yOffset={24} className="h-full">
-            <div className="group relative rounded-3xl glass-panel p-6 sm:p-7 flex flex-col justify-between h-full transition-all duration-300 hover:border-white/30 hover:shadow-[0_25px_70px_rgba(88,170,225,0.2)] hover:-translate-y-1">
+            <div className="group relative rounded-3xl glass-panel p-6 sm:p-8 flex flex-col justify-between h-full transition-all duration-300 hover:border-white/30 hover:shadow-[0_25px_70px_rgba(88,170,225,0.2)] hover:-translate-y-1">
               {/* Top highlight refraction line */}
               <div className="absolute inset-x-8 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none" />
 
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#10294B] to-[#244B78] border border-white/10 flex items-center justify-center shadow-[0_0_15px_rgba(88,170,225,0.25)] group-hover:scale-105 transition-transform">
-                    <Sparkles className="w-5 h-5 text-[#9EDCFF]" />
-                  </div>
-                  <span className="text-[10px] font-mono tracking-wider text-[#58AAE1] uppercase bg-[#58AAE1]/10 px-2 py-0.5 rounded-full border border-[#58AAE1]/20">
+                  <span className="text-[10px] font-mono tracking-wider text-[#58AAE1] uppercase bg-[#58AAE1]/10 px-2.5 py-1 rounded-full border border-[#58AAE1]/20">
                     Step 1
                   </span>
                 </div>
@@ -88,7 +78,7 @@ export function HeroSection({
                 <h2 className="text-lg sm:text-xl font-bold text-white font-tight tracking-tight">
                   Create a New Task
                 </h2>
-                <p className="mt-2 text-xs text-slate-300 leading-relaxed font-tight">
+                <p className="mt-2.5 text-xs text-slate-300 leading-relaxed font-tight">
                   Define a requirement, generate an implementation plan, and review it before execution.
                 </p>
               </div>
@@ -99,7 +89,7 @@ export function HeroSection({
                   className="w-full py-2.5 px-4 rounded-xl bg-white text-[#04060A] hover:bg-[#F1F4F8] text-xs font-semibold tracking-wide flex items-center justify-center gap-2 transition-all duration-200 shadow-[0_0_20px_rgba(255,255,255,0.25)] hover:shadow-[0_0_25px_rgba(255,255,255,0.5)] group-hover:bg-[#FFFFFF]"
                 >
                   <Plus className="w-3.5 h-3.5 text-[#04060A]" />
-                  <span>+ Create New Task</span>
+                  <span>Create New Task</span>
                 </button>
               </div>
             </div>
@@ -107,16 +97,13 @@ export function HeroSection({
 
           {/* Card B: Import an Existing Project */}
           <RevealOnScroll delayMs={220} durationMs={650} yOffset={24} className="h-full">
-            <div className="group relative rounded-3xl glass-panel p-6 sm:p-7 flex flex-col justify-between h-full transition-all duration-300 hover:border-white/30 hover:shadow-[0_25px_70px_rgba(88,170,225,0.2)] hover:-translate-y-1">
+            <div className="group relative rounded-3xl glass-panel p-6 sm:p-8 flex flex-col justify-between h-full transition-all duration-300 hover:border-white/30 hover:shadow-[0_25px_70px_rgba(88,170,225,0.2)] hover:-translate-y-1">
               {/* Top highlight refraction line */}
               <div className="absolute inset-x-8 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none" />
 
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#10294B] to-[#244B78] border border-white/10 flex items-center justify-center shadow-[0_0_15px_rgba(88,170,225,0.25)] group-hover:scale-105 transition-transform">
-                    <FolderGit2 className="w-5 h-5 text-[#9EDCFF]" />
-                  </div>
-                  <span className="text-[10px] font-mono tracking-wider text-[#9EDCFF] uppercase bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
+                  <span className="text-[10px] font-mono tracking-wider text-[#9EDCFF] uppercase bg-white/5 px-2.5 py-1 rounded-full border border-white/10">
                     Workspace
                   </span>
                 </div>
@@ -124,7 +111,7 @@ export function HeroSection({
                 <h2 className="text-lg sm:text-xl font-bold text-white font-tight tracking-tight">
                   Import Existing Project
                 </h2>
-                <p className="mt-2 text-xs text-slate-300 leading-relaxed font-tight">
+                <p className="mt-2.5 text-xs text-slate-300 leading-relaxed font-tight">
                   Connect a supported repository and prepare your codebase for analysis and task execution.
                 </p>
               </div>
