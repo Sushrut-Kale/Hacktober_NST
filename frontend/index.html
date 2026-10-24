@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIKASA — AI Development Intelligence & Verification Platform</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="app-header">
+    <div class="brand">
+      <img src="/favicon.svg" alt="VIKASA Logo" class="brand-icon">
+      <span class="brand-name">VIKASA</span>
+      <span class="brand-badge">Verification Engine</span>
+    </div>
+
+    <div class="header-actions">
+      <div id="system-status-pill" class="status-pill">
+        <span class="status-dot"></span>
+        <span id="system-status-text">Checking Backend...</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <label for="project-selector" style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">ACTIVE PROJECT:</label>
+        <select id="project-selector" class="form-select" style="min-width: 180px; padding: 6px 10px;">
+          <option value="">Select a Project...</option>
+        </select>
+      </div>
+
+      <button id="btn-open-new-project-modal" class="btn btn-primary btn-sm">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        New Project
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Application Body -->
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="app-sidebar">
+      <a class="nav-link active" data-tab="projects" id="tab-btn-projects">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+        Projects
+      </a>
+      <a class="nav-link" data-tab="tasks" id="tab-btn-tasks">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+        Tasks & Backlog
+      </a>
+      <a class="nav-link" data-tab="verification" id="tab-btn-verification">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        Verification Studio
+      </a>
+      <a class="nav-link" data-tab="diagnostics" id="tab-btn-diagnostics">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+        Diagnostics & Model
+      </a>
+      <a class="nav-link" data-tab="settings" id="tab-btn-settings">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Settings
+      </a>
+    </aside>
+
+    <!-- Main Content Panels -->
+    <main class="app-main">
+
+      <!-- PANEL 1: PROJECTS -->
+      <section id="panel-projects" class="section-panel active">
+        <div class="section-header">
+          <div>
+            <h1 class="section-title">Projects Directory</h1>
+            <p class="section-subtitle">Manage registered repositories and software workspaces tracked in VIKASA.</p>
+          </div>
+          <button id="btn-refresh-projects" class="btn btn-secondary btn-sm">Refresh</button>
+        </div>
+
+        <div id="projects-container" class="grid-cards">
+          <!-- Populated dynamically -->
+        </div>
+      </section>
+
+      <!-- PANEL 2: TASKS -->
+      <section id="panel-tasks" class="section-panel">
+        <div class="section-header">
+          <div>
+            <h1 class="section-title">Task Management</h1>
+            <p id="tasks-header-subtitle" class="section-subtitle">Select an active project to view and create development tasks.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button id="btn-open-new-task-modal" class="btn btn-primary btn-sm">Create Task</button>
+            <button id="btn-refresh-tasks" class="btn btn-secondary btn-sm">Refresh</button>
+          </div>
+        </div>
+
+        <div id="tasks-container" class="grid-cards">
+          <!-- Populated dynamically -->
+        </div>
+      </section>
+
+      <!-- PANEL 3: VERIFICATION STUDIO -->
+      <section id="panel-verification" class="section-panel">
+        <div class="section-header">
+          <div>
+            <h1 class="section-title">Deterministic Verification Studio</h1>
+            <p class="section-subtitle">Evaluate agent completion claims against ground-truth evidence, exit codes, and repository diffs.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button id="btn-load-demo-pass" class="btn btn-secondary btn-sm">Demo PASS</button>
+            <button id="btn-load-demo-fail" class="btn btn-secondary btn-sm">Demo FAIL</button>
+            <button id="btn-load-demo-unsub" class="btn btn-secondary btn-sm">Demo Unsubstantiated</button>
+          </div>
+        </div>
+
+        <div class="studio-layout">
+          <!-- Left Column: Task & Claim Input -->
+          <div class="panel-box">
+            <h3 style="font-size: 1.1rem; font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+              1. Task Specification & Agent Claim
+            </h3>
+
+            <div class="form-group">
+              <label class="form-label" for="verify-task-title">Task Title</label>
+              <input type="text" id="verify-task-title" class="form-input" value="Implement deterministic verification engine">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="verify-task-desc">Task Description</label>
+              <textarea id="verify-task-desc" class="form-textarea" rows="2">Implement rule-based verification independent of agent completion messages.</textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="verify-task-criteria">Acceptance Criteria (One per line)</label>
+              <textarea id="verify-task-criteria" class="form-textarea" rows="3">[AC-1] DeterministicVerificationEngine class implemented&#10;[AC-2] Passes unit tests with exit code 0</textarea>
+            </div>
+
+            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border-color); padding: 16px; border-radius: var(--radius-md);">
+              <h4 style="font-size: 0.9rem; margin-bottom: 12px; color: var(--accent-cyan);">Agent Claim</h4>
+              
+              <div class="form-group">
+                <label class="form-label" for="verify-agent-name">Agent Name</label>
+                <input type="text" id="verify-agent-name" class="form-input" value="AntigravityWorker">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="verify-claim-statement">Claim Statement</label>
+                <input type="text" id="verify-claim-statement" class="form-input" value="Implementation completed and tested with pytest.">
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+                <input type="checkbox" id="verify-claim-success" checked style="accent-color: var(--accent-cyan); width: 16px; height: 16px;">
+                <label for="verify-claim-success" style="font-size: 0.85rem; font-weight: 600; cursor: pointer;">Agent claims task was successfully completed</label>
+              </div>
+            </div>
+
+            <h3 style="font-size: 1.1rem; font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-top: 12px;">
+              2. Empirical Evidence Collection
+            </h3>
+
+            <div class="form-group">
+              <label class="form-label" for="verify-repo-path">Repository Path (Optional for live diff/execution)</label>
+              <input type="text" id="verify-repo-path" class="form-input" placeholder="e.g. D:/Hacktober_NST">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="verify-test-cmd">Test Command (Whitelisted binaries: pytest, python, git, npm, uv)</label>
+              <input type="text" id="verify-test-cmd" class="form-input" placeholder="e.g. pytest backend/tests/test_verification_engine.py">
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 8px;">
+              <button id="btn-collect-live-evidence" class="btn btn-secondary" style="flex: 1;">
+                Collect Live Evidence
+              </button>
+              <button id="btn-run-verification" class="btn btn-primary" style="flex: 2;">
+                Run Claim vs Reality Evaluation
+              </button>
+            </div>
+          </div>
+
+          <!-- Right Column: Verification Reality & Discrepancies -->
+          <div class="panel-box" id="verification-results-panel">
+            <h3 style="font-size: 1.1rem; font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+              3. Verification Reality & Findings
+            </h3>
+
+            <div id="verdict-hero-container">
+              <div class="verdict-hero NOT_RUN">
+                <span class="badge badge-not_run">Awaiting Evaluation</span>
+                <div class="verdict-title" style="color: var(--verdict-not_run);">NOT_RUN</div>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Submit an agent claim and evidence to generate the Claim vs Reality verdict.</p>
+              </div>
+            </div>
+
+            <!-- Discrepancies alert box -->
+            <div id="discrepancies-box" style="display: none;">
+              <h4 style="font-size: 0.85rem; font-weight: 700; color: #f87171; margin-bottom: 8px; text-transform: uppercase;">
+                Detected Claim vs Reality Discrepancies
+              </h4>
+              <div id="discrepancies-list"></div>
+            </div>
+
+            <!-- Rule evaluations breakdown -->
+            <div>
+              <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase;">
+                Deterministic Rule Evaluations
+              </h4>
+              <div id="rules-evaluations-list">
+                <div style="color: var(--text-dim); font-size: 0.85rem;">No rules evaluated yet.</div>
+              </div>
+            </div>
+
+            <!-- Raw Evidence Inspector -->
+            <div>
+              <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase;">
+                Recorded Evidence Items (<span id="evidence-count-badge">0</span>)
+              </h4>
+              <div id="evidence-items-list" class="code-block">No evidence attached.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PANEL 4: DIAGNOSTICS -->
+      <section id="panel-diagnostics" class="section-panel">
+        <div class="section-header">
+          <div>
+            <h1 class="section-title">System Diagnostics & AI Runtime</h1>
+            <p class="section-subtitle">Monitor health status of local Gemma models, Antigravity orchestration, and SQLite persistence.</p>
+          </div>
+          <button id="btn-refresh-diagnostics" class="btn btn-secondary btn-sm">Refresh All</button>
+        </div>
+
+        <div class="grid-cards">
+          <div class="card">
+            <div class="card-title">
+              <span>VIKASA Core API</span>
+              <span id="diag-api-badge" class="badge badge-not_run">Checking...</span>
+            </div>
+            <p class="card-desc">FastAPI backend instance with Claim vs Reality routing.</p>
+            <div class="card-meta">
+              <span id="diag-api-service">Service: --</span>
+              <span id="diag-api-version">Version: --</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <span>SQLite Database</span>
+              <span id="diag-db-badge" class="badge badge-not_run">Checking...</span>
+            </div>
+            <p class="card-desc">Persistent local database storing projects, tasks, and verification audit trails.</p>
+            <div class="card-meta">
+              <span id="diag-db-status">Status: --</span>
+              <span>Tables: projects, tasks, verification_records</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <span>Ollama & Gemma 4</span>
+              <span id="diag-ollama-badge" class="badge badge-not_run">Checking...</span>
+            </div>
+            <p class="card-desc">Local Ollama inference engine hosting Gemma 4 for task decomposition.</p>
+            <div class="card-meta">
+              <span id="diag-ollama-model">Configured Model: gemma4:e4b</span>
+              <span id="diag-ollama-ready">Readiness: --</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <span>Antigravity Adapter</span>
+              <span id="diag-antigravity-badge" class="badge badge-not_run">Checking...</span>
+            </div>
+            <p class="card-desc">SDK and CLI runner interface for verified tool execution and evidence capture.</p>
+            <div class="card-meta">
+              <span id="diag-antigravity-sdk">SDK: --</span>
+              <span id="diag-antigravity-cli">CLI: --</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PANEL 5: SETTINGS -->
+      <section id="panel-settings" class="section-panel">
+        <div class="section-header">
+          <div>
+            <h1 class="section-title">Platform Settings</h1>
+            <p class="section-subtitle">Configure backend connectivity and local API base URLs.</p>
+          </div>
+        </div>
+
+        <div class="panel-box" style="max-width: 600px;">
+          <div class="form-group">
+            <label class="form-label" for="settings-api-base">API Base URL</label>
+            <input type="text" id="settings-api-base" class="form-input" placeholder="http://127.0.0.1:8000 (leave empty for same origin)">
+            <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 4px;">
+              Default is empty (same-origin). Set explicitly when running frontend separately from backend.
+            </p>
+          </div>
+
+          <button id="btn-save-settings" class="btn btn-primary" style="width: fit-content;">Save Settings</button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL: NEW PROJECT -->
+  <div id="modal-new-project" class="modal-backdrop">
+    <div class="modal">
+      <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 16px;">Register New Project</h3>
+      
+      <div class="form-group">
+        <label class="form-label" for="modal-project-name">Project Name *</label>
+        <input type="text" id="modal-project-name" class="form-input" placeholder="e.g. VIKASA Core" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="modal-project-path">Root Path *</label>
+        <input type="text" id="modal-project-path" class="form-input" placeholder="e.g. D:/Hacktober_NST" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="modal-project-url">Repository URL (Optional)</label>
+        <input type="text" id="modal-project-url" class="form-input" placeholder="e.g. https://github.com/org/repo.git">
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;">
+        <button id="btn-cancel-project-modal" class="btn btn-secondary">Cancel</button>
+        <button id="btn-submit-project" class="btn btn-primary">Create Project</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: NEW TASK -->
+  <div id="modal-new-task" class="modal-backdrop">
+    <div class="modal">
+      <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 16px;">Create Project Task</h3>
+      
+      <div class="form-group">
+        <label class="form-label" for="modal-task-title">Task Title *</label>
+        <input type="text" id="modal-task-title" class="form-input" placeholder="e.g. Integrate AST parser" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="modal-task-desc">Description</label>
+        <textarea id="modal-task-desc" class="form-textarea" rows="2" placeholder="Task scope and technical context..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="modal-task-criteria">Acceptance Criteria</label>
+        <textarea id="modal-task-criteria" class="form-textarea" rows="3" placeholder="Condition 1&#10;Condition 2"></textarea>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;">
+        <button id="btn-cancel-task-modal" class="btn btn-secondary">Cancel</button>
+        <button id="btn-submit-task" class="btn btn-primary">Create Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Application Logic -->
+  <script src="/app.js"></script>
+</body>
+</html>
