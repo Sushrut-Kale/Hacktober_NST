@@ -221,29 +221,15 @@ Workspace: {workspace}
         command = request.command or "ANTIGRAVITY_MANUAL_HANDOFF"
 
         evidence_items: List[EvidenceItem] = []
-        criterion_id = request.criterion_id or (task.acceptance_criteria[0].id if task.acceptance_criteria else None)
+        target_criteria = [request.criterion_id] if request.criterion_id else ([c.id for c in task.acceptance_criteria] if task.acceptance_criteria else [None])
 
         # 1. Command exit code evidence (explicitly tagged as unverified user telemetry)
-        evidence_items.append(
-            EvidenceItem(
-                criterion_id=criterion_id,
-                evidence_type=EvidenceType.COMMAND_EXIT_CODE,
-                content=f"User-submitted test command: '{command}' (Claimed exit code: {exit_code})",
-                exit_code=exit_code,
-                passed=(exit_code == 0),
-                source_attribution="USER_SUBMITTED_MANUAL",
-                is_verified=False,
-            )
-        )
-
-        # 2. Output / Agent Response evidence
-        output_content = (request.test_output or request.agent_response or "").strip()
-        if output_content:
+        for cid in target_criteria:
             evidence_items.append(
                 EvidenceItem(
-                    criterion_id=criterion_id,
-                    evidence_type=EvidenceType.TEST_OUTPUT,
-                    content=output_content,
+                    criterion_id=cid,
+                    evidence_type=EvidenceType.COMMAND_EXIT_CODE,
+                    content=f"User-submitted test command: '{command}' (Claimed exit code: {exit_code})",
                     exit_code=exit_code,
                     passed=(exit_code == 0),
                     source_attribution="USER_SUBMITTED_MANUAL",
@@ -251,12 +237,28 @@ Workspace: {workspace}
                 )
             )
 
+        # 2. Output / Agent Response evidence
+        output_content = (request.test_output or request.agent_response or "").strip()
+        if output_content:
+            for cid in target_criteria:
+                evidence_items.append(
+                    EvidenceItem(
+                        criterion_id=cid,
+                        evidence_type=EvidenceType.TEST_OUTPUT,
+                        content=output_content,
+                        exit_code=exit_code,
+                        passed=(exit_code == 0),
+                        source_attribution="USER_SUBMITTED_MANUAL",
+                        is_verified=False,
+                    )
+                )
+
         # 3. Git diff evidence if provided
         git_diff = (request.git_diff or "").strip() or None
         if git_diff:
             evidence_items.append(
                 EvidenceItem(
-                    criterion_id=criterion_id,
+                    criterion_id=request.criterion_id or (task.acceptance_criteria[0].id if task.acceptance_criteria else None),
                     evidence_type=EvidenceType.GIT_DIFF,
                     content=git_diff,
                     exit_code=0,

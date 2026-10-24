@@ -114,6 +114,8 @@ class DatabaseRepository:
                 exit_code INTEGER,
                 file_path TEXT,
                 passed INTEGER,
+                source_attribution TEXT DEFAULT 'LOCAL_SUBPROCESS',
+                is_verified INTEGER DEFAULT 1,
                 created_at TEXT NOT NULL,
                 FOREIGN KEY (task_id) REFERENCES tasks (id)
             );
@@ -171,6 +173,35 @@ class DatabaseRepository:
             except Exception:
                 pass
 
+            try:
+                cursor.execute("ALTER TABLE evidence_records ADD COLUMN source_attribution TEXT DEFAULT 'LOCAL_SUBPROCESS'")
+            except Exception:
+                pass
+
+            try:
+                cursor.execute("ALTER TABLE evidence_records ADD COLUMN is_verified INTEGER DEFAULT 1")
+            except Exception:
+                pass
+
+            # Projects table non-destructive schema migrations
+            for col_name, col_type in [
+                ("source_type", "TEXT DEFAULT 'GIT'"),
+                ("description", "TEXT"),
+                ("idea_prompt", "TEXT"),
+                ("target_branch", "TEXT DEFAULT 'main'"),
+                ("tech_stack", "TEXT"),
+                ("architecture", "TEXT"),
+                ("claimed_features", "TEXT"),
+                ("clarification_questions", "TEXT"),
+                ("documentation", "TEXT"),
+                ("scan_history", "TEXT"),
+                ("updated_at", "TEXT"),
+            ]:
+                try:
+                    cursor.execute(f"ALTER TABLE projects ADD COLUMN {col_name} {col_type}")
+                except Exception:
+                    pass
+
     def save_task(self, task: Task) -> Task:
         with self._get_connection() as conn:
             cursor = conn.cursor()
@@ -216,9 +247,12 @@ class DatabaseRepository:
         try:
             parsed = json.loads(raw)
             if isinstance(parsed, list):
-                return [AcceptanceCriterion(**c) for c in parsed]
+                return [c if isinstance(c, AcceptanceCriterion) else AcceptanceCriterion(**c) for c in parsed]
             return [AcceptanceCriterion(id="AC-1", description=str(parsed))]
         except Exception:
+            parts = [p.strip() for p in str(raw).split(";") if p.strip()]
+            if len(parts) > 1:
+                return [AcceptanceCriterion(id=f"AC-{i+1}", description=part) for i, part in enumerate(parts)]
             return [AcceptanceCriterion(id="AC-1", description=str(raw))]
 
     def get_task(self, task_id: str) -> Optional[Task]:
@@ -389,12 +423,14 @@ class DatabaseRepository:
             )
             # Insert evidence directly using the active cursor to avoid connection deadlocks
             for ev in run.evidence_items:
+                is_ver_val = 1 if (ev.is_verified is not False) else 0
+                src_val = ev.source_attribution or "LOCAL_SUBPROCESS"
                 cursor.execute(
                     """
                     INSERT INTO evidence_records (
                         task_id, run_id, criterion_id, evidence_type, content,
-                        exit_code, file_path, passed, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        exit_code, file_path, passed, source_attribution, is_verified, created_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         run.task_id,
@@ -405,6 +441,8 @@ class DatabaseRepository:
                         ev.exit_code,
                         ev.file_path,
                         1 if ev.passed else (0 if ev.passed is False else None),
+                        src_val,
+                        is_ver_val,
                         datetime.now(timezone.utc).isoformat(),
                     ),
                 )
@@ -427,6 +465,8 @@ class DatabaseRepository:
             evidence = []
             for ev_row in cursor.fetchall():
                 passed_val = True if ev_row["passed"] == 1 else (False if ev_row["passed"] == 0 else None)
+                src_attr = ev_row["source_attribution"] if "source_attribution" in ev_row.keys() and ev_row["source_attribution"] else "LOCAL_SUBPROCESS"
+                is_ver = (ev_row["is_verified"] == 1) if ("is_verified" in ev_row.keys() and ev_row["is_verified"] is not None) else True
                 evidence.append(
                     EvidenceItem(
                         criterion_id=ev_row["criterion_id"],
@@ -435,6 +475,8 @@ class DatabaseRepository:
                         exit_code=ev_row["exit_code"],
                         file_path=ev_row["file_path"],
                         passed=passed_val,
+                        source_attribution=src_attr,
+                        is_verified=is_ver,
                     )
                 )
 
@@ -485,12 +527,14 @@ class DatabaseRepository:
     def save_evidence_item(self, task_id: str, run_id: Optional[str], evidence: EvidenceItem):
         with self._get_connection() as conn:
             cursor = conn.cursor()
+            is_ver_val = 1 if (evidence.is_verified is not False) else 0
+            src_val = evidence.source_attribution or "LOCAL_SUBPROCESS"
             cursor.execute(
                 """
                 INSERT INTO evidence_records (
                     task_id, run_id, criterion_id, evidence_type, content,
-                    exit_code, file_path, passed, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    exit_code, file_path, passed, source_attribution, is_verified, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     task_id,
@@ -501,6 +545,8 @@ class DatabaseRepository:
                     evidence.exit_code,
                     evidence.file_path,
                     1 if evidence.passed else (0 if evidence.passed is False else None),
+                    src_val,
+                    is_ver_val,
                     datetime.now(timezone.utc).isoformat(),
                 ),
             )
@@ -521,6 +567,8 @@ class DatabaseRepository:
             items = []
             for row in cursor.fetchall():
                 passed_val = True if row["passed"] == 1 else (False if row["passed"] == 0 else None)
+                src_attr = row["source_attribution"] if "source_attribution" in row.keys() and row["source_attribution"] else "LOCAL_SUBPROCESS"
+                is_ver = (row["is_verified"] == 1) if ("is_verified" in row.keys() and row["is_verified"] is not None) else True
                 items.append(
                     EvidenceItem(
                         criterion_id=row["criterion_id"],
@@ -529,6 +577,8 @@ class DatabaseRepository:
                         exit_code=row["exit_code"],
                         file_path=row["file_path"],
                         passed=passed_val,
+                        source_attribution=src_attr,
+                        is_verified=is_ver,
                     )
                 )
             return items

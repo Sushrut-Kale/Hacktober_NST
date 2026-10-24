@@ -69,7 +69,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$",
-    allow_origins=["*"],
+    allow_origins=settings.allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -163,7 +163,8 @@ async def create_task(payload: TaskCreateRequest, db: Session = Depends(get_db))
         # Also mirror in SQLAlchemy TaskRecord for relational queries under projects
         try:
             from backend.app.models.task import TaskRecord
-            crit_str = "; ".join(c.description for c in task.acceptance_criteria)
+            import json
+            crit_json = json.dumps([c.model_dump() for c in task.acceptance_criteria])
             status_val = getattr(payload, "status", None)
             if hasattr(status_val, "value"):
                 status_val = status_val.value
@@ -177,7 +178,7 @@ async def create_task(payload: TaskCreateRequest, db: Session = Depends(get_db))
                 project_id=task.project_id,
                 title=task.title,
                 description=task.description,
-                acceptance_criteria=crit_str,
+                acceptance_criteria=crit_json,
                 status=status_val,
             )
             db.merge(task_rec)
@@ -488,19 +489,16 @@ async def execute_task_route(
             exit_code = cmd_item.exit_code
             output_text = cmd_item.content or ""
 
-            if exit_code is not None:
-                if exit_code == 0:
-                    current_status = "COMPLETED"
-                else:
-                    current_status = "FAILED"
-                    if rec:
-                        rec.status = "FAILED"
-                        db.commit()
-                        db.refresh(rec)
-                    if repo_task:
-                        repo_task.status = "FAILED"
-                        repo_task.state = TaskState.FAILED
-                        db_repo.save_task(repo_task)
+            if exit_code is not None and exit_code != 0:
+                current_status = "FAILED"
+                if rec:
+                    rec.status = "FAILED"
+                    db.commit()
+                    db.refresh(rec)
+                if repo_task:
+                    repo_task.status = "FAILED"
+                    repo_task.state = TaskState.FAILED
+                    db_repo.save_task(repo_task)
 
         git_diff_text = None
         try:

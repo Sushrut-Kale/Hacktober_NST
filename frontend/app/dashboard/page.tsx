@@ -413,9 +413,19 @@ export default function DashboardPage() {
               <span
                 className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold"
                 style={{
-                  background: antigravityCap?.status === "READY" ? "rgba(52,211,153,0.1)" : "rgba(251,191,36,0.1)",
-                  color: antigravityCap?.status === "READY" ? "#34d399" : "#fbbf24",
-                  border: `1px solid ${antigravityCap?.status === "READY" ? "rgba(52,211,153,0.25)" : "rgba(251,191,36,0.25)"}`,
+                  background:
+                    antigravityCap?.status === "CLI_AVAILABLE" || antigravityCap?.status === "SDK_AVAILABLE"
+                      ? "rgba(52,211,153,0.1)"
+                      : "rgba(251,191,36,0.1)",
+                  color:
+                    antigravityCap?.status === "CLI_AVAILABLE" || antigravityCap?.status === "SDK_AVAILABLE"
+                      ? "#34d399"
+                      : "#fbbf24",
+                  border: `1px solid ${
+                    antigravityCap?.status === "CLI_AVAILABLE" || antigravityCap?.status === "SDK_AVAILABLE"
+                      ? "rgba(52,211,153,0.25)"
+                      : "rgba(251,191,36,0.25)"
+                  }`,
                 }}
               >
                 {antigravityCap?.status || "NEEDS_INSTALLATION"}

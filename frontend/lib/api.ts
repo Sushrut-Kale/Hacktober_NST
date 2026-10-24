@@ -150,17 +150,36 @@ export const api = {
   },
 
   async getAntigravityHealth() {
-    return fetchWithFallback(
+    return fetchWithFallback<AntigravityCapabilityInfo>(
       "/api/health/antigravity",
       {},
       {
+        status: "NEEDS_INSTALLATION",
         sdk_installed: false,
         sdk_package: "google-antigravity (PyPI)",
         cli_installed: false,
         cli_path: null,
-        mcp_enabled: true,
-        status: "NEEDS_INSTALLATION",
-        notes: "Local runner adapter handles execution with full deterministic evidence capture.",
+        ide_host_detected: true,
+        available_modes: ["LOCAL_SAFE_RUNNER", "ANTIGRAVITY_MANUAL_HANDOFF"],
+        supported_integrations: {
+          local_safe_runner: {
+            status: "AVAILABLE",
+            description: "Safe subprocess execution with allowlisting and timeouts.",
+            attribution: "LOCAL_SAFE_RUNNER",
+          },
+          manual_handoff: {
+            status: "READY",
+            description: "Export structured task prompt and submit verified results.",
+            attribution: "ANTIGRAVITY_MANUAL_HANDOFF",
+          },
+          automated_agent_dispatch: {
+            status: "NEEDS_INSTALLATION",
+            missing_prerequisite: "Install 'google-antigravity' or install Antigravity CLI.",
+            next_step: "Run 'pip install google-antigravity'.",
+            attribution: "ANTIGRAVITY_AGENT",
+          },
+        },
+        notes: "Local safe runner is active. Manual handoff workflow is fully available.",
       }
     );
   },
@@ -196,6 +215,55 @@ export const api = {
         body: JSON.stringify(data),
       },
       newProj
+    );
+  },
+
+  async getProjectDetail(projectId: string) {
+    return fetchWithFallback<any>(
+      `/api/projects/${projectId}/detail`,
+      {},
+      null
+    );
+  },
+
+  async rescanProject(projectId: string) {
+    return fetchWithFallback<any>(
+      `/api/projects/${projectId}/rescan`,
+      { method: "POST" },
+      null
+    );
+  },
+
+  async clarifyProject(projectId: string, answers: Record<string, string>) {
+    return fetchWithFallback<any>(
+      `/api/projects/${projectId}/clarify`,
+      {
+        method: "POST",
+        body: JSON.stringify({ answers }),
+      },
+      null
+    );
+  },
+
+  async skipQuestions(projectId: string) {
+    return fetchWithFallback<any>(
+      `/api/projects/${projectId}/skip-questions`,
+      {
+        method: "POST",
+        body: JSON.stringify({ use_defaults: true }),
+      },
+      null
+    );
+  },
+
+  async buildFeature(projectId: string, featureId: string) {
+    return fetchWithFallback<any>(
+      `/api/projects/${projectId}/build-feature`,
+      {
+        method: "POST",
+        body: JSON.stringify({ feature_id: featureId }),
+      },
+      null
     );
   },
 

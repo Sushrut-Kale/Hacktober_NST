@@ -28,6 +28,7 @@ class TaskRecord(Base):
     description = Column(Text, nullable=True)
     acceptance_criteria = Column(Text, nullable=True)
     status = Column(String(50), nullable=False, default="PLANNED")
+    state = Column(String(50), nullable=False, default="CREATED")
     created_at = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),

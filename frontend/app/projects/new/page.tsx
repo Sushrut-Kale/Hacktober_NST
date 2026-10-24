@@ -144,10 +144,13 @@ export default function NewProjectPage() {
         name: name || "VIKASA Workspace Project",
         description: description || projectIdea || "Project managed by VIKASA Verification Platform",
         git_url: mode === "git" ? gitUrl : undefined,
+        repository_url: mode === "git" ? gitUrl : undefined,
+        source_type: mode === "git" ? "GIT" : mode === "idea" ? "IDEA" : "FOLDER",
+        idea_prompt: mode === "idea" ? projectIdea : undefined,
         repo_path: rootPath,
         language: "Python/TypeScript",
         framework: "FastAPI/Next.js",
-      });
+      } as any);
 
       const projectId = res.data.id;
 

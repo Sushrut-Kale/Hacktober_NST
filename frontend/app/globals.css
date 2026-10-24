@@ -1,21 +1,31 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter+Tight:ital,wght@0,300..900;1,300..900&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* =========================================================
-   VIKASA — Arix-Inspired Design System v2
+   VIKASA — Arix-Inspired Design System & Cinematic Palette
    ========================================================= */
 
 :root {
-  --background: #07090e;
+  --background: #04060A;
+  --midnight-navy: #071426;
+  --deep-space-blue: #0A1B35;
+  --dark-blue: #10294B;
+  --atmospheric-blue: #244B78;
+  --electric-sky-blue: #58AAE1;
+  --light-sky-blue: #9EDCFF;
+  --ice-white: #F1F4F8;
+  --pure-white: #FFFFFF;
+  --main-dark-surface: #04060A;
+
   --surface-100: #0f1624;
   --surface-200: #0b101b;
   --foreground: #f1f5f9;
-  --brand: #00c3ff;
-  --brand-glow: rgba(0, 195, 255, 0.18);
-  --border: rgba(255, 255, 255, 0.08);
+  --brand: #58AAE1;
+  --brand-glow: rgba(88, 170, 225, 0.22);
+  --border: rgba(255, 255, 255, 0.1);
 }
 
 /* ---- Base ---- */
@@ -101,6 +111,41 @@ body {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Glass panel per Arix design specs */
+.glass-panel {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.09),
+      rgba(255, 255, 255, 0.02)
+    );
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.glass-panel-subtle {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.05),
+      rgba(255, 255, 255, 0.01)
+    );
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.font-heading {
+  font-family: 'Anton', Impact, sans-serif;
+  letter-spacing: 0.03em;
+}
+
+.font-tight {
+  font-family: 'Inter Tight', 'Inter', -apple-system, sans-serif;
 }
 
 /* ---- Brand Gradient Text ---- */

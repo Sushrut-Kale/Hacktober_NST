@@ -113,11 +113,26 @@ class DeterministicVerificationEngine:
                 message=f"{len(failed_commands)} command(s) or test execution(s) exited with non-zero status or failed."
             ))
         elif command_evidence:
+            has_unverified_manual = any(
+                getattr(e, "source_attribution", "") == "USER_SUBMITTED_MANUAL" or e.is_verified is False
+                for e in command_evidence
+            )
+            has_verified = any(
+                e.is_verified is not False and getattr(e, "source_attribution", "") != "USER_SUBMITTED_MANUAL"
+                for e in command_evidence
+            )
+            if has_verified and not has_unverified_manual:
+                msg = "All command executions and test runs verified with exit code 0 / passed (Independently corroborated)."
+            elif has_unverified_manual:
+                msg = "All command executions and test runs reported exit code 0 / passed (User-reported telemetry)."
+            else:
+                msg = "All command executions and test runs reported exit code 0 / passed."
+
             evaluations.append(RuleEvaluation(
                 rule_name="CommandExitCodeCheck",
                 passed=True,
                 verdict_impact=VerificationVerdict.PASS,
-                message="All command executions and test runs reported exit code 0 / passed."
+                message=msg
             ))
         else:
             evaluations.append(RuleEvaluation(
@@ -157,7 +172,7 @@ class DeterministicVerificationEngine:
             evaluations.append(RuleEvaluation(
                 rule_name="AcceptanceCriteriaCoverageCheck",
                 passed=False,
-                verdict_impact=VerificationVerdict.UNKNOWN,
+                verdict_impact=VerificationVerdict.REVIEW_REQUIRED,
                 message=f"Evidence submitted for criteria {unconfirmed_criteria} is inconclusive (missing test result or exit code)."
             ))
         else:
@@ -178,15 +193,21 @@ class DeterministicVerificationEngine:
             evaluations.append(RuleEvaluation(
                 rule_name="RepositoryDiffCheck",
                 passed=False,
-                verdict_impact=VerificationVerdict.UNKNOWN,
+                verdict_impact=VerificationVerdict.REVIEW_REQUIRED,
                 message="No repository diff provided. Code changes cannot be verified without recorded diff."
             ))
         else:
+            diff_items = [e for e in claim.evidence_list if e.evidence_type == EvidenceType.GIT_DIFF]
+            if diff_items and all(getattr(e, "source_attribution", "") == "USER_SUBMITTED_MANUAL" or e.is_verified is False for e in diff_items):
+                msg = "Repository diff provided via user submission (unverified against local working tree)."
+            else:
+                msg = "Repository diff evidence is present."
+
             evaluations.append(RuleEvaluation(
                 rule_name="RepositoryDiffCheck",
                 passed=True,
                 verdict_impact=VerificationVerdict.PASS,
-                message="Repository diff evidence is present."
+                message=msg
             ))
 
         # Rule 6: Conflict / Contradiction Check
@@ -196,6 +217,9 @@ class DeterministicVerificationEngine:
             "FATAL ERROR",
             "AssertionError",
             "SyntaxError:",
+            "=== FAILURES ===",
+            "FAILED (failures=",
+            "FAILED (errors=",
         ]
         contradictions = []
         for ev in claim.evidence_list:
@@ -204,7 +228,6 @@ class DeterministicVerificationEngine:
                     if kw in ev.content and (ev.passed is True or claim.claimed_success):
                         contradictions.append(f"Found '{kw}' in evidence content while claiming success.")
                         break
-
 
         if contradictions:
             evaluations.append(RuleEvaluation(
