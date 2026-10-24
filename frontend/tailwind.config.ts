@@ -35,10 +35,24 @@ const config: Config = {
           running: "#3b82f6",
           notrun: "#64748b",
         },
+        navy: {
+          950: "#04060A",
+          900: "#071426",
+          850: "#0A1B35",
+          800: "#10294B",
+          700: "#244B78",
+        },
+        sky: {
+          400: "#58AAE1",
+          300: "#9EDCFF",
+          50: "#F1F4F8",
+        },
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
-        display: ["Inter", "system-ui", "sans-serif"],
+        sans: ["'Inter Tight'", "Inter", "system-ui", "sans-serif"],
+        tight: ["'Inter Tight'", "Inter", "sans-serif"],
+        display: ["Anton", "Impact", "sans-serif"],
+        heading: ["Anton", "Impact", "sans-serif"],
         mono: ["JetBrains Mono", "Fira Code", "monospace"],
       },
       boxShadow: {

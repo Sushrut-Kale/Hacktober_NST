@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { usePathname } from "next/navigation";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { ToastContainer } from "../ui/ToastContainer";
@@ -8,6 +9,19 @@ import { ProjectProvider } from "@/hooks/useProject";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pathname = usePathname();
+  const isLandingPage = pathname === "/";
+
+  if (isLandingPage) {
+    return (
+      <ProjectProvider>
+        <div className="min-h-screen bg-[#04060A] text-slate-100 flex flex-col font-sans selection:bg-sky-500/30 selection:text-sky-200 relative overflow-x-hidden">
+          {children}
+          <ToastContainer />
+        </div>
+      </ProjectProvider>
+    );
+  }
 
   return (
     <ProjectProvider>
