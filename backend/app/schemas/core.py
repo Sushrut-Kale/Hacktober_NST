@@ -3,6 +3,16 @@ from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field, model_validator
 from datetime import datetime, timezone
 
+class TaskState(str, Enum):
+    CREATED = "CREATED"
+    PLANNED = "PLANNED"
+    APPROVED = "APPROVED"
+    RUNNING = "RUNNING"
+    VERIFYING = "VERIFYING"
+    VERIFIED = "VERIFIED"
+    FAILED = "FAILED"
+    REVIEW_REQUIRED = "REVIEW_REQUIRED"
+
 class VerificationVerdict(str, Enum):
     VERIFIED = "VERIFIED"
     FAILED = "FAILED"
@@ -30,7 +40,12 @@ class Task(BaseModel):
     title: str
     description: str
     acceptance_criteria: List[AcceptanceCriterion]
+    state: TaskState = TaskState.CREATED
+    project_id: str = "default"
+    workspace_path: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    approved_at: Optional[datetime] = None
 
 class PlanStep(BaseModel):
     step_number: int
@@ -55,12 +70,12 @@ class TaskPlan(BaseModel):
     tests_to_run: List[str] = Field(default_factory=list)
     risks: List[str] = Field(default_factory=list)
     verification_strategy: str = ""
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     @model_validator(mode="before")
     @classmethod
     def sync_summary_fields(cls, data: Any) -> Any:
         if isinstance(data, dict):
-            # Synchronize task_summary and legacy summary field
             if "summary" in data and not data.get("task_summary"):
                 data["task_summary"] = data["summary"]
             elif "task_summary" in data and not data.get("summary"):
@@ -98,6 +113,7 @@ class VerificationResult(BaseModel):
     summary: str
     verified_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     raw_evidence_count: int
+    run_id: Optional[str] = None
 
 class FailureDiagnosis(BaseModel):
     task_id: str
@@ -111,6 +127,8 @@ class FailureDiagnosis(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0, default=0.8)
     insufficient_evidence: bool = False
     ai_explanation: Optional[str] = None
+    run_id: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     @model_validator(mode="before")
     @classmethod
@@ -122,6 +140,43 @@ class FailureDiagnosis(BaseModel):
                 data["failure_summary"] = data["ai_explanation"]
         return data
 
+class ExecutionRun(BaseModel):
+    run_id: str
+    task_id: str
+    started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    completed_at: Optional[datetime] = None
+    status: str = "COMPLETED"
+    command: str
+    exit_code: Optional[int] = None
+    stdout: str = ""
+    stderr: str = ""
+    source: str = "LOCAL_EXECUTION_RUNNER"
+    git_diff: Optional[str] = None
+    evidence_items: List[EvidenceItem] = Field(default_factory=list)
+
+class ExecutionEvent(BaseModel):
+    id: Optional[int] = None
+    task_id: str
+    run_id: Optional[str] = None
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    event_type: str
+    message: str
+    details: Dict[str, Any] = Field(default_factory=dict)
+
+class RunReport(BaseModel):
+    run: ExecutionRun
+    task: Task
+    verification: Optional[VerificationResult] = None
+    diagnosis: Optional[FailureDiagnosis] = None
+    events: List[ExecutionEvent] = Field(default_factory=list)
+
+class TaskDetail(BaseModel):
+    task: Task
+    plan: Optional[TaskPlan] = None
+    latest_run: Optional[ExecutionRun] = None
+    latest_verification: Optional[VerificationResult] = None
+    latest_diagnosis: Optional[FailureDiagnosis] = None
+
 class PlanRequest(BaseModel):
     task: Task
     repo_context: Optional[str] = None
@@ -131,3 +186,19 @@ class FailureDiagnosisRequest(BaseModel):
     verification_result: VerificationResult
     repo_diff: Optional[str] = None
     evidence_list: Optional[List[EvidenceItem]] = None
+
+class TaskCreateRequest(BaseModel):
+    title: str
+    description: str
+    acceptance_criteria: List[AcceptanceCriterion]
+    id: Optional[str] = None
+    workspace_path: Optional[str] = None
+
+class TaskApproveRequest(BaseModel):
+    approved_by: str = "USER"
+    notes: Optional[str] = None
+
+class TaskExecuteRequest(BaseModel):
+    command: str
+    criterion_id: Optional[str] = None
+    timeout_seconds: Optional[float] = 30.0

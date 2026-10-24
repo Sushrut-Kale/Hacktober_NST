@@ -1,4 +1,5 @@
 from backend.app.schemas.core import (
+    TaskState,
     VerificationVerdict,
     GeneratorStatus,
     EvidenceType,
@@ -12,11 +13,19 @@ from backend.app.schemas.core import (
     RuleEvaluation,
     VerificationResult,
     FailureDiagnosis,
+    ExecutionRun,
+    ExecutionEvent,
+    RunReport,
+    TaskDetail,
     PlanRequest,
     FailureDiagnosisRequest,
+    TaskCreateRequest,
+    TaskApproveRequest,
+    TaskExecuteRequest,
 )
 
 __all__ = [
+    "TaskState",
     "VerificationVerdict",
     "GeneratorStatus",
     "EvidenceType",
@@ -30,6 +39,13 @@ __all__ = [
     "RuleEvaluation",
     "VerificationResult",
     "FailureDiagnosis",
+    "ExecutionRun",
+    "ExecutionEvent",
+    "RunReport",
+    "TaskDetail",
     "PlanRequest",
     "FailureDiagnosisRequest",
+    "TaskCreateRequest",
+    "TaskApproveRequest",
+    "TaskExecuteRequest",
 ]
