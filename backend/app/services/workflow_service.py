@@ -282,9 +282,22 @@ class WorkflowService:
         if not task:
             raise KeyError(f"Task '{task_id}' not found.")
 
+        # Verify run ownership and prevent cross-task evidence leaking
+        if run_id:
+            specified_run = self.repo.get_execution_run(run_id)
+            if not specified_run:
+                raise KeyError(f"Execution run '{run_id}' not found.")
+            if specified_run.task_id != task_id:
+                raise ValueError(
+                    f"Execution run '{run_id}' belongs to task '{specified_run.task_id}', not task '{task_id}'. "
+                    "Cross-task verification is forbidden."
+                )
+            latest_run = specified_run
+        else:
+            latest_run = self.repo.get_latest_execution_run(task_id)
+
         # Gather recorded evidence
         evidence_items = self.repo.list_evidence(task_id, run_id=run_id)
-        latest_run = self.repo.get_execution_run(run_id) if run_id else self.repo.get_latest_execution_run(task_id)
 
         # Build claim representation
         git_diff = latest_run.git_diff if latest_run else None

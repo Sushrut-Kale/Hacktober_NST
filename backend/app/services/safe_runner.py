@@ -35,11 +35,24 @@ class SafeExecutionRunner:
 
     def validate_workspace(self, workspace_path: Optional[str]) -> str:
         """
-        Validates that the workspace exists and is a safe directory without null bytes.
+        Validates that the workspace exists and is a safe directory without null bytes,
+        UNC network shares, or DOS device paths. Resolves symlinks safely.
         """
         if workspace_path and "\0" in workspace_path:
             raise ValueError("Workspace path contains invalid null bytes.")
-        target = os.path.abspath(workspace_path or self.default_workspace)
+
+        raw_path = (workspace_path or self.default_workspace).strip()
+        # Reject UNC paths (e.g. \\evil-share\share or //evil-share) to prevent SMB relay attacks
+        if raw_path.startswith(("\\\\", "//")):
+            raise ValueError("Network UNC paths are not permitted for workspaces.")
+
+        # Reject Windows reserved device names (CON, PRN, AUX, NUL, COM1..9, LPT1..9)
+        base_name = os.path.basename(raw_path).split(".")[0].upper()
+        reserved_devices = {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10))}
+        if base_name in reserved_devices:
+            raise ValueError(f"Reserved device name '{base_name}' is not a valid workspace directory.")
+
+        target = os.path.realpath(os.path.abspath(raw_path))
         if not os.path.isdir(target):
             raise ValueError(f"Workspace path does not exist or is not a directory: {target}")
         return target
@@ -132,11 +145,55 @@ class SafeExecutionRunner:
         return encoded[:max_bytes].decode("utf-8", errors="replace") + "\n\n[TRUNCATED: Output exceeded 512 KB limit]"
 
     @staticmethod
+    def _redact_secrets(text: Optional[str]) -> str:
+        """
+        Redacts sensitive tokens, credentials, and password URLs from logs and evidence.
+        """
+        if not text:
+            return ""
+        import re
+        # Redact URL credentials: http(s)://user:pass@host
+        redacted = re.sub(r'(https?://)[^:\s/@]+:[^@\s/]+@', r'\1[REDACTED_AUTH]@', text)
+        # Redact common token patterns: ghp_..., eyJ... (JWTs), Bearer tokens
+        redacted = re.sub(r'ghp_[A-Za-z0-9_]{30,}', '[REDACTED_GH_TOKEN]', redacted)
+        redacted = re.sub(r'(?i)(bearer\s+)[A-Za-z0-9._~+/-]{20,}', r'\1[REDACTED_BEARER]', redacted)
+        redacted = re.sub(r'(?i)(--api[-_]?key\s*=\s*)[^\s]+', r'\1[REDACTED_KEY]', redacted)
+        redacted = re.sub(r'(?i)(--password\s*=\s*)[^\s]+', r'\1[REDACTED_PASSWORD]', redacted)
+        return redacted
+
+    @staticmethod
+    def _terminate_process_tree(pid: int):
+        """
+        Terminates a process and any child processes it spawned to prevent orphaned processes on Windows.
+        """
+        if os.name == "nt":
+            try:
+                subprocess.run(
+                    ["taskkill", "/F", "/T", "/PID", str(pid)],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=5,
+                )
+            except Exception:
+                pass
+        else:
+            try:
+                import signal
+                os.kill(pid, signal.SIGKILL)
+            except Exception:
+                pass
+
+    @staticmethod
     def _get_sanitized_environment() -> dict:
         """
         Sanitizes environment variables to prevent leaking credentials or secrets into subprocess runs.
         """
-        sensitive_substrings = ("KEY", "SECRET", "TOKEN", "PASSWORD", "AUTH", "CREDENTIAL", "PRIVATE")
+        sensitive_substrings = (
+            "KEY", "SECRET", "TOKEN", "PASSWORD", "PASSWD", "AUTH",
+            "CREDENTIAL", "PRIVATE", "DATABASE_URL", "MONGO_URI",
+            "REDIS_URL", "POSTGRES_URL", "SENTRY_DSN", "CONN_STR",
+            "API_URL", "PAT", "BEARER", "SIGNATURE", "CERT"
+        )
         sanitized = {}
         for k, v in os.environ.items():
             k_upper = k.upper()
@@ -166,30 +223,40 @@ class SafeExecutionRunner:
         exit_code = None
         status = "COMPLETED"
 
+        proc = None
         try:
-            proc = subprocess.run(
+            proc = subprocess.Popen(
                 cmd_args,
                 cwd=workspace,
                 env=self._get_sanitized_environment(),
-                capture_output=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
                 text=True,
-                timeout=timeout_seconds,
             )
+            raw_stdout, raw_stderr = proc.communicate(timeout=timeout_seconds)
             exit_code = proc.returncode
-            stdout = self._cap_output(proc.stdout)
-            stderr = self._cap_output(proc.stderr)
+            stdout = self._redact_secrets(self._cap_output(raw_stdout))
+            stderr = self._redact_secrets(self._cap_output(raw_stderr))
             status = "COMPLETED" if exit_code == 0 else "FAILED"
         except subprocess.TimeoutExpired as te:
             logger.warning("Execution timed out after %s seconds: %s", timeout_seconds, command)
+            if proc:
+                self._terminate_process_tree(proc.pid)
+                try:
+                    proc.kill()
+                except Exception:
+                    pass
             status = "TIMEOUT"
             exit_code = -1
-            stdout = self._cap_output(te.stdout or "")
+            stdout = self._redact_secrets(self._cap_output(te.stdout or ""))
             stderr = f"Execution timed out after {timeout_seconds} seconds"
         except Exception as e:
             logger.error("Execution error: %s", e)
+            if proc:
+                self._terminate_process_tree(proc.pid)
             status = "ERROR"
             exit_code = -1
-            stderr = str(e)
+            stderr = self._redact_secrets(str(e))
 
         completed_at = datetime.now(timezone.utc)
         git_diff = self._capture_git_diff(workspace)

@@ -83,6 +83,14 @@ def test_state_update(temp_db):
     assert updated.approved_at is not None
 
 def test_plan_persistence(temp_db):
+    task = Task(
+        id="task-plan-store",
+        title="Plan storage test",
+        description="Task for plan testing",
+        acceptance_criteria=[],
+    )
+    temp_db.save_task(task)
+
     plan = TaskPlan(
         task_id="task-plan-store",
         task_summary="Plan summary",
@@ -106,6 +114,14 @@ def test_plan_persistence(temp_db):
     assert loaded.steps[0].action == "Step 1"
 
 def test_execution_run_and_evidence_history(temp_db):
+    task = Task(
+        id="task-history-01",
+        title="History test",
+        description="Task for history testing",
+        acceptance_criteria=[],
+    )
+    temp_db.save_task(task)
+
     ev = EvidenceItem(
         criterion_id="AC-1",
         evidence_type=EvidenceType.COMMAND_EXIT_CODE,
@@ -131,6 +147,14 @@ def test_execution_run_and_evidence_history(temp_db):
     assert loaded_run.evidence_items[0].exit_code == 0
 
 def test_verification_and_diagnosis_persistence(temp_db):
+    task = Task(
+        id="task-verif-01",
+        title="Verif test",
+        description="Task for verif testing",
+        acceptance_criteria=[],
+    )
+    temp_db.save_task(task)
+
     verif = VerificationResult(
         task_id="task-verif-01",
         verdict=VerificationVerdict.FAILED,

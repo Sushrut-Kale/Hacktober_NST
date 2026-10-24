@@ -47,12 +47,24 @@ class EvidenceCollector:
     @staticmethod
     def validate_repo_path(repo_path: str) -> str:
         """
-        Validates that a repository directory exists and is a valid directory.
+        Validates that a repository directory exists and is a valid directory,
+        rejecting null bytes, network UNC shares, and DOS device names.
         """
         if not repo_path or not isinstance(repo_path, str):
             raise ValueError("Repository path must be a non-empty string.")
+        if "\0" in repo_path:
+            raise ValueError("Repository path contains invalid null bytes.")
 
-        abs_path = os.path.abspath(repo_path)
+        raw_path = repo_path.strip()
+        if raw_path.startswith(("\\\\", "//")):
+            raise ValueError("Network UNC paths are not permitted for repository paths.")
+
+        base_name = os.path.basename(raw_path).split(".")[0].upper()
+        reserved_devices = {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10))}
+        if base_name in reserved_devices:
+            raise ValueError(f"Reserved device name '{base_name}' is not a valid repository path.")
+
+        abs_path = os.path.realpath(os.path.abspath(raw_path))
         if not os.path.exists(abs_path):
             raise ValueError(f"Repository path does not exist: {abs_path}")
         if not os.path.isdir(abs_path):
@@ -243,29 +255,43 @@ class EvidenceCollector:
                 passed=False,
             )
 
+        proc = None
         try:
-            sensitive_substrings = ("KEY", "SECRET", "TOKEN", "PASSWORD", "AUTH", "CREDENTIAL", "PRIVATE")
+            import re
+            sensitive_substrings = (
+                "KEY", "SECRET", "TOKEN", "PASSWORD", "PASSWD", "AUTH",
+                "CREDENTIAL", "PRIVATE", "DATABASE_URL", "MONGO_URI",
+                "REDIS_URL", "POSTGRES_URL", "SENTRY_DSN", "CONN_STR",
+                "API_URL", "PAT", "BEARER", "SIGNATURE", "CERT"
+            )
             sanitized_env = {
                 k: v for k, v in os.environ.items()
                 if not any(sens in k.upper() for sens in sensitive_substrings)
             }
 
-            proc = subprocess.run(
+            proc = subprocess.Popen(
                 command,
                 cwd=valid_cwd,
                 env=sanitized_env,
-                capture_output=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
                 text=True,
-                timeout=timeout_seconds,
-                shell=False,
             )
-            raw_output = (proc.stdout or "") + ("\n" + proc.stderr if proc.stderr else "")
+            raw_stdout, raw_stderr = proc.communicate(timeout=timeout_seconds)
+            raw_output = (raw_stdout or "") + ("\n" + raw_stderr if raw_stderr else "")
             max_bytes = 512 * 1024
             encoded = raw_output.encode("utf-8", errors="replace")
             if len(encoded) > max_bytes:
                 output = encoded[:max_bytes].decode("utf-8", errors="replace") + "\n\n[TRUNCATED: Output exceeded 512 KB limit]"
             else:
                 output = raw_output
+
+            # Redact secrets from output
+            output = re.sub(r'(https?://)[^:\s/@]+:[^@\s/]+@', r'\1[REDACTED_AUTH]@', output)
+            output = re.sub(r'ghp_[A-Za-z0-9_]{30,}', '[REDACTED_GH_TOKEN]', output)
+            output = re.sub(r'(?i)(bearer\s+)[A-Za-z0-9._~+/-]{20,}', r'\1[REDACTED_BEARER]', output)
+            output = re.sub(r'(?i)(--api[-_]?key\s*=\s*)[^\s]+', r'\1[REDACTED_KEY]', output)
+            output = re.sub(r'(?i)(--password\s*=\s*)[^\s]+', r'\1[REDACTED_PASSWORD]', output)
 
             return EvidenceItem(
                 criterion_id=criterion_id,
@@ -275,6 +301,14 @@ class EvidenceCollector:
                 passed=(proc.returncode == 0),
             )
         except subprocess.TimeoutExpired:
+            if proc:
+                try:
+                    if os.name == "nt":
+                        subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5)
+                    else:
+                        proc.kill()
+                except Exception:
+                    pass
             return EvidenceItem(
                 criterion_id=criterion_id,
                 evidence_type=EvidenceType.COMMAND_EXIT_CODE,
@@ -283,6 +317,14 @@ class EvidenceCollector:
                 passed=False,
             )
         except Exception as exc:
+            if proc:
+                try:
+                    if os.name == "nt":
+                        subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5)
+                    else:
+                        proc.kill()
+                except Exception:
+                    pass
             return EvidenceItem(
                 criterion_id=criterion_id,
                 evidence_type=EvidenceType.LOG_OUTPUT,
