@@ -9,6 +9,18 @@ from backend.app.schemas.core import (
     ExecutionClaim,
     RuleEvaluation,
     VerificationResult,
+    ClaimVsRealityReport,
+    EvidenceCollectionRequest,
+)
+from backend.app.schemas.project import (
+    AnalysisStatus,
+    ProjectCreate,
+    ProjectResponse,
+)
+from backend.app.schemas.task import (
+    TaskCreate,
+    TaskResponse,
+    TaskStatus,
 )
 
 __all__ = [
@@ -22,4 +34,12 @@ __all__ = [
     "ExecutionClaim",
     "RuleEvaluation",
     "VerificationResult",
+    "ClaimVsRealityReport",
+    "EvidenceCollectionRequest",
+    "AnalysisStatus",
+    "ProjectCreate",
+    "ProjectResponse",
+    "TaskCreate",
+    "TaskResponse",
+    "TaskStatus",
 ]
