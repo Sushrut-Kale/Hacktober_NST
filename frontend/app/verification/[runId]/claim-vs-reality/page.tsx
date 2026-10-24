@@ -10,15 +10,11 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import {
-  Scale,
-  Bot,
-  ShieldCheck,
   AlertTriangle,
   CheckCircle2,
   XCircle,
   FileCode,
   ArrowLeft,
-  Sparkles,
   RefreshCw,
   FileText,
   Info,
@@ -115,9 +111,8 @@ export default function ClaimVsRealityPage() {
                 Core Invariant Evaluation
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#F1F4F8] mt-1 flex items-center gap-2.5">
-              <Scale className="w-7 h-7 text-[#58AAE1]" />
-              <span>Claim vs Reality</span>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#F1F4F8] mt-1">
+              Claim vs Reality
             </h1>
           </div>
         </div>
@@ -158,10 +153,9 @@ export default function ClaimVsRealityPage() {
         {/* ============================================================ */}
         <div className="space-y-4">
           <div className="flex items-center justify-between px-1">
-            <div className="flex items-center gap-2 text-sm font-bold text-[#9EDCFF]">
-              <Bot className="w-5 h-5 text-[#58AAE1]" />
-              <span>Agent Claim</span>
-            </div>
+            <h2 className="text-sm font-bold text-[#9EDCFF] uppercase tracking-wider font-mono">
+              Agent Claim
+            </h2>
             <span className="text-[11px] font-mono text-[#9EDCFF] bg-[#58AAE1]/10 px-2 py-0.5 rounded border border-[#58AAE1]/20">
               Self-Reported Message
             </span>
@@ -248,10 +242,9 @@ export default function ClaimVsRealityPage() {
         {/* ============================================================ */}
         <div className="space-y-4">
           <div className="flex items-center justify-between px-1">
-            <div className="flex items-center gap-2 text-sm font-bold text-[#58AAE1]">
-              <ShieldCheck className="w-5 h-5 text-[#58AAE1]" />
-              <span>Observed Evidence</span>
-            </div>
+            <h2 className="text-sm font-bold text-[#58AAE1] uppercase tracking-wider font-mono">
+              Observed Evidence
+            </h2>
             <span className="text-[11px] font-mono text-[#58AAE1] bg-[#58AAE1]/10 px-2 py-0.5 rounded border border-[#58AAE1]/20">
               Deterministic Facts
             </span>
@@ -430,12 +423,9 @@ export default function ClaimVsRealityPage() {
       {suggested_correction && (
         <Card borderVariant="brand" className="p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-[#58AAE1]" />
-              <h2 className="text-base font-bold text-[#F1F4F8]">
-                Deterministic Suggested Correction (Gemma 4)
-              </h2>
-            </div>
+            <h2 className="text-base font-bold text-[#F1F4F8]">
+              Deterministic Suggested Correction (Gemma 4)
+            </h2>
             <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-[#58AAE1]/10 text-[#9EDCFF] border border-[#58AAE1]/20">
               Automated Patch Recommendation
             </span>
