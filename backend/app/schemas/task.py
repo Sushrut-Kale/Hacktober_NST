@@ -68,3 +68,25 @@ class TaskStatusUpdate(BaseModel):
     """Request body for PATCH /api/tasks/{task_id}/status."""
 
     status: TaskStatus = Field(..., description="The target status to transition the task into.")
+
+
+class TaskExecuteRequest(BaseModel):
+    """Request body for POST /api/tasks/{task_id}/execute."""
+
+    test_command: Optional[List[str]] = Field(default=None, description="Optional whitelisted verification command to run")
+    repo_path: Optional[str] = Field(default=None, description="Target repository directory path")
+    timeout_seconds: Optional[float] = Field(default=30.0, ge=1.0, le=120.0, description="Execution timeout in seconds")
+
+
+class TaskExecuteResponse(BaseModel):
+    """Response body for POST /api/tasks/{task_id}/execute."""
+
+    task_id: str
+    status: str
+    execution_mode: str
+    command: Optional[List[str]] = None
+    exit_code: Optional[int] = None
+    stdout: Optional[str] = None
+    evidence: List[Any] = Field(default_factory=list)
+    message: str
+

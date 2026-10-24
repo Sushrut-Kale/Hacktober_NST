@@ -314,3 +314,92 @@ def test_unapproved_task_cannot_execute_database_state_immutable(client):
     assert db_check3.status_code == 200
     assert db_check3.json()["status"] == "IN_PROGRESS"
 
+
+# ===========================================================================
+# POST /api/tasks/{task_id}/execute tests
+# ===========================================================================
+
+def test_execute_endpoint_rejects_unapproved_task(client):
+    """POST /api/tasks/{id}/execute rejects unapproved (PLANNED) task with 409 Conflict."""
+    _, tid = _setup_project_and_task(client)
+
+    resp = client.post(f"/api/tasks/{tid}/execute", json={})
+    assert resp.status_code == 409
+    assert "PLANNED" in resp.json()["detail"] or "approval" in resp.json()["detail"].lower()
+
+    # Confirm database state is still PLANNED
+    get_resp = client.get(f"/api/tasks/{tid}")
+    assert get_resp.json()["status"] == "PLANNED"
+
+
+def test_execute_endpoint_allows_approved_task(client):
+    """POST /api/tasks/{id}/execute succeeds after approval (PENDING_APPROVAL)."""
+    _, tid = _setup_project_and_task(client)
+    _transition(client, tid, "PENDING_APPROVAL")
+
+    resp = client.post(f"/api/tasks/{tid}/execute", json={})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["task_id"] == tid
+    assert data["status"] == "IN_PROGRESS"
+    assert data["execution_mode"] in ("LOCAL_SAFE_RUNNER", "ANTIGRAVITY_AGENT")
+
+
+def test_execute_endpoint_runs_command_and_records_failure(client, tmp_path):
+    """POST /api/tasks/{id}/execute runs command, records exit code != 0, updates task to FAILED."""
+    _, tid = _setup_project_and_task(client)
+    _transition(client, tid, "PENDING_APPROVAL")
+
+    resp = client.post(
+        f"/api/tasks/{tid}/execute",
+        json={
+            "test_command": ["python", "-c", "import sys; sys.exit(2)"],
+            "repo_path": str(tmp_path),
+        },
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["exit_code"] == 2
+    assert data["status"] == "FAILED"
+
+    # Confirmed in database
+    get_resp = client.get(f"/api/tasks/{tid}")
+    assert get_resp.json()["status"] == "FAILED"
+
+
+def test_execute_endpoint_runs_command_and_records_success(client, tmp_path):
+    """POST /api/tasks/{id}/execute runs passing command, captures stdout, status remains IN_PROGRESS."""
+    _, tid = _setup_project_and_task(client)
+    _transition(client, tid, "PENDING_APPROVAL")
+
+    resp = client.post(
+        f"/api/tasks/{tid}/execute",
+        json={
+            "test_command": ["python", "-c", "print('EXEC_SUCCESS')"],
+            "repo_path": str(tmp_path),
+        },
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["exit_code"] == 0
+    assert "EXEC_SUCCESS" in data["stdout"]
+    assert data["status"] == "IN_PROGRESS"
+
+
+def test_execute_endpoint_blocks_disallowed_command(client, tmp_path):
+    """POST /api/tasks/{id}/execute blocks non-allowlisted binaries (bash/curl/etc)."""
+    _, tid = _setup_project_and_task(client)
+    _transition(client, tid, "PENDING_APPROVAL")
+
+    resp = client.post(
+        f"/api/tasks/{tid}/execute",
+        json={
+            "test_command": ["bash", "-c", "echo blocked"],
+            "repo_path": str(tmp_path),
+        },
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["exit_code"] == -1
+    assert "Execution blocked" in data["stdout"]
+

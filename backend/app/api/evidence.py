@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -15,15 +15,18 @@ from backend.app.schemas.core import (
     EvidenceItem,
     ClaimVsRealityReport,
     EvidenceCollectionRequest,
+    VerificationResult,
 )
 from backend.app.services.evidence_collector import EvidenceCollector
 from backend.app.services.verification_engine import DeterministicVerificationEngine
+from backend.app.services.gemma_service import GemmaService
 
 logger = logging.getLogger("vikasa.api.evidence")
 
 router = APIRouter()
 collector = EvidenceCollector()
 engine = DeterministicVerificationEngine()
+gemma_service = GemmaService()
 
 
 class VerifyClaimVsRealityRequest(BaseModel):
@@ -129,3 +132,24 @@ def verify_repository_claim(
         timeout_seconds=payload.timeout_seconds or 30.0,
     )
     return report
+
+
+class DiagnoseFailureRequest(BaseModel):
+    task: Task
+    verification_result: VerificationResult
+
+
+@router.post(
+    "/diagnose",
+    status_code=status.HTTP_200_OK,
+    summary="Diagnose verification failure and suggest evidence-based corrections",
+    description="Uses Gemma (or structured deterministic fallback) to explain verification discrepancies.",
+)
+async def diagnose_failure(
+    payload: DiagnoseFailureRequest,
+) -> Dict[str, Any]:
+    """Provide AI / evidence-based failure explanation and corrective suggestions."""
+    return await gemma_service.explain_verification_failure(
+        task=payload.task,
+        verification_result=payload.verification_result,
+    )
