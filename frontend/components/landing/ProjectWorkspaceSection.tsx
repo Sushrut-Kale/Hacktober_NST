@@ -4,12 +4,9 @@ import React from "react";
 import Link from "next/link";
 import { useProject } from "@/hooks/useProject";
 import {
-  FolderGit2,
   GitBranch,
   ArrowRight,
   Plus,
-  Code2,
-  Layers,
   ChevronRight,
 } from "lucide-react";
 import { RevealOnScroll } from "./RevealOnScroll";

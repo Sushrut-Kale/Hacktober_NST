@@ -54,7 +54,7 @@ export function Card({
   return (
     <div
       className={`relative rounded-xl border overflow-hidden transition-all duration-200 ${
-        lift ? "card-lift" : ""
+        lift ? "card-lift" : "hover:border-white/20"
       } ${className}`}
       style={borderStyles[borderVariant]}
       {...props}

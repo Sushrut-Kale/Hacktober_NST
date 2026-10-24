@@ -2,14 +2,17 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useProject } from "@/hooks/useProject";
 import { api } from "@/lib/api";
 import { Task, ExecutionEvent } from "@/lib/types";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { formatDate } from "@/lib/formatters";
 import {
+  CheckSquare,
   CheckCircle2,
   XCircle,
   Clock,
@@ -129,6 +132,7 @@ function StatCard({
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const { currentProject, isMockMode, isBackendOnline } = useProject();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [events, setEvents] = useState<ExecutionEvent[]>([]);
@@ -359,6 +363,14 @@ export default function DashboardPage() {
                   style={{ border: "1px solid rgba(255, 255, 255, 0.08)" }}
                 />
               ))
+            ) : tasks.length === 0 ? (
+              <EmptyState
+                icon={CheckSquare}
+                title="No Active Tasks"
+                description="There are no active tasks registered in the current project workspace. Create a task to start autonomous development with deterministic verification."
+                actionLabel="Create Task"
+                onAction={() => router.push("/tasks/new")}
+              />
             ) : (
               tasks.map((task) => (
                 <Card key={task.id} lift className="p-4 group">
@@ -442,11 +454,16 @@ export default function DashboardPage() {
                 marginLeft: "4px",
               }}
             >
-              {loading
-                ? Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="h-10 rounded shimmer" />
-                  ))
-                : events.slice(0, 5).map((evt) => (
+              {loading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="h-10 rounded shimmer" />
+                ))
+              ) : events.length === 0 ? (
+                <div className="py-8 text-center text-xs text-[#718198] font-mono">
+                  No execution audit events recorded yet.
+                </div>
+              ) : (
+                events.slice(0, 5).map((evt) => (
                     <div key={evt.id} className="relative text-xs">
                       <span
                         className="absolute -left-[25px] top-1 w-2.5 h-2.5 rounded-full border-2"

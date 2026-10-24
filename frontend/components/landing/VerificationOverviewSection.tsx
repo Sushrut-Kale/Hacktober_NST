@@ -3,14 +3,8 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import {
-  Scale,
-  Bot,
-  ShieldCheck,
   CheckCircle2,
-  Terminal,
   ArrowRight,
-  Sparkles,
-  Check,
   ExternalLink,
 } from "lucide-react";
 import { RevealOnScroll } from "./RevealOnScroll";

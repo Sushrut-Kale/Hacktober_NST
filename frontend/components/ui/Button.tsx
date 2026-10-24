@@ -27,7 +27,7 @@ export function Button({
   ...props
 }: ButtonProps) {
   const baseClasses =
-    "inline-flex items-center justify-center font-semibold transition-all duration-200 rounded-xl cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed select-none whitespace-nowrap";
+    "inline-flex items-center justify-center font-semibold transition-all duration-200 rounded-xl cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed select-none whitespace-nowrap hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99]";
 
   const sizeClasses = {
     sm: "px-3 py-1.5 text-xs gap-1.5",

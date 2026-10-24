@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { ShieldCheck, GitBranch, Terminal, ExternalLink } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 
 export function LandingFooter() {
   return (
