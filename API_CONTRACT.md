@@ -177,7 +177,18 @@ Retrieves task with its associated plan, latest execution run, latest verificati
   "plan": { ... },
   "latest_run": { ... },
   "latest_verification": { ... },
-  "latest_diagnosis": { ... }
+  "latest_diagnosis": { ... },
+  "events": [
+    {
+      "id": "evt-12345",
+      "task_id": "task-user-auth",
+      "run_id": null,
+      "event_type": "TASK_CREATED",
+      "message": "Task 'task-user-auth' created in state 'CREATED'.",
+      "details": {},
+      "timestamp": "2026-10-24T12:00:00Z"
+    }
+  ]
 }
 ```
 * **Error (`404 Not Found`):** `{"detail": "Task 'xyz' not found."}`
@@ -442,3 +453,32 @@ All errors return JSON with the standard FastAPI format: `{"detail": "<error_mes
 | `400 Bad Request` | Malformed body, invalid workspace, or forbidden shell metacharacter. | `{"detail": "Forbidden shell separator ';' detected"}` |
 | `404 Not Found` | Requested task or run does not exist. | `{"detail": "Task 'task-xyz' not found."}` |
 | `409 Conflict` | Illegal state machine transition. | `{"detail": "Cannot execute task 't1' in state 'PLANNED'. Explicit user approval is required."}` |
+
+---
+
+## 4. CORS Configuration & Frontend Connectivity
+
+The FastAPI backend has CORS enabled with regex pattern matching:
+* **Allowed Origins:** Any `http://localhost:*` or `http://127.0.0.1:*` (e.g. Vite on `5173`, Next.js on `3000`).
+* **Credentials:** Supported (`allow_credentials=True`).
+* **Allowed Methods:** `GET`, `POST`, `OPTIONS`, `PUT`, `DELETE`.
+* **Allowed Headers:** All headers (`*`).
+
+Frontend clients can connect directly to `http://localhost:8000` or configure a reverse proxy via Vite (`vite.config.ts`) or Next.js (`next.config.js`).
+
+---
+
+## 5. UI Screen to API Endpoint Mapping Guide
+
+| UI Dashboard Component | Backend Endpoint | Key Response Fields to Render |
+|---|---|---|
+| **Task List** | `GET /api/tasks` | `id`, `title`, `state`, `created_at` |
+| **Task Detail View** | `GET /api/tasks/{task_id}` | `task`, `plan`, `latest_run`, `latest_verification`, `latest_diagnosis`, `events` |
+| **Plan Generator & Review** | `POST /api/tasks/{task_id}/plan` | `steps`, `acceptance_criteria`, `files_to_inspect`, `tests_to_run`, `generator_status` |
+| **Approval Gate Action** | `POST /api/tasks/{task_id}/approve` | Enables Execute button only when `state == "APPROVED"` |
+| **Execution Trigger & Terminal** | `POST /api/tasks/{task_id}/execute` | `run_id`, `command`, `exit_code`, `stdout`, `stderr`, `git_diff_output`, `status` |
+| **Verification & Confidence Badge** | `POST /api/tasks/{task_id}/verify` | `verdict` (`VERIFIED`, `FAILED`, `REVIEW_REQUIRED`), `confidence_score` (0.0–1.0), `rule_evaluations` |
+| **Failure Diagnosis Panel** | `latest_diagnosis` on `TaskDetail` | `root_cause`, `evidence_grounding`, `recommended_actions`, `suggested_patch` |
+| **Audit Timeline** | `events` array on `TaskDetail` or `RunReport` | `timestamp`, `event_type`, `message`, `details` |
+| **System Health Status Bar** | `GET /health`, `GET /api/health/ollama`, `GET /api/health/antigravity` | Model readiness, Ollama status, Antigravity adapter status |
+

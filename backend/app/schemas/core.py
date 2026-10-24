@@ -176,6 +176,7 @@ class TaskDetail(BaseModel):
     latest_run: Optional[ExecutionRun] = None
     latest_verification: Optional[VerificationResult] = None
     latest_diagnosis: Optional[FailureDiagnosis] = None
+    events: List[ExecutionEvent] = Field(default_factory=list)
 
 class PlanRequest(BaseModel):
     task: Task

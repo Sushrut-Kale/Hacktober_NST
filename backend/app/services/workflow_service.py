@@ -197,6 +197,12 @@ class WorkflowService:
                 f"Cannot execute task '{task_id}' in state '{task.state.value}'. Explicit user approval is required."
             )
 
+        # Pre-validate workspace and command BEFORE transitioning task state to RUNNING.
+        # This prevents leaving the task stuck in RUNNING if the command is malformed or forbidden.
+        workspace = task.workspace_path or self.runner.default_workspace
+        self.runner.validate_workspace(workspace)
+        self.runner.validate_command(command)
+
         # Transition to RUNNING
         self.transition_task_state(task, TaskState.RUNNING)
 
@@ -210,7 +216,6 @@ class WorkflowService:
         )
 
         # Run command safely
-        workspace = task.workspace_path or self.runner.default_workspace
         run = self.runner.execute_command(
             task_id=task.id,
             command=command,
@@ -328,6 +333,7 @@ class WorkflowService:
             latest_run=self.repo.get_latest_execution_run(task_id),
             latest_verification=self.repo.get_latest_verification(task_id),
             latest_diagnosis=self.repo.get_latest_diagnosis(task_id),
+            events=self.repo.list_events(task_id),
         )
 
     def get_run_report(self, run_id: str) -> RunReport:
@@ -345,7 +351,7 @@ class WorkflowService:
         verifications = self.repo.list_verifications(run.task_id)
         matched_verification = next((v for v in reversed(verifications) if v.run_id == run_id), None)
         latest_diagnosis = self.repo.get_latest_diagnosis(run.task_id)
-        events = [e for e in self.repo.list_events(run.task_id) if e.run_id == run_id]
+        events = [e for e in self.repo.list_events(run.task_id) if e.run_id == run_id or e.run_id is None]
 
         return RunReport(
             run=run,
