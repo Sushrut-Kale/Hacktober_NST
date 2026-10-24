@@ -325,3 +325,36 @@ def test_evidence_collect_endpoint(tmp_path):
     assert isinstance(items, list)
     assert any(i["evidence_type"] == "COMMAND_EXIT_CODE" and i["exit_code"] == 0 for i in items)
 
+def test_verify_diagnose_endpoint():
+    """POST /api/verify/diagnose provides evidence-based failure explanation and corrective suggestions."""
+    payload = {
+        "task": {
+            "id": "t-diag",
+            "title": "Diagnose Test Task",
+            "description": "Fix bug in calculation",
+            "acceptance_criteria": [{"id": "AC1", "description": "Tests pass", "required": True}]
+        },
+        "verification_result": {
+            "task_id": "t-diag",
+            "verdict": "FAIL",
+            "confidence_score": 0.0,
+            "summary": "1 failed command execution",
+            "raw_evidence_count": 1,
+            "rule_evaluations": [
+                {
+                    "rule_name": "CommandExitCodeCheck",
+                    "passed": False,
+                    "verdict_impact": "FAIL",
+                    "message": "Command exited with status 1."
+                }
+            ]
+        }
+    }
+    response = client.post("/api/verify/diagnose", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["task_id"] == "t-diag"
+    assert data["verdict"] == "FAIL"
+    assert data["failed_rule_count"] == 1
+    assert "ai_explanation" in data
+

@@ -131,7 +131,7 @@ class TaskPlan(BaseModel):
 class EvidenceItem(BaseModel):
     criterion_id: Optional[str] = None
     evidence_type: EvidenceType
-    content: str
+    content: Optional[str] = ""
     exit_code: Optional[int] = None
     file_path: Optional[str] = None
     passed: Optional[bool] = None

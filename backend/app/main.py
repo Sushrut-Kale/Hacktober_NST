@@ -409,3 +409,17 @@ async def diagnose_failure(payload: FailureDiagnosisRequest) -> FailureDiagnosis
 # Include integrated project and evidence routers
 app.include_router(projects_router, prefix="/api/projects", tags=["projects"])
 app.include_router(evidence_router, prefix="/api/verify", tags=["verification"])
+
+# Mount frontend web application static files if present
+import os
+from fastapi.staticfiles import StaticFiles
+
+frontend_dir = os.path.abspath(
+    os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend")
+)
+if not os.path.exists(frontend_dir):
+    frontend_dir = os.path.abspath("frontend")
+
+if os.path.exists(frontend_dir):
+    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
+
