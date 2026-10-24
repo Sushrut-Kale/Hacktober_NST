@@ -25,48 +25,41 @@ export interface NavSection {
 
 export const NAVIGATION_SECTIONS: NavSection[] = [
   {
-    title: "Overview",
+    title: "Workspace",
     items: [
       { name: "Dashboard", href: "/dashboard", iconName: "LayoutDashboard" },
-    ],
-  },
-  {
-    title: "Projects",
-    items: [
       { name: "All Projects", href: "/projects", iconName: "FolderGit2" },
-      { name: "Add Project", href: "/projects/new", iconName: "FolderPlus" },
     ],
   },
   {
-    title: "Tasks & Executions",
+    title: "Development",
     items: [
-      { name: "Tasks Board", href: "/tasks", iconName: "CheckSquare" },
-      { name: "Create Task", href: "/tasks/new", iconName: "PlusCircle" },
+      { name: "Tasks", href: "/tasks", iconName: "CheckSquare" },
       { name: "Executions", href: "/executions", iconName: "Terminal" },
     ],
   },
   {
-    title: "Verification & Evidence",
+    title: "Verification",
     items: [
       {
         name: "Claim vs Reality",
-        href: "/verification/run-b8f3e21a/claim-vs-reality",
+        href: "/verification",
         iconName: "Scale",
         badge: "CORE",
       },
       {
         name: "Verification Results",
-        href: "/verification/run-b8f3e21a",
+        href: "/verification",
         iconName: "ShieldCheck",
       },
       {
-        name: "Failure Explanation",
-        href: "/verification/run-auth-failed/failure",
+        name: "Failure Diagnosis",
+        href: "/verification",
         iconName: "AlertTriangle",
       },
       {
-        name: "Replay Run",
-        href: "/executions/run-b8f3e21a/replay",
+        name: "Replay Runs",
+        href: "/executions",
         iconName: "History",
       },
       {
@@ -77,10 +70,10 @@ export const NAVIGATION_SECTIONS: NavSection[] = [
     ],
   },
   {
-    title: "Reports & Transparency",
+    title: "Reports",
     items: [
       { name: "Run Reports", href: "/reports", iconName: "FileText" },
-      { name: "Model Transparency", href: "/model", iconName: "Cpu" },
+      { name: "Audit History", href: "/model", iconName: "Cpu" },
     ],
   },
   {
@@ -90,6 +83,7 @@ export const NAVIGATION_SECTIONS: NavSection[] = [
     ],
   },
 ];
+
 
 export const STATUS_CONFIG: Record<
   VerificationVerdict | TaskState | ExecutionStatus,
