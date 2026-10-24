@@ -23,6 +23,8 @@ from backend.app.schemas.core import (
     TaskExecuteRequest,
     ExecutionRun,
     ExecutionEvent,
+    EvidenceItem,
+    EvidenceType,
     RunReport,
     TaskDetail,
     ClaimVsRealityReport,
@@ -451,6 +453,18 @@ async def execute_task_route(
             except Exception:
                 cmd = req.command.split()
 
+        crit_id = req.criterion_id
+        if not crit_id and repo_task and repo_task.acceptance_criteria:
+            crit_id = repo_task.acceptance_criteria[0].id
+        elif not crit_id and rec and rec.acceptance_criteria:
+            try:
+                import json
+                parsed_c = json.loads(rec.acceptance_criteria) if isinstance(rec.acceptance_criteria, str) else rec.acceptance_criteria
+                if isinstance(parsed_c, list) and len(parsed_c) > 0:
+                    crit_id = parsed_c[0].get("id")
+            except Exception:
+                pass
+
         import uuid
         run_id = f"run-{uuid.uuid4().hex[:8]}"
         evidence_items = []
@@ -462,6 +476,7 @@ async def execute_task_route(
             cmd_item = collector.execute_test_command(
                 command=cmd,
                 cwd=target_dir,
+                criterion_id=crit_id,
                 timeout_seconds=req.timeout_seconds or 30.0,
             )
             evidence_items.append(cmd_item)
@@ -479,6 +494,24 @@ async def execute_task_route(
                     repo_task.state = TaskState.FAILED
                     db_repo.save_task(repo_task)
 
+        git_diff_text = None
+        try:
+            import subprocess
+            is_git = subprocess.run(
+                ["git", "rev-parse", "--is-inside-work-tree"],
+                cwd=target_dir,
+                capture_output=True,
+                timeout=5,
+            ).returncode == 0
+            if is_git:
+                git_items = collector.collect_git_evidence(target_dir, criterion_id=crit_id)
+                for gi in git_items:
+                    evidence_items.append(gi)
+                    if gi.evidence_type == EvidenceType.GIT_DIFF and gi.content:
+                        git_diff_text = gi.content
+        except Exception:
+            pass
+
         run_obj = ExecutionRun(
             run_id=run_id,
             task_id=task_id,
@@ -488,6 +521,7 @@ async def execute_task_route(
             stdout=output_text,
             stderr="",
             source=execution_mode,
+            git_diff=git_diff_text,
             evidence_items=evidence_items,
             evidence=evidence_items,
             execution_mode=execution_mode,
