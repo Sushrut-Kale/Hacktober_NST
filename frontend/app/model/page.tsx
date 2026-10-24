@@ -4,21 +4,11 @@ import React, { useEffect, useState } from "react";
 import { useProject } from "@/hooks/useProject";
 import { api } from "@/lib/api";
 import { ModelTransparencyInfo } from "@/lib/types";
-import { Card, CardHeader, CardContent } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { ModelChip } from "@/components/ui/ModelChip";
-import { formatDate } from "@/lib/formatters";
 import {
-  Cpu,
-  Server,
-  Activity,
-  Layers,
-  AlertTriangle,
-  CheckCircle2,
   RefreshCw,
-  ExternalLink,
-  Shield,
   Info,
 } from "lucide-react";
 
@@ -58,7 +48,7 @@ export default function ModelTransparencyPage() {
 
   if (loading || !modelInfo) {
     return (
-      <div className="p-12 text-center text-slate-400">
+      <div className="p-12 text-center text-[#718198] font-mono text-sm">
         Querying local model and runtime diagnostics...
       </div>
     );
@@ -70,12 +60,12 @@ export default function ModelTransparencyPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-white">
+            <h1 className="text-2xl font-bold tracking-tight text-[#F1F4F8]">
               Model & Runtime Transparency
             </h1>
             <ModelChip status={modelStatus} modelName={modelInfo.model_id} />
           </div>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-[#718198] mt-1">
             Deterministic telemetry for local Gemma 4 inference, Ollama runtime, and Antigravity SDK
           </p>
         </div>
@@ -92,47 +82,47 @@ export default function ModelTransparencyPage() {
       </div>
 
       {/* Model Transparency Invariant Alert */}
-      <div className="p-4 rounded-xl border border-sky-500/20 bg-sky-500/5 text-xs text-slate-300 flex items-start gap-3">
-        <Info className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+      <div className="p-4 rounded-xl border border-[#58AAE1]/20 bg-[#58AAE1]/10 text-xs text-[#A4B2C5] flex items-start gap-3">
+        <Info className="w-4 h-4 text-[#58AAE1] shrink-0 mt-0.5" />
         <div>
-          <strong className="text-sky-300">Transparency Invariant:</strong> VIKASA never pretends an AI model is running locally when it is unreachable or times out. When Ollama is stopped or unreachable, the system explicitly marks the status as <code>FALLBACK_ACTIVE</code> or <code>AI_UNAVAILABLE</code> and falls back to deterministic rule generation.
+          <strong className="text-[#9EDCFF]">Transparency Invariant:</strong> VIKASA never pretends an AI model is running locally when it is unreachable or times out. When Ollama is stopped or unreachable, the system explicitly marks the status as <code>FALLBACK_ACTIVE</code> or <code>AI_UNAVAILABLE</code> and falls back to deterministic rule generation.
         </div>
       </div>
 
       {/* Telemetry Overview Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase">
+          <div className="text-[10px] font-bold text-[#718198] uppercase font-mono">
             Model Engine
           </div>
-          <div className="text-lg font-bold font-mono text-white mt-1">
+          <div className="text-lg font-bold font-mono text-[#F1F4F8] mt-1">
             {modelInfo.model_id}
           </div>
-          <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+          <div className="text-[10px] text-[#718198] font-mono mt-0.5">
             Quantization: {modelInfo.quantization || "Q4_K_M"}
           </div>
         </Card>
 
         <Card className="p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase">
+          <div className="text-[10px] font-bold text-[#718198] uppercase font-mono">
             Execution Mode
           </div>
           <div className="text-lg font-bold font-mono text-emerald-400 mt-1">
             {modelInfo.mode}
           </div>
-          <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+          <div className="text-[10px] text-[#718198] font-mono mt-0.5">
             Local Ollama Service
           </div>
         </Card>
 
         <Card className="p-4">
-          <div className="text-xs font-semibold text-slate-400 uppercase">
+          <div className="text-[10px] font-bold text-[#718198] uppercase font-mono">
             Inference Latency
           </div>
-          <div className="text-lg font-bold font-mono text-sky-400 mt-1">
+          <div className="text-lg font-bold font-mono text-[#58AAE1] mt-1">
             {modelInfo.duration_ms} ms
           </div>
-          <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+          <div className="text-[10px] text-[#718198] font-mono mt-0.5">
             Context: {modelInfo.context_window_size} tokens
           </div>
         </Card>
@@ -141,12 +131,9 @@ export default function ModelTransparencyPage() {
       {/* Ollama Runtime Service Diagnostics */}
       <Card className="p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Server className="w-5 h-5 text-sky-400" />
-            <h2 className="text-base font-bold text-white">
-              Ollama Server Health Check
-            </h2>
-          </div>
+          <h2 className="text-base font-bold text-[#F1F4F8]">
+            Ollama Server Health Check
+          </h2>
           <span
             className={`px-2.5 py-1 text-xs font-mono font-bold rounded-full border ${
               ollamaHealth?.available
@@ -159,13 +146,13 @@ export default function ModelTransparencyPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
-          <div className="p-3 rounded-lg bg-surface-100 border border-white/5 space-y-1">
-            <span className="text-slate-400 block text-[10px]">OLLAMA ENDPOINT</span>
-            <span className="text-slate-200">{modelInfo.endpoint}</span>
+          <div className="p-3 rounded-lg bg-[#0B1423] border border-white/5 space-y-1">
+            <span className="text-[#718198] block text-[10px]">OLLAMA ENDPOINT</span>
+            <span className="text-[#F1F4F8]">{modelInfo.endpoint}</span>
           </div>
-          <div className="p-3 rounded-lg bg-surface-100 border border-white/5 space-y-1">
-            <span className="text-slate-400 block text-[10px]">MODEL LOADED</span>
-            <span className="text-slate-200">
+          <div className="p-3 rounded-lg bg-[#0B1423] border border-white/5 space-y-1">
+            <span className="text-[#718198] block text-[10px]">MODEL LOADED</span>
+            <span className="text-[#F1F4F8]">
               {ollamaHealth?.model || "gemma4:e4b"} ({ollamaHealth?.model_ready ? "Ready" : "Standby"})
             </span>
           </div>
@@ -173,14 +160,14 @@ export default function ModelTransparencyPage() {
 
         {ollamaHealth?.all_models && (
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#718198] font-mono block mb-2">
               Locally Available Models
             </span>
             <div className="flex flex-wrap gap-2 text-xs font-mono">
               {ollamaHealth.all_models.map((m: string) => (
                 <span
                   key={m}
-                  className="px-2.5 py-1 rounded bg-white/5 border border-white/5 text-slate-300"
+                  className="px-2.5 py-1 rounded bg-[#0B1423] border border-white/5 text-[#A4B2C5]"
                 >
                   {m}
                 </span>
@@ -193,32 +180,29 @@ export default function ModelTransparencyPage() {
       {/* Google Antigravity Telemetry Card */}
       <Card className="p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Cpu className="w-5 h-5 text-purple-400" />
-            <h2 className="text-base font-bold text-white">
-              Google Antigravity SDK & MCP Runtime
-            </h2>
-          </div>
-          <span className="px-2.5 py-1 text-xs font-mono font-bold rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/30">
+          <h2 className="text-base font-bold text-[#F1F4F8]">
+            Google Antigravity SDK & MCP Runtime
+          </h2>
+          <span className="px-2.5 py-1 text-xs font-mono font-bold rounded-full bg-[#58AAE1]/10 text-[#58AAE1] border border-[#58AAE1]/30">
             {antigravityHealth?.status || "NEEDS_INSTALLATION"}
           </span>
         </div>
 
-        <p className="text-xs text-slate-300 leading-relaxed">
+        <p className="text-xs text-[#A4B2C5] leading-relaxed">
           {antigravityHealth?.notes ||
             "google-antigravity 0.1.22 is available on PyPI ('pip install google-antigravity'). Local safe runner adapter handles execution with full deterministic evidence capture."}
         </p>
 
         <div className="grid grid-cols-2 gap-3 text-xs font-mono">
-          <div className="p-3 rounded-lg bg-surface-100 border border-white/5 space-y-1">
-            <span className="text-slate-400 block text-[10px]">MCP SERVERS</span>
-            <span className="text-slate-200">
+          <div className="p-3 rounded-lg bg-[#0B1423] border border-white/5 space-y-1">
+            <span className="text-[#718198] block text-[10px]">MCP SERVERS</span>
+            <span className="text-[#F1F4F8]">
               {antigravityHealth?.mcp_enabled ? "Enabled" : "Disabled"}
             </span>
           </div>
-          <div className="p-3 rounded-lg bg-surface-100 border border-white/5 space-y-1">
-            <span className="text-slate-400 block text-[10px]">PYPI PACKAGE</span>
-            <span className="text-slate-200">
+          <div className="p-3 rounded-lg bg-[#0B1423] border border-white/5 space-y-1">
+            <span className="text-[#718198] block text-[10px]">PYPI PACKAGE</span>
+            <span className="text-[#F1F4F8]">
               {antigravityHealth?.sdk_package || "google-antigravity"}
             </span>
           </div>

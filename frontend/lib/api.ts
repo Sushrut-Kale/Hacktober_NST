@@ -91,17 +91,19 @@ async function fetchWithFallback<T>(
       } catch {
         if (errText) errorMsg = errText;
       }
-      console.warn(`API call failed for ${endpoint}: ${errorMsg}. Falling back to demo fixture.`);
-      return { data: fallbackData, isMock: true, error: errorMsg };
+      return {
+        data: (Array.isArray(fallbackData) ? [] : fallbackData) as T,
+        isMock: false,
+        error: errorMsg,
+      };
     }
 
     const data = await res.json();
     return { data, isMock: false };
   } catch (err: any) {
-    console.warn(`Backend unreachable for ${endpoint}. Using fixture.`, err?.message);
     return {
-      data: fallbackData,
-      isMock: true,
+      data: (Array.isArray(fallbackData) ? [] : fallbackData) as T,
+      isMock: false,
       error: err?.message || "Backend unreachable",
     };
   }
@@ -432,6 +434,15 @@ export const api = {
       `/api/tasks/${taskId}/verification`,
       {},
       fallback
+    );
+  },
+
+  async getRuns(taskId?: string) {
+    const query = taskId ? `?task_id=${taskId}` : "";
+    return fetchWithFallback<ExecutionRun[]>(
+      `/api/runs${query}`,
+      {},
+      Object.values(DEMO_RUNS)
     );
   },
 

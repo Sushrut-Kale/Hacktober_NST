@@ -6,20 +6,16 @@ import Link from "next/link";
 import { useProject } from "@/hooks/useProject";
 import { api } from "@/lib/api";
 import { FailureDiagnosis } from "@/lib/types";
-import { Card, CardHeader, CardContent } from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ModelChip } from "@/components/ui/ModelChip";
 import {
-  AlertTriangle,
   ArrowLeft,
   Languages,
-  Sparkles,
   FileCode,
   CheckCircle2,
   Terminal,
-  Shield,
-  Layers,
   Info,
   Scale,
 } from "lucide-react";
@@ -64,7 +60,7 @@ export default function FailureExplanationPage() {
 
   if (loading || !diagnosis) {
     return (
-      <div className="p-12 text-center text-slate-400">
+      <div className="p-12 text-center text-[#718198] font-mono text-sm">
         Loading failure explanation and AI diagnosis...
       </div>
     );
@@ -77,13 +73,13 @@ export default function FailureExplanationPage() {
         <div className="flex items-center gap-3">
           <Link
             href={`/verification/${runId}`}
-            className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
+            className="p-2 text-[#A4B2C5] hover:text-[#F1F4F8] rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="text-xs font-mono font-bold text-sky-400">
+              <span className="text-xs font-mono font-bold text-[#58AAE1]">
                 {runId}
               </span>
               <Badge status="FAILED" size="sm" />
@@ -92,32 +88,31 @@ export default function FailureExplanationPage() {
                 modelName="gemma4:e4b"
               />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-white mt-1 flex items-center gap-2">
-              <AlertTriangle className="w-6 h-6 text-rose-400" />
-              <span>Failure Diagnosis & Explanation</span>
+            <h1 className="text-2xl font-bold tracking-tight text-[#F1F4F8] mt-1">
+              Failure Diagnosis & Explanation
             </h1>
           </div>
         </div>
 
         {/* Language Selection Toggle */}
-        <div className="flex items-center gap-2 bg-surface-100 p-1 rounded-xl border border-white/10">
-          <Languages className="w-4 h-4 text-slate-400 ml-2" />
+        <div className="flex items-center gap-2 bg-[#0B1423] p-1 rounded-xl border border-white/10">
+          <Languages className="w-4 h-4 text-[#718198] ml-2" />
           <button
             onClick={() => setLanguage("en")}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
+            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
               language === "en"
-                ? "bg-sky-500/20 text-sky-300 border border-sky-500/30"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-[#58AAE1]/20 text-[#9EDCFF] border border-[#58AAE1]/30"
+                : "text-[#718198] hover:text-[#F1F4F8]"
             }`}
           >
             English
           </button>
           <button
             onClick={() => setLanguage("mr")}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
+            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
               language === "mr"
-                ? "bg-sky-500/20 text-sky-300 border border-sky-500/30"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-[#58AAE1]/20 text-[#9EDCFF] border border-[#58AAE1]/30"
+                : "text-[#718198] hover:text-[#F1F4F8]"
             }`}
           >
             मराठी / Hinglish
@@ -126,17 +121,17 @@ export default function FailureExplanationPage() {
       </div>
 
       {/* Language Invariant Alert */}
-      <div className="p-3.5 rounded-xl border border-white/10 bg-surface-200/60 backdrop-blur-sm flex items-start gap-2.5 text-xs text-slate-300">
-        <Info className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+      <div className="p-3.5 rounded-xl border border-[#58AAE1]/20 bg-[#0B1423] backdrop-blur-sm flex items-start gap-2.5 text-xs text-[#A4B2C5]">
+        <Info className="w-4 h-4 text-[#58AAE1] shrink-0 mt-0.5" />
         <span>
-          <strong>Invariant:</strong> Switching between English and Marathi-Hinglish explains the failure in your preferred language without modifying the underlying deterministic failure verdict or evidence.
+          <strong className="text-[#9EDCFF]">Invariant:</strong> Switching between English and Marathi-Hinglish explains the failure in your preferred language without modifying the underlying deterministic failure verdict or evidence.
         </span>
       </div>
 
       {/* Failure Narrative Card */}
       <Card borderVariant="rose" className="p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-rose-400">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-rose-400 font-mono">
             {language === "en" ? "Failure Summary" : "त्रुटी तपशील (Failure Summary)"}
           </h2>
           <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">
@@ -144,15 +139,14 @@ export default function FailureExplanationPage() {
           </span>
         </div>
 
-        <p className="text-base text-slate-100 font-semibold leading-snug">
+        <p className="text-base text-[#F1F4F8] font-semibold leading-snug">
           {diagnosis.failure_summary}
         </p>
 
         {language === "mr" && diagnosis.explanation_mr ? (
           <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-200 leading-relaxed font-sans">
-            <div className="flex items-center gap-2 font-bold mb-1 text-purple-300">
-              <Sparkles className="w-4 h-4" />
-              <span>Gemma 4 Marathi Diagnosis:</span>
+            <div className="font-bold mb-1 text-purple-300">
+              Gemma 4 Marathi Diagnosis:
             </div>
             {diagnosis.explanation_mr}
           </div>
@@ -160,10 +154,10 @@ export default function FailureExplanationPage() {
 
         {/* Likely Root Cause */}
         <div className="pt-3 border-t border-white/5 space-y-1.5">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#718198] font-mono block">
             {language === "en" ? "Identified Root Cause" : "मुख्य कारण (Root Cause)"}
           </span>
-          <p className="text-xs text-slate-300 leading-relaxed bg-surface-100 p-3.5 rounded-lg border border-white/5">
+          <p className="text-xs text-[#A4B2C5] leading-relaxed bg-[#05080F] p-3.5 rounded-lg border border-white/5">
             {diagnosis.likely_cause}
           </p>
         </div>
@@ -171,14 +165,14 @@ export default function FailureExplanationPage() {
 
       {/* Supporting Evidence References */}
       <Card className="p-6 space-y-3">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-[#718198] font-mono">
           Supporting Failure Evidence
         </h2>
         <div className="space-y-2 font-mono text-xs">
           {diagnosis.evidence_references.map((ref, idx) => (
             <div
               key={idx}
-              className="p-3 rounded-lg bg-surface-100 border border-white/5 text-slate-300 flex items-center justify-between"
+              className="p-3 rounded-lg bg-[#05080F] border border-white/5 text-[#A4B2C5] flex items-center justify-between"
             >
               <div className="flex items-center gap-2">
                 <FileCode className="w-4 h-4 text-rose-400 shrink-0" />
@@ -194,19 +188,18 @@ export default function FailureExplanationPage() {
 
       {/* Recommended Fix & Retest Command */}
       <Card borderVariant="brand" className="p-6 space-y-4">
-        <div className="flex items-center gap-2 text-sm font-bold text-white">
-          <Sparkles className="w-4 h-4 text-sky-400" />
-          <span>Recommended Code Fix (Deterministic Correction)</span>
-        </div>
+        <h2 className="text-sm font-bold text-[#F1F4F8]">
+          Recommended Code Fix (Deterministic Correction)
+        </h2>
 
-        <p className="text-xs text-slate-300 leading-relaxed">
+        <p className="text-xs text-[#A4B2C5] leading-relaxed">
           {diagnosis.recommended_fix}
         </p>
 
         {diagnosis.suggested_retest_command && (
-          <div className="p-3 rounded-lg bg-[#07090e] border border-white/10 font-mono text-xs flex items-center justify-between text-slate-300">
+          <div className="p-3 rounded-lg bg-[#05080F] border border-white/10 font-mono text-xs flex items-center justify-between text-[#A4B2C5]">
             <div className="flex items-center gap-2 truncate">
-              <Terminal className="w-4 h-4 text-sky-400 shrink-0" />
+              <Terminal className="w-4 h-4 text-[#58AAE1] shrink-0" />
               <span className="truncate">{diagnosis.suggested_retest_command}</span>
             </div>
             <span className="text-[10px] text-emerald-400 font-bold uppercase shrink-0 ml-2">
