@@ -221,24 +221,25 @@ class DeterministicVerificationEngine:
         # Final Verdict Aggregation Hierarchy:
         # 1. BLOCKED (environment/dependency failure took place)
         # 2. FAIL (any explicit failure or violation of required criteria)
-        # 3. NOT_RUN (no verification checks were executed)
-        # 4. UNKNOWN (evidence is insufficient or inconclusive)
+        # 3. UNKNOWN (evidence is insufficient or inconclusive)
+        # 4. NOT_RUN (checks were not executed)
         # 5. PASS (all required configured checks passed)
-        impacts = [ev.verdict_impact for ev in evaluations]
+        has_blocked = any(ev.verdict_impact == VerificationVerdict.BLOCKED for ev in evaluations)
+        has_failed = any(ev.verdict_impact == VerificationVerdict.FAIL for ev in evaluations)
+        has_unknown = any(ev.verdict_impact == VerificationVerdict.UNKNOWN for ev in evaluations)
+        has_not_run = any(ev.verdict_impact == VerificationVerdict.NOT_RUN for ev in evaluations)
 
-        if VerificationVerdict.BLOCKED in impacts:
+        if has_blocked:
             verdict = VerificationVerdict.BLOCKED
-        elif VerificationVerdict.FAIL in impacts:
+        elif has_failed:
             verdict = VerificationVerdict.FAIL
-        elif all(imp == VerificationVerdict.NOT_RUN for imp in impacts if not ev.passed):
-            # If all failures are due to checks not having been run
-            verdict = VerificationVerdict.NOT_RUN if any(imp == VerificationVerdict.NOT_RUN for imp in impacts) else VerificationVerdict.UNKNOWN
-        elif VerificationVerdict.UNKNOWN in impacts:
+        elif has_unknown:
             verdict = VerificationVerdict.UNKNOWN
-        elif VerificationVerdict.NOT_RUN in impacts:
+        elif has_not_run:
             verdict = VerificationVerdict.NOT_RUN
         else:
             verdict = VerificationVerdict.PASS
+
 
         # Deterministic confidence scoring
         total_rules = len(evaluations)
