@@ -160,18 +160,22 @@ export default function ProjectsPage() {
 
                   {/* Tech badges */}
                   <div className="flex flex-wrap gap-1.5 text-[11px] font-mono">
-                    <span
-                      className="px-2 py-0.5 rounded"
-                      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "#94a3b8" }}
-                    >
-                      {project.language}
-                    </span>
-                    <span
-                      className="px-2 py-0.5 rounded"
-                      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "#94a3b8" }}
-                    >
-                      {project.framework}
-                    </span>
+                    {project.language && (
+                      <span
+                        className="px-2 py-0.5 rounded"
+                        style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "#94a3b8" }}
+                      >
+                        {project.language}
+                      </span>
+                    )}
+                    {project.framework && (
+                      <span
+                        className="px-2 py-0.5 rounded"
+                        style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "#94a3b8" }}
+                      >
+                        {project.framework}
+                      </span>
+                    )}
                     {project.analysis_status && (
                       <span
                         className="px-2 py-0.5 rounded uppercase"
@@ -184,9 +188,9 @@ export default function ProjectsPage() {
                         {project.analysis_status}
                       </span>
                     )}
-                    {project.git_url && (
+                    {(project.git_url || (project as any).repository_url) && (
                       <a
-                        href={project.git_url}
+                        href={project.git_url || (project as any).repository_url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="px-2 py-0.5 rounded flex items-center gap-1 hover:text-sky-400 transition-colors"
@@ -206,15 +210,15 @@ export default function ProjectsPage() {
                   <div className="flex items-center gap-4 text-xs font-mono">
                     <span className="flex items-center gap-1.5 text-emerald-400">
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      {project.stats.verified_tasks} verified
+                      {project.stats?.verified_tasks ?? 0} verified
                     </span>
                     <span className="flex items-center gap-1.5 text-rose-400">
                       <XCircle className="w-3.5 h-3.5" />
-                      {project.stats.failed_tasks} failed
+                      {project.stats?.failed_tasks ?? 0} failed
                     </span>
                     <span className="flex items-center gap-1.5 text-amber-400">
                       <Clock className="w-3.5 h-3.5" />
-                      {project.stats.unverified_tasks} pending
+                      {project.stats?.unverified_tasks ?? 0} pending
                     </span>
                   </div>
 
