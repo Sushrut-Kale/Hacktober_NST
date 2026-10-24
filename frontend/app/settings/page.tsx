@@ -102,7 +102,7 @@ export default function SettingsPage() {
 
         <div>
           <label className="block text-xs font-medium text-[#F1F4F8] mb-1.5">
-            Backend API Base URL (NEXT_PUBLIC_API_BASE_URL)
+            Backend API Base URL (NEXT_PUBLIC_API_URL / NEXT_PUBLIC_API_BASE_URL)
           </label>
           <div className="flex gap-2">
             <input
