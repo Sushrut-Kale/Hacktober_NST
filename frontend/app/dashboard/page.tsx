@@ -96,11 +96,12 @@ function StatCard({
 
   return (
     <div
-      className="relative rounded-xl p-5 overflow-hidden card-lift"
+      className="relative rounded-xl p-5 overflow-hidden card-lift animate-slide-up"
       style={{
         background: c.bg,
         border: `1px solid ${c.border}`,
         backdropFilter: "blur(14px)",
+        animationDelay: `${delay}ms`,
       }}
     >
       {/* Ambient glow spot */}

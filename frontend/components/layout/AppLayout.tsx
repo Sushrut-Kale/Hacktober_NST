@@ -44,7 +44,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Full-width Main Content Layout (no permanent sidebar footprint) */}
         <div className="flex flex-col flex-1 min-h-screen relative z-10 w-full">
           <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-          <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto animate-fade-in">
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto animate-page-enter">
             {children}
           </main>
         </div>
