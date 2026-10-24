@@ -36,6 +36,10 @@ from backend.app.db.repository import DatabaseRepository
 from backend.app.schemas.task import TaskStatusUpdate
 from backend.app.api.projects import router as projects_router
 from backend.app.api.evidence import router as evidence_router
+import threading
+
+_active_executions: set[str] = set()
+_execution_lock = threading.Lock()
 
 
 @asynccontextmanager
@@ -258,6 +262,7 @@ async def generate_task_plan_route(
     task_id: str,
     payload: Optional[TaskPlanRequestWrapper] = None,
     repo_context: Optional[str] = None,
+    db: Session = Depends(get_db),
 ) -> TaskPlan:
     """
     Generates and persists a structured task plan via Gemma 4, advancing task to PLANNED.
@@ -265,7 +270,14 @@ async def generate_task_plan_route(
     """
     context = (payload.repo_context if payload else None) or repo_context
     try:
-        return await workflow_service.generate_and_save_plan(task_id, repo_context=context)
+        plan = await workflow_service.generate_and_save_plan(task_id, repo_context=context)
+        from backend.app.models.task import TaskRecord
+        rec = db.query(TaskRecord).filter(TaskRecord.id == task_id).first()
+        if rec:
+            rec.status = "PLANNED"
+            db.commit()
+            db.refresh(rec)
+        return plan
     except KeyError:
         raise HTTPException(status_code=404, detail=f"Task '{task_id}' not found.")
     except InvalidStateTransitionError as e:
@@ -397,101 +409,113 @@ async def execute_task_route(
                 detail=f"Task '{task_id}' is in terminal status '{current_status}' and cannot execute.",
             )
 
-    # 2. Transition to IN_PROGRESS if approved
-    current_status = "IN_PROGRESS"
-    if rec:
-        rec.status = "IN_PROGRESS"
-        db.commit()
-        db.refresh(rec)
-    if repo_task:
-        repo_task.status = "IN_PROGRESS"
-        repo_task.state = TaskState.IN_PROGRESS
-        db_repo.save_task(repo_task)
-
-    # 3. Detect Execution Mode:
-    # Safe local subprocess executions must be honestly labeled LOCAL_SAFE_RUNNER.
-    # ANTIGRAVITY_AGENT is strictly reserved for genuine dispatches through Antigravity CLI/SDK.
-    execution_mode = "LOCAL_SAFE_RUNNER"
-
-    # 4. Target Directory
-    if req.repo_path:
-        target_dir = req.repo_path
-    elif repo_task and repo_task.workspace_path:
-        target_dir = repo_task.workspace_path
-    else:
-        proj = db.query(Project).filter(Project.id == getattr(rec, "project_id", "default")).first() if rec else None
-        target_dir = proj.root_path if proj else os.getcwd()
-
-    cmd = req.test_command
-    if not cmd and req.command:
-        import shlex
-        try:
-            cmd = shlex.split(req.command)
-        except Exception:
-            cmd = req.command.split()
-
-    import uuid
-    run_id = f"run-{uuid.uuid4().hex[:8]}"
-    evidence_items = []
-    exit_code = 0
-    output_text = ""
-
-    collector = EvidenceCollector()
-    if cmd:
-        cmd_item = collector.execute_test_command(
-            command=cmd,
-            cwd=target_dir,
-            timeout_seconds=req.timeout_seconds or 30.0,
-        )
-        evidence_items.append(cmd_item)
-        exit_code = cmd_item.exit_code
-        output_text = cmd_item.content or ""
-
-        if exit_code is not None and exit_code != 0:
-            current_status = "FAILED"
-            if rec:
-                rec.status = "FAILED"
-                db.commit()
-                db.refresh(rec)
-            if repo_task:
-                repo_task.status = "FAILED"
-                repo_task.state = TaskState.FAILED
-                db_repo.save_task(repo_task)
-
-    run_obj = ExecutionRun(
-        run_id=run_id,
-        task_id=task_id,
-        status=current_status,
-        command=" ".join(cmd) if cmd else (req.command or ""),
-        exit_code=exit_code,
-        stdout=output_text,
-        stderr="",
-        source=execution_mode,
-        evidence_items=evidence_items,
-        evidence=evidence_items,
-        execution_mode=execution_mode,
-        message=(
-            f"Task execution completed in {execution_mode} mode."
-            if cmd
-            else f"Task entered '{current_status}' execution state in {execution_mode} mode."
-        ),
-    )
+    with _execution_lock:
+        if task_id in _active_executions:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Task '{task_id}' is already actively executing. Concurrent execution requests are forbidden.",
+            )
+        _active_executions.add(task_id)
 
     try:
-        db_repo.save_execution_run(run_obj)
-        db_repo.record_event(
-            ExecutionEvent(
-                task_id=task_id,
-                run_id=run_id,
-                event_type="COMMAND_EXECUTED",
-                message=f"Executed '{run_obj.command}' (exit code: {exit_code})",
-                details={"exit_code": exit_code, "command": run_obj.command},
-            )
-        )
-    except Exception:
-        pass
+        # 2. Transition to IN_PROGRESS if approved
+        current_status = "IN_PROGRESS"
+        if rec:
+            rec.status = "IN_PROGRESS"
+            db.commit()
+            db.refresh(rec)
+        if repo_task:
+            repo_task.status = "IN_PROGRESS"
+            repo_task.state = TaskState.IN_PROGRESS
+            db_repo.save_task(repo_task)
 
-    return run_obj
+        # 3. Detect Execution Mode:
+        # Safe local subprocess executions must be honestly labeled LOCAL_SAFE_RUNNER.
+        # ANTIGRAVITY_AGENT is strictly reserved for genuine dispatches through Antigravity CLI/SDK.
+        execution_mode = "LOCAL_SAFE_RUNNER"
+
+        # 4. Target Directory
+        if req.repo_path:
+            target_dir = req.repo_path
+        elif repo_task and repo_task.workspace_path:
+            target_dir = repo_task.workspace_path
+        else:
+            proj = db.query(Project).filter(Project.id == getattr(rec, "project_id", "default")).first() if rec else None
+            target_dir = proj.root_path if proj else os.getcwd()
+
+        cmd = req.test_command
+        if not cmd and req.command:
+            import shlex
+            try:
+                cmd = shlex.split(req.command)
+            except Exception:
+                cmd = req.command.split()
+
+        import uuid
+        run_id = f"run-{uuid.uuid4().hex[:8]}"
+        evidence_items = []
+        exit_code = 0
+        output_text = ""
+
+        collector = EvidenceCollector()
+        if cmd:
+            cmd_item = collector.execute_test_command(
+                command=cmd,
+                cwd=target_dir,
+                timeout_seconds=req.timeout_seconds or 30.0,
+            )
+            evidence_items.append(cmd_item)
+            exit_code = cmd_item.exit_code
+            output_text = cmd_item.content or ""
+
+            if exit_code is not None and exit_code != 0:
+                current_status = "FAILED"
+                if rec:
+                    rec.status = "FAILED"
+                    db.commit()
+                    db.refresh(rec)
+                if repo_task:
+                    repo_task.status = "FAILED"
+                    repo_task.state = TaskState.FAILED
+                    db_repo.save_task(repo_task)
+
+        run_obj = ExecutionRun(
+            run_id=run_id,
+            task_id=task_id,
+            status=current_status,
+            command=" ".join(cmd) if cmd else (req.command or ""),
+            exit_code=exit_code,
+            stdout=output_text,
+            stderr="",
+            source=execution_mode,
+            evidence_items=evidence_items,
+            evidence=evidence_items,
+            execution_mode=execution_mode,
+            message=(
+                f"Task execution completed in {execution_mode} mode."
+                if cmd
+                else f"Task entered '{current_status}' execution state in {execution_mode} mode."
+            ),
+        )
+
+        try:
+            db_repo.save_execution_run(run_obj)
+            db_repo.record_event(
+                ExecutionEvent(
+                    task_id=task_id,
+                    run_id=run_id,
+                    event_type="COMMAND_EXECUTED",
+                    message=f"Executed '{run_obj.command}' (exit code: {exit_code})",
+                    details={"exit_code": exit_code, "command": run_obj.command},
+                )
+            )
+        except Exception:
+            pass
+
+        return run_obj
+    finally:
+        with _execution_lock:
+            _active_executions.discard(task_id)
 
 @app.get("/api/tasks/{task_id}/events", response_model=List[ExecutionEvent])
 async def get_task_events(task_id: str) -> List[ExecutionEvent]:
@@ -512,8 +536,8 @@ async def verify_persisted_task(task_id: str, run_id: Optional[str] = None) -> V
     try:
         return await workflow_service.verify_task(task_id, run_id=run_id)
     except KeyError:
-        raise HTTPException(status_code=404, detail=f"Task '{task_id}' not found.")
-    except InvalidStateTransitionError as e:
+        raise HTTPException(status_code=404, detail=f"Task '{task_id}' or run '{run_id}' not found.")
+    except (InvalidStateTransitionError, ValueError) as e:
         raise HTTPException(status_code=409, detail=str(e))
 
 @app.get("/api/tasks/{task_id}/verification", response_model=VerificationResult)

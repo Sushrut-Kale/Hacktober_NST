@@ -77,6 +77,8 @@ class WorkflowService:
         Validates and applies a state transition, saving task state and logging an event.
         """
         current_state = task.state
+        if current_state == target_state:
+            return task
         if target_state not in VALID_TRANSITIONS.get(current_state, set()):
             raise InvalidStateTransitionError(
                 f"Invalid task state transition from {current_state.value} to {target_state.value}."
