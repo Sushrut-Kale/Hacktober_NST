@@ -24,6 +24,9 @@ from backend.app.schemas.core import (
     TaskExecuteRequest,
     ClaimVsRealityReport,
     EvidenceCollectionRequest,
+    AntigravityCapability,
+    HandoffPrompt,
+    HandoffSubmissionRequest,
 )
 from backend.app.schemas.project import (
     AnalysisStatus,
@@ -62,6 +65,9 @@ __all__ = [
     "TaskExecuteRequest",
     "ClaimVsRealityReport",
     "EvidenceCollectionRequest",
+    "AntigravityCapability",
+    "HandoffPrompt",
+    "HandoffSubmissionRequest",
     "AnalysisStatus",
     "ProjectCreate",
     "ProjectResponse",

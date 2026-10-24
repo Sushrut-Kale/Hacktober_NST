@@ -28,6 +28,9 @@ from backend.app.schemas.core import (
     RunReport,
     TaskDetail,
     ClaimVsRealityReport,
+    AntigravityCapability,
+    HandoffPrompt,
+    HandoffSubmissionRequest,
 )
 from backend.app.services.verification_engine import DeterministicVerificationEngine
 from backend.app.services.gemma_service import GemmaService
@@ -560,6 +563,83 @@ async def get_task_events(task_id: str) -> List[ExecutionEvent]:
     if not task:
         raise HTTPException(status_code=404, detail=f"Task '{task_id}' not found.")
     return db_repo.list_events(task_id)
+
+
+@app.get("/api/tasks/{task_id}/handoff", response_model=HandoffPrompt)
+async def get_task_handoff_prompt(task_id: str, db: Session = Depends(get_db)) -> HandoffPrompt:
+    """
+    Generates a structured, task-specific prompt for Antigravity manual handoff execution.
+    """
+    task = db_repo.get_task(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail=f"Task '{task_id}' not found.")
+    rec = db.query(TaskRecord).filter(TaskRecord.id == task_id).first()
+    proj = db.query(Project).filter(Project.id == getattr(rec, "project_id", task.project_id)).first() if rec else None
+    plan = db_repo.get_plan(task_id)
+    return antigravity_adapter.generate_handoff_prompt(task, project_name=proj.name if proj else "", plan=plan)
+
+
+@app.post("/api/tasks/{task_id}/handoff", response_model=ExecutionRun)
+async def submit_task_handoff(
+    task_id: str,
+    req: HandoffSubmissionRequest,
+    db: Session = Depends(get_db),
+) -> ExecutionRun:
+    """
+    Submits unverified manual agent telemetry and git diff from an external Antigravity session.
+    Enforces human approval before execution submission.
+    """
+    task = db_repo.get_task(task_id)
+    rec = db.query(TaskRecord).filter(TaskRecord.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail=f"Task '{task_id}' not found.")
+
+    try:
+        run = antigravity_adapter.create_manual_handoff_run(task, req, db_repo)
+        if rec:
+            rec.status = run.status
+            db.commit()
+            db.refresh(rec)
+        return run
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+
+@app.post("/api/tasks/{task_id}/dispatch", response_model=ExecutionRun)
+async def dispatch_task_agent(
+    task_id: str,
+    timeout_seconds: float = 60.0,
+    db: Session = Depends(get_db),
+) -> ExecutionRun:
+    """
+    Attempts genuine automated dispatch to the Antigravity agent CLI or SDK.
+    If neither is available, returns HTTP 501 with truthful missing prerequisite information.
+    """
+    task = db_repo.get_task(task_id)
+    rec = db.query(TaskRecord).filter(TaskRecord.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail=f"Task '{task_id}' not found.")
+
+    task_state_val = task.state.value if hasattr(task.state, "value") else str(task.state)
+    if task_state_val not in ("APPROVED", "RUNNING", "IN_PROGRESS"):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Task '{task_id}' requires explicit approval before dispatch.",
+        )
+
+    try:
+        prompt_obj = antigravity_adapter.generate_handoff_prompt(task)
+        run = antigravity_adapter.dispatch_agent(task, prompt_obj.prompt, timeout_seconds=timeout_seconds)
+        if rec:
+            rec.status = run.status
+            db.commit()
+            db.refresh(rec)
+        return run
+    except RuntimeError as e:
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail=str(e),
+        )
 
 @app.post("/api/tasks/{task_id}/verify", response_model=VerificationResult)
 async def verify_persisted_task(task_id: str, run_id: Optional[str] = None) -> VerificationResult:

@@ -148,6 +148,8 @@ class EvidenceItem(BaseModel):
     exit_code: Optional[int] = None
     file_path: Optional[str] = None
     passed: Optional[bool] = None
+    source_attribution: Optional[str] = "LOCAL_SUBPROCESS"
+    is_verified: Optional[bool] = True
 
 
 class ExecutionClaim(BaseModel):
@@ -219,6 +221,9 @@ class ExecutionRun(BaseModel):
     execution_mode: Optional[str] = "LOCAL_SAFE_RUNNER"
     evidence: List[Any] = Field(default_factory=list)
     message: Optional[str] = None
+    is_manual_submission: Optional[bool] = False
+    submission_notes: Optional[str] = None
+    provenance_details: Dict[str, Any] = Field(default_factory=dict)
 
 class ExecutionEvent(BaseModel):
     id: Optional[int] = None
@@ -350,4 +355,41 @@ class EvidenceCollectionRequest(BaseModel):
     criterion_id: Optional[str] = None
     test_command: Optional[List[str]] = None
     timeout_seconds: Optional[float] = 30.0
+
+
+class AntigravityCapability(BaseModel):
+    status: str
+    cli_installed: bool = False
+    cli_path: Optional[str] = None
+    sdk_installed: bool = False
+    sdk_package: str = "google-antigravity (PyPI)"
+    ide_host_detected: bool = False
+    conversation_id: Optional[str] = None
+    available_modes: List[str] = Field(default_factory=lambda: ["LOCAL_SAFE_RUNNER", "ANTIGRAVITY_MANUAL_HANDOFF"])
+    supported_integrations: Dict[str, Any] = Field(default_factory=dict)
+    notes: Optional[str] = None
+
+
+class HandoffPrompt(BaseModel):
+    task_id: str
+    project_id: str
+    prompt: str
+    target_files: List[str] = Field(default_factory=list)
+    acceptance_criteria: List[Dict[str, Any]] = Field(default_factory=list)
+    suggested_command: Optional[str] = None
+    workspace_path: Optional[str] = None
+    instructions: str
+    missing_prerequisite: str
+    next_step: str
+
+
+class HandoffSubmissionRequest(BaseModel):
+    agent_response: Optional[str] = ""
+    git_diff: Optional[str] = None
+    command: Optional[str] = None
+    command_exit_code: Optional[int] = 0
+    test_output: Optional[str] = ""
+    criterion_id: Optional[str] = None
+    submitted_by: Optional[str] = "USER"
+    notes: Optional[str] = None
 

@@ -107,6 +107,9 @@ export interface ExecutionRun {
   git_diff?: string;
   evidence_items: EvidenceItem[];
   model_name?: string;
+  is_manual_submission?: boolean;
+  submission_notes?: string;
+  provenance_details?: Record<string, any>;
   runtime_metadata?: {
     duration_ms?: number;
     memory_mb?: number;
@@ -278,3 +281,50 @@ export interface RunReport {
   comparison?: ClaimVsRealityComparison;
   events: ExecutionEvent[];
 }
+
+export interface AntigravityCapabilityInfo {
+  status: "NEEDS_INSTALLATION" | "CLI_AVAILABLE" | "SDK_AVAILABLE";
+  cli_installed: boolean;
+  cli_path?: string | null;
+  sdk_installed: boolean;
+  sdk_package: string;
+  ide_host_detected: boolean;
+  conversation_id?: string | null;
+  available_modes: string[];
+  supported_integrations: {
+    local_safe_runner: { status: string; description: string; attribution: string };
+    manual_handoff: { status: string; description: string; attribution: string };
+    automated_agent_dispatch: {
+      status: string;
+      missing_prerequisite?: string | null;
+      next_step?: string | null;
+      attribution: string;
+    };
+  };
+  notes?: string;
+}
+
+export interface HandoffPrompt {
+  task_id: string;
+  project_id: string;
+  prompt: string;
+  target_files: string[];
+  acceptance_criteria: Array<{ id: string; description: string; required?: boolean }>;
+  suggested_command?: string | null;
+  workspace_path?: string | null;
+  instructions: string;
+  missing_prerequisite: string;
+  next_step: string;
+}
+
+export interface HandoffSubmissionRequest {
+  agent_response?: string;
+  git_diff?: string;
+  command?: string;
+  command_exit_code?: number;
+  test_output?: string;
+  criterion_id?: string;
+  submitted_by?: string;
+  notes?: string;
+}
+
