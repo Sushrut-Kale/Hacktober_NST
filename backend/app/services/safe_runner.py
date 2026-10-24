@@ -35,8 +35,10 @@ class SafeExecutionRunner:
 
     def validate_workspace(self, workspace_path: Optional[str]) -> str:
         """
-        Validates that the workspace exists and is a safe directory.
+        Validates that the workspace exists and is a safe directory without null bytes.
         """
+        if workspace_path and "\0" in workspace_path:
+            raise ValueError("Workspace path contains invalid null bytes.")
         target = os.path.abspath(workspace_path or self.default_workspace)
         if not os.path.isdir(target):
             raise ValueError(f"Workspace path does not exist or is not a directory: {target}")

@@ -38,8 +38,8 @@ class GemmaService:
 
     async def check_readiness(self) -> Dict[str, Any]:
         """
-        Verifies whether Ollama is accessible and whether the required Gemma model is loaded.
-        Returns status AI_ACTIVE or AI_UNAVAILABLE.
+        Verifies whether Ollama is accessible and whether the required Gemma model is installed/loaded.
+        Returns status AI_ACTIVE or AI_UNAVAILABLE with fine-grained readiness state.
         """
         try:
             async with httpx.AsyncClient(timeout=min(self.timeout, 10.0)) as client:
@@ -51,17 +51,41 @@ class GemmaService:
                         "error": f"Ollama HTTP {res.status_code}",
                         "model": self.model,
                         "model_ready": False,
+                        "model_loaded": False,
+                        "readiness_state": "OLLAMA_UNREACHABLE",
                         "all_models": [],
                     }
                 data = res.json()
                 models = [m.get("name") for m in data.get("models", [])]
                 model_ready = any(self.model in name or name in self.model for name in models)
-                status = GeneratorStatus.AI_ACTIVE.value if model_ready else GeneratorStatus.AI_UNAVAILABLE.value
+
+                model_loaded = False
+                try:
+                    ps_res = await client.get(f"{self.base_url}/api/ps")
+                    if ps_res.status_code == 200:
+                        ps_data = ps_res.json()
+                        ps_models = [m.get("name") for m in ps_data.get("models", [])]
+                        model_loaded = any(self.model in name or name in self.model for name in ps_models)
+                except Exception:
+                    pass
+
+                if not model_ready:
+                    readiness_state = "MODEL_NOT_FOUND"
+                    status = GeneratorStatus.AI_UNAVAILABLE.value
+                elif model_loaded:
+                    readiness_state = "ACTIVE_IN_MEMORY"
+                    status = GeneratorStatus.AI_ACTIVE.value
+                else:
+                    readiness_state = "READY_TO_LOAD"
+                    status = GeneratorStatus.AI_ACTIVE.value
+
                 return {
                     "status": status,
                     "available": True,
                     "model": self.model,
                     "model_ready": model_ready,
+                    "model_loaded": model_loaded,
+                    "readiness_state": readiness_state,
                     "all_models": models,
                 }
         except Exception as exc:
@@ -72,6 +96,8 @@ class GemmaService:
                 "error": str(exc),
                 "model": self.model,
                 "model_ready": False,
+                "model_loaded": False,
+                "readiness_state": "OLLAMA_UNREACHABLE",
                 "all_models": [],
             }
 
