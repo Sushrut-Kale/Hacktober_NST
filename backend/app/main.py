@@ -41,6 +41,8 @@ from backend.app.db.repository import DatabaseRepository
 from backend.app.schemas.task import TaskStatusUpdate
 from backend.app.api.projects import router as projects_router
 from backend.app.api.evidence import router as evidence_router
+from backend.app.models.task import TaskRecord
+from backend.app.models.project import Project
 import threading
 
 _active_executions: set[str] = set()
@@ -486,16 +488,19 @@ async def execute_task_route(
             exit_code = cmd_item.exit_code
             output_text = cmd_item.content or ""
 
-            if exit_code is not None and exit_code != 0:
-                current_status = "FAILED"
-                if rec:
-                    rec.status = "FAILED"
-                    db.commit()
-                    db.refresh(rec)
-                if repo_task:
-                    repo_task.status = "FAILED"
-                    repo_task.state = TaskState.FAILED
-                    db_repo.save_task(repo_task)
+            if exit_code is not None:
+                if exit_code == 0:
+                    current_status = "COMPLETED"
+                else:
+                    current_status = "FAILED"
+                    if rec:
+                        rec.status = "FAILED"
+                        db.commit()
+                        db.refresh(rec)
+                    if repo_task:
+                        repo_task.status = "FAILED"
+                        repo_task.state = TaskState.FAILED
+                        db_repo.save_task(repo_task)
 
         git_diff_text = None
         try:
@@ -600,6 +605,9 @@ async def submit_task_handoff(
             rec.status = run.status
             db.commit()
             db.refresh(rec)
+        task.state = TaskState.RUNNING
+        task.status = run.status
+        db_repo.save_task(task)
         return run
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
@@ -634,6 +642,9 @@ async def dispatch_task_agent(
             rec.status = run.status
             db.commit()
             db.refresh(rec)
+        task.state = TaskState.RUNNING
+        task.status = run.status
+        db_repo.save_task(task)
         return run
     except RuntimeError as e:
         raise HTTPException(

@@ -339,26 +339,48 @@ Workspace: {workspace}
             import subprocess
             cmd_args = [capabilities["cli_path"], "task", "run", "--prompt", prompt]
             workspace = task.workspace_path or os.getcwd()
-            proc = subprocess.run(
-                cmd_args,
-                cwd=workspace,
-                capture_output=True,
-                text=True,
-                timeout=timeout_seconds,
-            )
-            exit_code = proc.returncode
-            stdout = proc.stdout
-            stderr = proc.stderr
-            status = "COMPLETED" if exit_code == 0 else "FAILED"
+            try:
+                proc = subprocess.run(
+                    cmd_args,
+                    cwd=workspace,
+                    capture_output=True,
+                    text=True,
+                    timeout=timeout_seconds,
+                )
+                exit_code = proc.returncode
+                stdout = proc.stdout
+                stderr = proc.stderr
+                status = "COMPLETED" if exit_code == 0 else "FAILED"
+                msg = f"Antigravity agent dispatch completed with exit code {exit_code}."
+            except subprocess.TimeoutExpired:
+                exit_code = 124
+                stdout = ""
+                stderr = f"Antigravity agent execution timed out after {timeout_seconds}s."
+                status = "TIMED_OUT"
+                msg = f"Antigravity agent dispatch timed out after {timeout_seconds} seconds."
+            except Exception as e:
+                exit_code = 1
+                stdout = ""
+                stderr = str(e)
+                status = "FAILED"
+                msg = f"Antigravity agent dispatch failed: {e}"
         else:
             # SDK dispatch boundary
-            import google.antigravity as agy  # type: ignore
-            client = agy.Client()
-            result = client.execute_task(task_id=task.id, prompt=prompt, timeout=timeout_seconds)
-            exit_code = result.get("exit_code", 0)
-            stdout = result.get("stdout", "")
-            stderr = result.get("stderr", "")
-            status = "COMPLETED" if exit_code == 0 else "FAILED"
+            try:
+                import google.antigravity as agy  # type: ignore
+                client = agy.Client()
+                result = client.execute_task(task_id=task.id, prompt=prompt, timeout=timeout_seconds)
+                exit_code = result.get("exit_code", 0)
+                stdout = result.get("stdout", "")
+                stderr = result.get("stderr", "")
+                status = "COMPLETED" if exit_code == 0 else "FAILED"
+                msg = f"Antigravity agent SDK dispatch completed with exit code {exit_code}."
+            except Exception as e:
+                exit_code = 1
+                stdout = ""
+                stderr = str(e)
+                status = "FAILED"
+                msg = f"Antigravity SDK execution error: {e}"
 
         return ExecutionRun(
             run_id=run_id,
@@ -373,7 +395,12 @@ Workspace: {workspace}
             source="ANTIGRAVITY_AGENT",
             execution_mode="ANTIGRAVITY_AGENT",
             is_manual_submission=False,
-            message=f"Antigravity agent dispatch completed with exit code {exit_code}.",
+            provenance_details={
+                "source": "ANTIGRAVITY_AGENT",
+                "execution_mode": "AUTOMATED_DISPATCH",
+                "cli_path": capabilities.get("cli_path"),
+            },
+            message=msg,
         )
 
     async def execute_task_run(self, task_id: str, prompt: str) -> Dict[str, Any]:
