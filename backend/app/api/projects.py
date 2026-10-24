@@ -2,7 +2,7 @@
 
 import logging
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -13,6 +13,10 @@ from backend.app.schemas.project import ProjectCreate, ProjectResponse
 from backend.app.schemas.task import TaskResponse
 
 logger = logging.getLogger("vikasa.api.projects")
+
+# Pagination constants
+_DEFAULT_LIMIT: int = 50
+_MAX_LIMIT: int = 200
 
 router = APIRouter()
 
@@ -53,12 +57,33 @@ def create_project(
     response_model=List[ProjectResponse],
     status_code=status.HTTP_200_OK,
     summary="List all registered projects",
+    description=(
+        "Returns a paginated list of projects ordered by creation time descending, "
+        f"then by ID descending for stable ordering. Default limit={_DEFAULT_LIMIT}, max={_MAX_LIMIT}."
+    ),
 )
 def list_projects(
+    limit: int = Query(
+        default=_DEFAULT_LIMIT,
+        ge=1,
+        le=_MAX_LIMIT,
+        description=f"Number of records to return (1–{_MAX_LIMIT}). Default: {_DEFAULT_LIMIT}.",
+    ),
+    offset: int = Query(
+        default=0,
+        ge=0,
+        description="Zero-based index of the first record to return. Must be >= 0.",
+    ),
     db: Session = Depends(get_db),
 ) -> List[Project]:
-    """Retrieve all projects ordered by creation time descending."""
-    return db.query(Project).order_by(Project.created_at.desc()).all()
+    """Retrieve paginated projects ordered by creation time descending, then ID descending."""
+    return (
+        db.query(Project)
+        .order_by(Project.created_at.desc(), Project.id.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
 
 
 @router.get(
@@ -86,12 +111,27 @@ def get_project(
     response_model=List[TaskResponse],
     status_code=status.HTTP_200_OK,
     summary="List tasks for a project",
+    description=(
+        "Returns a paginated list of tasks scoped to a specific project, ordered by creation time "
+        f"descending, then by ID descending for stable ordering. Default limit={_DEFAULT_LIMIT}, max={_MAX_LIMIT}."
+    ),
 )
 def list_project_tasks(
     project_id: str,
+    limit: int = Query(
+        default=_DEFAULT_LIMIT,
+        ge=1,
+        le=_MAX_LIMIT,
+        description=f"Number of records to return (1–{_MAX_LIMIT}). Default: {_DEFAULT_LIMIT}.",
+    ),
+    offset: int = Query(
+        default=0,
+        ge=0,
+        description="Zero-based index of the first record to return. Must be >= 0.",
+    ),
     db: Session = Depends(get_db),
 ) -> List[TaskRecord]:
-    """List all tasks belonging to the specified project."""
+    """List paginated tasks belonging to the specified project."""
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(
@@ -102,6 +142,8 @@ def list_project_tasks(
     return (
         db.query(TaskRecord)
         .filter(TaskRecord.project_id == project_id)
-        .order_by(TaskRecord.created_at.desc())
+        .order_by(TaskRecord.created_at.desc(), TaskRecord.id.desc())
+        .offset(offset)
+        .limit(limit)
         .all()
     )

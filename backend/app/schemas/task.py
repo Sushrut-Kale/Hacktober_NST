@@ -9,6 +9,7 @@ from backend.app.schemas.core import AcceptanceCriterion
 
 class TaskStatus(str, Enum):
     PLANNED = "PLANNED"
+    PENDING_APPROVAL = "PENDING_APPROVAL"
     IN_PROGRESS = "IN_PROGRESS"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
@@ -56,8 +57,14 @@ class TaskCreate(TaskBase):
 class TaskResponse(TaskBase):
     id: str = Field(..., description="Unique UUID identifier for the task")
     project_id: str = Field(..., description="Parent project identifier")
-    status: TaskStatus = Field(default=TaskStatus.PLANNED)
+    status: str = Field(default=TaskStatus.PLANNED, description="Current lifecycle status of the task")
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last modification timestamp")
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class TaskStatusUpdate(BaseModel):
+    """Request body for PATCH /api/tasks/{task_id}/status."""
+
+    status: TaskStatus = Field(..., description="The target status to transition the task into.")
