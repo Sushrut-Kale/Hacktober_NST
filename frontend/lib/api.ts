@@ -212,6 +212,7 @@ export const api = {
 
   async createTask(data: {
     id?: string;
+    project_id?: string;
     title: string;
     description: string;
     acceptance_criteria: Array<{ id: string; description: string; required?: boolean }>;
@@ -219,7 +220,7 @@ export const api = {
   }) {
     const fallback: Task = {
       id: data.id || `task-${Date.now().toString(36)}`,
-      project_id: "default",
+      project_id: data.project_id || "default",
       title: data.title,
       description: data.description,
       state: "CREATED",
