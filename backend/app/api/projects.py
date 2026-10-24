@@ -55,10 +55,28 @@ def create_project(
     summary="List all registered projects",
 )
 def list_projects(
+    limit: int = 50,
+    offset: int = 0,
     db: Session = Depends(get_db),
 ) -> List[Project]:
-    """Retrieve all projects ordered by creation time descending."""
-    return db.query(Project).order_by(Project.created_at.desc()).all()
+    """Retrieve all projects ordered by creation time descending with pagination."""
+    if limit < 1 or limit > 100:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Limit must be between 1 and 100.",
+        )
+    if offset < 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Offset must be greater than or equal to 0.",
+        )
+    return (
+        db.query(Project)
+        .order_by(Project.created_at.desc(), Project.id.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
 
 
 @router.get(
@@ -89,9 +107,21 @@ def get_project(
 )
 def list_project_tasks(
     project_id: str,
+    limit: int = 50,
+    offset: int = 0,
     db: Session = Depends(get_db),
 ) -> List[TaskRecord]:
-    """List all tasks belonging to the specified project."""
+    """List all tasks belonging to the specified project with pagination."""
+    if limit < 1 or limit > 100:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Limit must be between 1 and 100.",
+        )
+    if offset < 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Offset must be greater than or equal to 0.",
+        )
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(
@@ -102,6 +132,8 @@ def list_project_tasks(
     return (
         db.query(TaskRecord)
         .filter(TaskRecord.project_id == project_id)
-        .order_by(TaskRecord.created_at.desc())
+        .order_by(TaskRecord.created_at.desc(), TaskRecord.id.desc())
+        .offset(offset)
+        .limit(limit)
         .all()
     )

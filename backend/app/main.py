@@ -25,6 +25,7 @@ from backend.app.schemas.core import (
     ExecutionEvent,
     RunReport,
     TaskDetail,
+    ClaimVsRealityReport,
 )
 from backend.app.services.verification_engine import DeterministicVerificationEngine
 from backend.app.services.gemma_service import GemmaService
@@ -180,11 +181,25 @@ async def create_task(payload: TaskCreateRequest, db: Session = Depends(get_db))
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.get("/api/tasks", response_model=List[Task])
-async def list_tasks(project_id: Optional[str] = None) -> List[Task]:
+async def list_tasks(
+    project_id: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> List[Task]:
     """
-    Lists all persisted tasks ordered by creation time.
+    Lists all persisted tasks ordered by creation time with pagination.
     """
-    return db_repo.list_tasks(project_id=project_id)
+    if limit < 1 or limit > 100:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Limit must be between 1 and 100.",
+        )
+    if offset < 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Offset must be greater than or equal to 0.",
+        )
+    return db_repo.list_tasks(project_id=project_id, limit=limit, offset=offset)
 
 @app.get("/api/tasks/{task_id}", response_model=TaskDetail)
 async def get_task_detail(task_id: str, db: Session = Depends(get_db)) -> TaskDetail:
@@ -213,13 +228,23 @@ async def get_task_detail(task_id: str, db: Session = Depends(get_db)) -> TaskDe
         raise HTTPException(status_code=404, detail=f"Task '{task_id}' not found.")
 
 
+class TaskPlanRequestWrapper(BaseModel):
+    repo_context: Optional[str] = None
+
+
 @app.post("/api/tasks/{task_id}/plan", response_model=TaskPlan)
-async def generate_task_plan_route(task_id: str, repo_context: Optional[str] = None) -> TaskPlan:
+async def generate_task_plan_route(
+    task_id: str,
+    payload: Optional[TaskPlanRequestWrapper] = None,
+    repo_context: Optional[str] = None,
+) -> TaskPlan:
     """
     Generates and persists a structured task plan via Gemma 4, advancing task to PLANNED.
+    Supports repo_context via optional JSON request body or query parameter.
     """
+    context = (payload.repo_context if payload else None) or repo_context
     try:
-        return await workflow_service.generate_and_save_plan(task_id, repo_context=repo_context)
+        return await workflow_service.generate_and_save_plan(task_id, repo_context=context)
     except KeyError:
         raise HTTPException(status_code=404, detail=f"Task '{task_id}' not found.")
     except InvalidStateTransitionError as e:
@@ -314,6 +339,42 @@ async def get_run_report(run_id: str) -> RunReport:
         return workflow_service.get_run_report(run_id)
     except KeyError:
         raise HTTPException(status_code=404, detail=f"Execution run '{run_id}' not found.")
+
+@app.get("/api/runs/{run_id}/diagnosis", response_model=FailureDiagnosis)
+async def get_run_diagnosis(run_id: str) -> FailureDiagnosis:
+    """
+    Retrieves the failure diagnosis record associated with an execution run.
+    """
+    run = db_repo.get_execution_run(run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail=f"Execution run '{run_id}' not found.")
+    diag = db_repo.get_latest_diagnosis(run.task_id)
+    if not diag:
+        raise HTTPException(status_code=404, detail=f"No diagnosis record exists for run '{run_id}'.")
+    return diag
+
+@app.get("/api/runs/{run_id}/claim-vs-reality", response_model=ClaimVsRealityReport)
+async def get_run_claim_vs_reality(run_id: str) -> ClaimVsRealityReport:
+    """
+    Returns a Claim vs Reality comparison report comparing agent execution against verified evidence.
+    """
+    run = db_repo.get_execution_run(run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail=f"Execution run '{run_id}' not found.")
+    task = db_repo.get_task(run.task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail=f"Task '{run.task_id}' not found.")
+
+    claim = ExecutionClaim(
+        task_id=task.id,
+        agent_name="VIKASA Execution Runner",
+        claimed_success=(run.exit_code == 0),
+        statement=f"Executed '{run.command}'" if run.command else "Executed test command",
+        git_diff=run.git_diff or "",
+        evidence_list=run.evidence_items,
+    )
+    verification_res = verification_engine.evaluate(task, claim)
+    return verification_engine.generate_claim_vs_reality_report(task, claim, verification_res)
 
 # -------------------------------------------------------------
 # Stateless Helper Endpoints (Preserving Phase 0 & 1 Contracts)

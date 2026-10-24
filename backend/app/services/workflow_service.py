@@ -35,9 +35,17 @@ VALID_TRANSITIONS: Dict[TaskState, set] = {
     TaskState.PLANNED: {TaskState.APPROVED, TaskState.PLANNED},
     TaskState.APPROVED: {TaskState.RUNNING},
     TaskState.RUNNING: {TaskState.VERIFYING, TaskState.FAILED},
-    TaskState.VERIFYING: {TaskState.VERIFIED, TaskState.FAILED, TaskState.REVIEW_REQUIRED},
+    TaskState.VERIFYING: {
+        TaskState.VERIFIED,
+        TaskState.FAILED,
+        TaskState.REVIEW_REQUIRED,
+        TaskState.BLOCKED,
+        TaskState.NOT_RUN,
+    },
     TaskState.FAILED: {TaskState.PLANNED, TaskState.APPROVED},
     TaskState.REVIEW_REQUIRED: {TaskState.PLANNED, TaskState.APPROVED},
+    TaskState.BLOCKED: {TaskState.PLANNED, TaskState.APPROVED},
+    TaskState.NOT_RUN: {TaskState.PLANNED, TaskState.APPROVED},
     TaskState.VERIFIED: set(),
 }
 
@@ -119,8 +127,15 @@ class WorkflowService:
         if not task:
             raise KeyError(f"Task '{task_id}' not found.")
 
-        # Task can be planned from CREATED, or re-planned from FAILED/REVIEW_REQUIRED/PLANNED
-        if task.state not in [TaskState.CREATED, TaskState.PLANNED, TaskState.FAILED, TaskState.REVIEW_REQUIRED]:
+        # Task can be planned from CREATED, or re-planned from FAILED/REVIEW_REQUIRED/BLOCKED/NOT_RUN/PLANNED
+        if task.state not in [
+            TaskState.CREATED,
+            TaskState.PLANNED,
+            TaskState.FAILED,
+            TaskState.REVIEW_REQUIRED,
+            TaskState.BLOCKED,
+            TaskState.NOT_RUN,
+        ]:
             raise InvalidStateTransitionError(
                 f"Cannot generate plan while task is in '{task.state.value}' state."
             )
@@ -158,9 +173,15 @@ class WorkflowService:
         if not plan:
             raise ValueError(f"Task '{task_id}' has no generated plan to approve.")
 
-        if task.state not in [TaskState.PLANNED, TaskState.FAILED, TaskState.REVIEW_REQUIRED]:
+        if task.state not in [
+            TaskState.PLANNED,
+            TaskState.FAILED,
+            TaskState.REVIEW_REQUIRED,
+            TaskState.BLOCKED,
+            TaskState.NOT_RUN,
+        ]:
             raise InvalidStateTransitionError(
-                f"Cannot approve task in state '{task.state.value}'. Must be in PLANNED state."
+                f"Cannot approve task in state '{task.state.value}'. Must be in PLANNED or recoverable state."
             )
 
         approved_at = datetime.now(timezone.utc)
@@ -307,8 +328,15 @@ class WorkflowService:
             )
         )
 
-        # If failed or review required, generate and persist Gemma failure diagnosis
-        if verification.verdict in [VerificationVerdict.FAILED, VerificationVerdict.REVIEW_REQUIRED]:
+        # If failed, blocked, or review required, generate and persist Gemma failure diagnosis
+        non_passing_verdicts = {
+            VerificationVerdict.FAILED,
+            VerificationVerdict.FAIL,
+            VerificationVerdict.REVIEW_REQUIRED,
+            VerificationVerdict.UNKNOWN,
+            VerificationVerdict.BLOCKED,
+        }
+        if verification.verdict in non_passing_verdicts:
             diagnosis = await self.gemma.explain_failure(
                 task=task,
                 verification_result=verification,

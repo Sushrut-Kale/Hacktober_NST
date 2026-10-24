@@ -242,13 +242,25 @@ class DatabaseRepository:
                 approved_at=datetime.fromisoformat(row["approved_at"]) if row["approved_at"] else None,
             )
 
-    def list_tasks(self, project_id: Optional[str] = None) -> List[Task]:
+    def list_tasks(
+        self,
+        project_id: Optional[str] = None,
+        limit: Optional[int] = None,
+        offset: int = 0,
+    ) -> List[Task]:
         with self._get_connection() as conn:
             cursor = conn.cursor()
+            query = "SELECT * FROM tasks"
+            params: List[Any] = []
             if project_id:
-                cursor.execute("SELECT * FROM tasks WHERE project_id = ? ORDER BY created_at DESC", (project_id,))
-            else:
-                cursor.execute("SELECT * FROM tasks ORDER BY created_at DESC")
+                query += " WHERE project_id = ?"
+                params.append(project_id)
+            query += " ORDER BY created_at DESC, id DESC"
+            if limit is not None:
+                query += " LIMIT ? OFFSET ?"
+                params.extend([limit, offset])
+
+            cursor.execute(query, tuple(params))
             tasks = []
             for row in cursor.fetchall():
                 criteria = self._parse_criteria(row["acceptance_criteria"])
