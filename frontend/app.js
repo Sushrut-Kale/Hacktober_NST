@@ -17,8 +17,11 @@
     projects: [],
     selectedProjectId: null,
     tasks: [],
+    taskPlans: {},
     currentEvidence: [],
     systemHealth: null,
+    lastReport: null,
+    lastVerifiedTask: null,
   };
 
   // DOM Elements
@@ -312,6 +315,20 @@
     }
   }
 
+  function getStatusBadgeClass(status) {
+    switch (status) {
+      case 'IN_PROGRESS':
+      case 'COMPLETED':
+        return 'badge-pass';
+      case 'FAILED':
+        return 'badge-fail';
+      case 'PENDING_APPROVAL':
+        return 'badge-blocked';
+      default:
+        return 'badge-not_run';
+    }
+  }
+
   function renderTasks(tasks) {
     if (!tasks || tasks.length === 0) {
       elements.tasksContainer.innerHTML = `
@@ -327,18 +344,32 @@
       return;
     }
 
-    elements.tasksContainer.innerHTML = tasks.map(t => `
+    elements.tasksContainer.innerHTML = tasks.map(t => {
+      const statusClass = getStatusBadgeClass(t.status);
+      const plan = state.taskPlans[t.id];
+      return `
       <div class="card" data-task-id="${t.id}">
         <div class="card-title">
           <span>${escapeHtml(t.title)}</span>
-          <span class="badge badge-not_run">${t.status || 'PLANNED'}</span>
+          <span class="badge ${statusClass}">${t.status || 'PLANNED'}</span>
         </div>
         <p class="card-desc">${escapeHtml(t.description || 'No description provided.')}</p>
         
         ${t.acceptance_criteria ? `
-          <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; font-family: var(--font-mono); color: #cbd5e1;">
+          <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; font-family: var(--font-mono); color: #cbd5e1; margin-bottom: 8px;">
             <strong>Acceptance Criteria:</strong>
             <pre style="white-space: pre-wrap; margin-top: 4px;">${escapeHtml(t.acceptance_criteria)}</pre>
+          </div>
+        ` : ''}
+
+        ${plan ? `
+          <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--accent-indigo); padding: 10px; border-radius: 6px; font-size: 0.8rem; margin-bottom: 8px;">
+            <div style="font-weight: 700; color: var(--accent-indigo); margin-bottom: 4px;">Plan (${escapeHtml(plan.model_name)}):</div>
+            <div style="font-weight: 500; margin-bottom: 6px;">${escapeHtml(plan.summary)}</div>
+            <ol style="padding-left: 18px; margin-bottom: 4px;">
+              ${plan.steps.map(s => `<li>${escapeHtml(s.action)} &rarr; <span style="color: var(--text-muted);">${escapeHtml(s.expected_outcome)}</span></li>`).join('')}
+            </ol>
+            <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 4px;"><strong>Verification:</strong> ${escapeHtml(plan.verification_strategy)}</div>
           </div>
         ` : ''}
 
@@ -347,12 +378,124 @@
           <span>Created: ${new Date(t.created_at).toLocaleString()}</span>
         </div>
 
-        <button class="btn btn-secondary btn-sm btn-verify-task" data-id="${t.id}" style="margin-top: 8px;">
-          Send to Verification Studio &rarr;
-        </button>
-      </div>
-    `).join('');
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+          ${t.status === 'PLANNED' || !t.status ? `
+            <button class="btn btn-secondary btn-sm btn-plan-task" data-id="${t.id}">
+              Generate Plan
+            </button>
+            <button class="btn btn-primary btn-sm btn-approve-task" data-id="${t.id}">
+              Approve Plan
+            </button>
+          ` : ''}
 
+          ${t.status === 'PENDING_APPROVAL' ? `
+            <button class="btn btn-primary btn-sm btn-execute-task" data-id="${t.id}">
+              Execute Task
+            </button>
+          ` : ''}
+
+          ${t.status === 'FAILED' ? `
+            <button class="btn btn-secondary btn-sm btn-retry-task" data-id="${t.id}">
+              Retry Task
+            </button>
+          ` : ''}
+
+          <button class="btn btn-secondary btn-sm btn-verify-task" data-id="${t.id}">
+            Send to Verification Studio &rarr;
+          </button>
+        </div>
+      </div>
+    `;
+    }).join('');
+
+    // Wire Plan button
+    document.querySelectorAll('.btn-plan-task').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const task = state.tasks.find(t => t.id === btn.dataset.id);
+        if (!task) return;
+        btn.disabled = true;
+        btn.textContent = 'Generating...';
+        try {
+          const plan = await apiRequest('/api/plan', {
+            method: 'POST',
+            body: JSON.stringify({
+              id: task.id,
+              title: task.title,
+              description: task.description || '',
+              acceptance_criteria: task.acceptance_criteria || '',
+            }),
+          });
+          state.taskPlans[task.id] = plan;
+          renderTasks(state.tasks);
+          showToast(`Plan generated for "${task.title}". Review and approve before execution.`, 'info');
+        } catch (err) {
+          showToast('Failed to generate plan: ' + err.message, 'error');
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    });
+
+    // Wire Approve button
+    document.querySelectorAll('.btn-approve-task').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const tid = btn.dataset.id;
+        btn.disabled = true;
+        btn.textContent = 'Approving...';
+        try {
+          await apiRequest(`/api/tasks/${tid}/status`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status: 'PENDING_APPROVAL' }),
+          });
+          showToast('Task approved! Transitioned to PENDING_APPROVAL.', 'success');
+          await loadTasks(state.selectedProjectId);
+        } catch (err) {
+          showToast('Approval failed: ' + err.message, 'error');
+          btn.disabled = false;
+        }
+      });
+    });
+
+    // Wire Execute button
+    document.querySelectorAll('.btn-execute-task').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const tid = btn.dataset.id;
+        btn.disabled = true;
+        btn.textContent = 'Executing...';
+        try {
+          const res = await apiRequest(`/api/tasks/${tid}/execute`, {
+            method: 'POST',
+            body: JSON.stringify({}),
+          });
+          showToast(`Execution started in ${res.execution_mode} mode!`, 'success');
+          await loadTasks(state.selectedProjectId);
+        } catch (err) {
+          showToast('Execution failed: ' + err.message, 'error');
+          btn.disabled = false;
+        }
+      });
+    });
+
+    // Wire Retry button
+    document.querySelectorAll('.btn-retry-task').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const tid = btn.dataset.id;
+        btn.disabled = true;
+        try {
+          await apiRequest(`/api/tasks/${tid}/status`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status: 'PLANNED' }),
+          });
+          showToast('Task reset to PLANNED for revision.', 'info');
+          await loadTasks(state.selectedProjectId);
+        } catch (err) {
+          showToast('Retry transition failed: ' + err.message, 'error');
+          btn.disabled = false;
+        }
+      });
+    });
+
+    // Wire Verify button
     document.querySelectorAll('.btn-verify-task').forEach(btn => {
       btn.addEventListener('click', () => {
         const task = state.tasks.find(t => t.id === btn.dataset.id);
@@ -501,6 +644,9 @@
         }),
       });
 
+      state.lastReport = report;
+      state.lastVerifiedTask = taskPayload;
+
       renderVerificationReport(report);
       showToast(`Verification completed: Verdict ${report.verdict}`, report.claim_verified ? 'success' : 'error');
     } catch (err) {
@@ -536,11 +682,53 @@
     // Discrepancies
     if (report.discrepancies && report.discrepancies.length > 0) {
       elements.discrepanciesBox.style.display = 'block';
-      elements.discrepanciesList.innerHTML = report.discrepancies.map(d => `
-        <div class="discrepancy-card">
-          &#9888; ${escapeHtml(d)}
+      elements.discrepanciesList.innerHTML = `
+        ${report.discrepancies.map(d => `
+          <div class="discrepancy-card">
+            &#9888; ${escapeHtml(d)}
+          </div>
+        `).join('')}
+        <div style="margin-top: 12px;">
+          <button id="btn-diagnose-failure" class="btn btn-secondary btn-sm">
+            Diagnose Failure with Gemma
+          </button>
+          <div id="diagnosis-container" style="display: none; margin-top: 10px; padding: 12px; background: rgba(99, 102, 241, 0.12); border: 1px solid var(--accent-indigo); border-radius: 8px;">
+            <div style="font-weight: 700; color: #818cf8; font-size: 0.85rem; margin-bottom: 6px;">GEMMA EVIDENCE-BASED DIAGNOSIS & CORRECTION:</div>
+            <div id="diagnosis-text" style="font-size: 0.85rem; color: #e2e8f0; white-space: pre-wrap; font-family: var(--font-mono);"></div>
+          </div>
         </div>
-      `).join('');
+      `;
+
+      document.getElementById('btn-diagnose-failure')?.addEventListener('click', async () => {
+        const btn = document.getElementById('btn-diagnose-failure');
+        const container = document.getElementById('diagnosis-container');
+        const text = document.getElementById('diagnosis-text');
+        btn.disabled = true;
+        btn.textContent = 'Diagnosing...';
+
+        try {
+          const taskObj = state.lastVerifiedTask || {
+            id: report.task_id,
+            title: elements.verifyTaskTitle.value.trim() || 'Task',
+            acceptance_criteria: [],
+          };
+          const diag = await apiRequest('/api/verify/diagnose', {
+            method: 'POST',
+            body: JSON.stringify({
+              task: taskObj,
+              verification_result: report.verification_result,
+            }),
+          });
+          container.style.display = 'block';
+          text.textContent = diag.ai_explanation;
+          showToast('Evidence diagnosis generated by Gemma.', 'info');
+        } catch (err) {
+          showToast('Diagnosis failed: ' + err.message, 'error');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Diagnose Failure with Gemma';
+        }
+      });
     } else {
       elements.discrepanciesBox.style.display = 'none';
       elements.discrepanciesList.innerHTML = '';
