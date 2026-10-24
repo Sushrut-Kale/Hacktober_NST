@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Zap,
 } from "lucide-react";
+import { RevealOnScroll } from "./RevealOnScroll";
 
 export function DeveloperStatusStrip() {
   const { projects, isBackendOnline, isMockMode, modelStatus, backendLatency } =
@@ -64,7 +65,12 @@ export function DeveloperStatusStrip() {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 relative z-10 -mt-4 mb-16">
+    <RevealOnScroll
+      delayMs={60}
+      durationMs={650}
+      yOffset={18}
+      className="w-full max-w-5xl mx-auto px-4 sm:px-6 relative z-10 -mt-4 mb-16"
+    >
       <div className="p-3 sm:p-4 rounded-2xl glass-panel-subtle border border-white/10 flex flex-wrap items-center justify-between gap-3 sm:gap-4 text-xs font-mono text-slate-300">
         {/* Metric 1: AI Model */}
         <div className="flex items-center gap-2">
@@ -151,6 +157,6 @@ export function DeveloperStatusStrip() {
           </div>
         </div>
       </div>
-    </div>
+    </RevealOnScroll>
   );
 }
