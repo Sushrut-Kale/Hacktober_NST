@@ -19,6 +19,50 @@ import {
 export function LandingNav() {
   const { isBackendOnline, isMockMode, modelStatus } = useProject();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = React.useRef(0);
+  const ticking = React.useRef(false);
+
+  React.useEffect(() => {
+    const threshold = 10;
+    const topThreshold = 25;
+
+    const handleScroll = () => {
+      if (!ticking.current) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = Math.max(0, window.scrollY);
+
+          if (currentScrollY <= topThreshold) {
+            setIsVisible(true);
+            lastScrollY.current = currentScrollY;
+            ticking.current = false;
+            return;
+          }
+
+          const delta = currentScrollY - lastScrollY.current;
+
+          if (Math.abs(delta) > threshold) {
+            if (delta > 0 && currentScrollY > 75) {
+              // Scrolling down
+              if (!mobileMenuOpen) {
+                setIsVisible(false);
+              }
+            } else if (delta < 0) {
+              // Scrolling up
+              setIsVisible(true);
+            }
+            lastScrollY.current = currentScrollY;
+          }
+
+          ticking.current = false;
+        });
+        ticking.current = true;
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [mobileMenuOpen]);
 
   const navLinks = [
     { label: "Projects", href: "/projects" },
@@ -41,7 +85,13 @@ export function LandingNav() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 lg:px-10 pt-4 sm:pt-6 pointer-events-none">
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 lg:px-10 pt-4 sm:pt-6 pointer-events-none transition-all duration-300 ease-out ${
+        isVisible
+          ? "translate-y-0 opacity-100"
+          : "-translate-y-full opacity-0 pointer-events-none"
+      }`}
+    >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Left: VIKASA Logo & Wordmark */}
         <Link
