@@ -484,7 +484,8 @@ export default function DashboardPage() {
                       </div>
                       <p className="text-[#A4B2C5] leading-snug">{evt.message}</p>
                     </div>
-                  ))}
+                  ))
+                )}
             </div>
           </Card>
 
