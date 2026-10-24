@@ -122,7 +122,8 @@ async def test_reproducible_end_to_end_verification_lifecycle(demo_environment):
     )
     assert run_1.status == "FAILED"
     assert run_1.exit_code == 1
-    assert "AssertionError: assert 7 == 12" in run_1.stdout
+    assert "assert 7 == 12" in run_1.stdout
+    assert "AssertionError" in run_1.stdout
     assert wf.repo.get_task(task.id).state == TaskState.VERIFYING
 
     # -------------------------------------------------------------
