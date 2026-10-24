@@ -30,9 +30,7 @@ interface ProjectContextType {
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 export function ProjectProvider({ children }: { children: React.ReactNode }) {
-  const [projects, setProjects] = useState<Project[]>(() =>
-    typeof window !== "undefined" && isMockModeForced() ? DEMO_PROJECTS : []
-  );
+  const [projects, setProjects] = useState<Project[]>(DEMO_PROJECTS);
   const [currentProjectId, setCurrentProjectIdState] = useState<string>("default");
   const [isBackendOnline, setIsBackendOnline] = useState<boolean>(false);
   const [isMockMode, setIsMockModeState] = useState<boolean>(false);
@@ -56,13 +54,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     const next = !isMockMode;
     setIsMockModeState(next);
     setMockModeForced(next);
-    if (next) {
-      setProjects(DEMO_PROJECTS);
-    } else {
-      refreshStatus();
-    }
     showToast(
-      next ? "Mock Fixture Mode Forced [DEV FIXTURE]" : "Live Backend Mode Enabled",
+      next ? "Mock Fixture Mode Forced" : "Live Backend Mode Enabled",
       next ? "warning" : "success"
     );
   };
@@ -90,7 +83,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       }
 
       const projs = await api.getProjects();
-      if (projs.data) {
+      if (projs.data && projs.data.length > 0) {
         setProjects(projs.data);
       }
     } catch {

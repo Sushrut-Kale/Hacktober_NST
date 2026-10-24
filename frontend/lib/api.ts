@@ -163,11 +163,7 @@ export const api = {
   },
 
   async getProjects() {
-    return fetchWithFallback<Project[]>(
-      "/api/projects",
-      {},
-      isMockModeForced() ? DEMO_PROJECTS : []
-    );
+    return fetchWithFallback<Project[]>("/api/projects", {}, DEMO_PROJECTS);
   },
 
   async getProject(projectId: string) {
@@ -201,24 +197,12 @@ export const api = {
   },
 
   async getTasks(projectId?: string) {
-    let mockList = DEMO_TASKS;
+    let fallback = DEMO_TASKS;
     if (projectId && projectId !== "all") {
-      mockList = DEMO_TASKS.filter((t) => t.project_id === projectId);
+      fallback = DEMO_TASKS.filter((t) => t.project_id === projectId);
     }
     const query = projectId && projectId !== "all" ? `?project_id=${projectId}` : "";
-    return fetchWithFallback<Task[]>(
-      `/api/tasks${query}`,
-      {},
-      isMockModeForced() ? mockList : []
-    );
-  },
-
-  async getExecutions() {
-    return fetchWithFallback<ExecutionRun[]>(
-      "/api/runs",
-      {},
-      isMockModeForced() ? Object.values(DEMO_RUNS) : []
-    );
+    return fetchWithFallback<Task[]>(`/api/tasks${query}`, {}, fallback);
   },
 
   async getTask(taskId: string) {

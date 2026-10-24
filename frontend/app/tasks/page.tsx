@@ -140,21 +140,8 @@ export default function TasksPage() {
           ))
         ) : filteredTasks.length === 0 ? (
           <div className="p-12 text-center rounded-2xl border border-dashed border-white/10 bg-[#0B1423]/40 text-[#718198]">
-            <h3 className="text-base font-semibold text-[#F1F4F8] mb-1">
-              No Tasks Found
-            </h3>
-            <p className="text-xs text-[#718198] max-w-md mx-auto mb-5 leading-relaxed">
-              {tasks.length === 0
-                ? "No tasks have been registered in this project yet. Create your first task to begin planning."
-                : "No tasks match your current search and status filter."}
-            </p>
-            {tasks.length === 0 && (
-              <Link href="/tasks/new">
-                <Button variant="brand" size="sm" icon={<Plus className="w-4 h-4" />}>
-                  Create Task
-                </Button>
-              </Link>
-            )}
+            <CheckSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
+            <p className="text-sm font-medium">No tasks found matching criteria.</p>
           </div>
         ) : (
           filteredTasks.map((task) => (

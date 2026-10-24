@@ -29,7 +29,8 @@ export function ProjectWorkspaceSection({
       <RevealOnScroll delayMs={0} durationMs={650}>
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
           <div>
-            <div className="inline-flex items-center text-xs font-mono tracking-widest text-[#58AAE1] uppercase mb-1">
+            <div className="flex items-center gap-2 text-xs font-mono tracking-widest text-[#58AAE1] uppercase mb-1">
+              <Layers className="w-3.5 h-3.5" />
               <span>Workspace Inventory</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white font-tight">
@@ -65,7 +66,7 @@ export function ProjectWorkspaceSection({
               className="h-full"
             >
               <div
-                className={`group relative rounded-2xl p-5 sm:p-6 flex flex-col justify-between h-full transition-all duration-200 border ${
+                className={`group relative rounded-2xl p-5 flex flex-col justify-between h-full transition-all duration-200 border ${
                   isSelected
                     ? "bg-gradient-to-b from-[#10294B]/40 to-[#0A1B35]/30 border-[#58AAE1]/50 shadow-[0_10px_35px_rgba(88,170,225,0.15)]"
                     : "glass-panel hover:border-white/25 hover:shadow-[0_15px_40px_rgba(0,0,0,0.4)]"
@@ -73,14 +74,12 @@ export function ProjectWorkspaceSection({
               >
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-[#9EDCFF]">
+                    <div className="w-8 h-8 rounded-xl bg-[#58AAE1]/15 text-[#9EDCFF] flex items-center justify-center border border-[#58AAE1]/30">
+                      <FolderGit2 className="w-4 h-4" />
+                    </div>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-slate-300">
                       {project.language || "Python"}
                     </span>
-                    {project.branch && (
-                      <span className="text-[10px] font-mono text-slate-400">
-                        {project.branch}
-                      </span>
-                    )}
                   </div>
 
                   <h3 className="text-base font-bold text-white group-hover:text-[#9EDCFF] transition-colors font-tight">

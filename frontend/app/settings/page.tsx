@@ -74,8 +74,9 @@ export default function SettingsPage() {
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-[#F1F4F8]">
-          System Settings & Configuration
+        <h1 className="text-2xl font-bold tracking-tight text-[#F1F4F8] flex items-center gap-2.5">
+          <Settings className="w-6 h-6 text-[#58AAE1]" />
+          <span>System Settings & Configuration</span>
         </h1>
         <p className="text-xs text-[#718198] mt-1">
           Configure API endpoints, execution runner settings, and application environments
@@ -85,8 +86,9 @@ export default function SettingsPage() {
       {/* Backend API Configuration Card */}
       <Card className="p-6 space-y-5">
         <div className="flex items-center justify-between">
-          <div className="text-sm font-bold text-[#F1F4F8]">
-            FastAPI Backend Connection
+          <div className="flex items-center gap-2 text-sm font-bold text-[#F1F4F8]">
+            <Server className="w-5 h-5 text-[#58AAE1]" />
+            <span>FastAPI Backend Connection</span>
           </div>
           <span
             className={`px-2.5 py-1 text-xs font-mono font-bold rounded-full border ${
@@ -169,8 +171,9 @@ export default function SettingsPage() {
       <Card className="p-6 space-y-4">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <div className="text-sm font-bold text-[#F1F4F8]">
-              Forced Demo Fixture Mode
+            <div className="flex items-center gap-2 text-sm font-bold text-[#F1F4F8]">
+              <SlidersHorizontal className="w-5 h-5 text-amber-400" />
+              <span>Forced Demo Fixture Mode</span>
             </div>
             <p className="text-xs text-[#718198] max-w-md">
               Enable to force the UI to render deterministic demo fixtures even if a backend server is detected on localhost. Useful for interface demonstration and QA.
@@ -194,8 +197,9 @@ export default function SettingsPage() {
 
       {/* Active Project Selection */}
       <Card className="p-6 space-y-4">
-        <div className="text-sm font-bold text-[#F1F4F8]">
-          Active Project Workspace
+        <div className="flex items-center gap-2 text-sm font-bold text-[#F1F4F8]">
+          <FolderGit2 className="w-5 h-5 text-[#58AAE1]" />
+          <span>Active Project Workspace</span>
         </div>
 
         <div>
@@ -221,8 +225,9 @@ export default function SettingsPage() {
 
       {/* Security & Secrets Invariant Notice */}
       <Card className="p-6 space-y-3">
-        <div className="text-sm font-bold text-emerald-400">
-          Security & Environment Isolation
+        <div className="flex items-center gap-2 text-sm font-bold text-emerald-400">
+          <Shield className="w-5 h-5" />
+          <span>Security & Environment Isolation</span>
         </div>
         <p className="text-xs text-[#A4B2C5] leading-relaxed">
           In compliance with VIKASA security invariants, no API keys, private tokens, or backend secrets are exposed in browser-visible environment variables or JavaScript bundles. All sensitive model queries and filesystem operations are handled on the server side.

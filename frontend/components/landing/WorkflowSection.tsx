@@ -1,7 +1,16 @@
 "use client";
 
 import React from "react";
-import { ArrowRight } from "lucide-react";
+import {
+  FolderGit2,
+  FileText,
+  CheckCircle2,
+  ShieldAlert,
+  ArrowRight,
+  GitBranch,
+  Sparkles,
+  Terminal,
+} from "lucide-react";
 import { RevealOnScroll } from "./RevealOnScroll";
 
 export function WorkflowSection() {
@@ -12,6 +21,7 @@ export function WorkflowSection() {
       subtitle: "Codebase Context",
       description:
         "Connect your repository or server path. VIKASA analyzes project structure, dependencies, and environment configurations.",
+      icon: <FolderGit2 className="w-5 h-5 text-[#9EDCFF]" />,
     },
     {
       num: "02",
@@ -19,6 +29,7 @@ export function WorkflowSection() {
       subtitle: "Deterministic Scope",
       description:
         "State requirements, affected paths, and explicit acceptance criteria. Define what constitutes true success before writing code.",
+      icon: <FileText className="w-5 h-5 text-[#58AAE1]" />,
     },
     {
       num: "03",
@@ -26,6 +37,7 @@ export function WorkflowSection() {
       subtitle: "Human-in-the-Loop",
       description:
         "Inspect the structured execution steps, diff predictions, and dependency modifications. Retain full authority before execution runs.",
+      icon: <Sparkles className="w-5 h-5 text-[#9EDCFF]" />,
     },
     {
       num: "04",
@@ -33,6 +45,7 @@ export function WorkflowSection() {
       subtitle: "Proof Over Claims",
       description:
         "Execute automated assertions, compare claims against real stdout and exit codes, and receive an audit-grade cryptographic verdict.",
+      icon: <CheckCircle2 className="w-5 h-5 text-emerald-400" />,
     },
   ];
 
@@ -67,12 +80,12 @@ export function WorkflowSection() {
 
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <span className="font-heading text-3xl text-slate-500 group-hover:text-[#58AAE1] transition-colors">
+                  <span className="font-heading text-2xl text-slate-500 group-hover:text-[#58AAE1] transition-colors">
                     {step.num}
                   </span>
-                  <span className="text-[10px] font-mono tracking-wider uppercase text-[#58AAE1] bg-[#58AAE1]/10 px-2 py-0.5 rounded border border-[#58AAE1]/20">
-                    Step {idx + 1}
-                  </span>
+                  <div className="w-9 h-9 rounded-xl bg-[#10294B]/50 border border-white/10 flex items-center justify-center">
+                    {step.icon}
+                  </div>
                 </div>
 
                 <div className="text-[10px] font-mono tracking-wider uppercase text-[#58AAE1] mb-1">

@@ -90,8 +90,9 @@ export default function FailureExplanationPage() {
                 modelName="gemma4:e4b"
               />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-[#F1F4F8] mt-1">
-              Failure Diagnosis & Explanation
+            <h1 className="text-2xl font-bold tracking-tight text-[#F1F4F8] mt-1 flex items-center gap-2">
+              <AlertTriangle className="w-6 h-6 text-rose-400" />
+              <span>Failure Diagnosis & Explanation</span>
             </h1>
           </div>
         </div>
@@ -123,7 +124,8 @@ export default function FailureExplanationPage() {
       </div>
 
       {/* Language Invariant Alert */}
-      <div className="p-3.5 rounded-xl border border-[#58AAE1]/20 bg-[#0B1423] backdrop-blur-sm text-xs text-[#A4B2C5] border-l-4 border-l-[#58AAE1]">
+      <div className="p-3.5 rounded-xl border border-[#58AAE1]/20 bg-[#0B1423] backdrop-blur-sm flex items-start gap-2.5 text-xs text-[#A4B2C5]">
+        <Info className="w-4 h-4 text-[#58AAE1] shrink-0 mt-0.5" />
         <span>
           <strong className="text-[#9EDCFF]">Invariant:</strong> Switching between English and Marathi-Hinglish explains the failure in your preferred language without modifying the underlying deterministic failure verdict or evidence.
         </span>
@@ -190,8 +192,9 @@ export default function FailureExplanationPage() {
 
       {/* Recommended Fix & Retest Command */}
       <Card borderVariant="brand" className="p-6 space-y-4">
-        <div className="text-sm font-bold text-[#F1F4F8]">
-          Recommended Code Fix (Deterministic Correction)
+        <div className="flex items-center gap-2 text-sm font-bold text-[#F1F4F8]">
+          <Sparkles className="w-4 h-4 text-[#58AAE1]" />
+          <span>Recommended Code Fix (Deterministic Correction)</span>
         </div>
 
         <p className="text-xs text-[#A4B2C5] leading-relaxed">

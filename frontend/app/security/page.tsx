@@ -54,9 +54,10 @@ export default function SecurityTestResultsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-[#F1F4F8]">
-              Safe Execution Runner Security Tests
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight text-[#F1F4F8] flex items-center gap-2">
+              <Lock className="w-6 h-6 text-emerald-400" />
+              <span>Safe Execution Runner Security Tests</span>
             </h1>
           </div>
           <p className="text-xs text-[#718198] mt-1">
@@ -76,7 +77,8 @@ export default function SecurityTestResultsPage() {
       </div>
 
       {/* Security Invariant Alert */}
-      <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-xs text-[#A4B2C5] border-l-4 border-l-emerald-500">
+      <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-xs text-[#A4B2C5] flex items-start gap-3">
+        <Info className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
         <div>
           <strong className="text-emerald-300">Sandbox Invariant:</strong> The Safe Execution Runner strictly rejects arbitrary command strings. Compound operators (<code>&&</code>, <code>||</code>, <code>;</code>, <code>|</code>) and unallowlisted binaries trigger immediate HTTP 400 Bad Request before child process spawning.
         </div>

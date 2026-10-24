@@ -84,7 +84,8 @@ export default function ModelTransparencyPage() {
       </div>
 
       {/* Model Transparency Invariant Alert */}
-      <div className="p-4 rounded-xl border border-[#58AAE1]/20 bg-[#58AAE1]/10 text-xs text-[#A4B2C5] border-l-4 border-l-[#58AAE1]">
+      <div className="p-4 rounded-xl border border-[#58AAE1]/20 bg-[#58AAE1]/10 text-xs text-[#A4B2C5] flex items-start gap-3">
+        <Info className="w-4 h-4 text-[#58AAE1] shrink-0 mt-0.5" />
         <div>
           <strong className="text-[#9EDCFF]">Transparency Invariant:</strong> VIKASA never pretends an AI model is running locally when it is unreachable or times out. When Ollama is stopped or unreachable, the system explicitly marks the status as <code>FALLBACK_ACTIVE</code> or <code>AI_UNAVAILABLE</code> and falls back to deterministic rule generation.
         </div>
@@ -132,9 +133,12 @@ export default function ModelTransparencyPage() {
       {/* Ollama Runtime Service Diagnostics */}
       <Card className="p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-[#F1F4F8]">
-            Ollama Server Health Check
-          </h2>
+          <div className="flex items-center gap-2">
+            <Server className="w-5 h-5 text-[#58AAE1]" />
+            <h2 className="text-base font-bold text-[#F1F4F8]">
+              Ollama Server Health Check
+            </h2>
+          </div>
           <span
             className={`px-2.5 py-1 text-xs font-mono font-bold rounded-full border ${
               ollamaHealth?.available
@@ -181,9 +185,12 @@ export default function ModelTransparencyPage() {
       {/* Google Antigravity Telemetry Card */}
       <Card className="p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-[#F1F4F8]">
-            Google Antigravity SDK & MCP Runtime
-          </h2>
+          <div className="flex items-center gap-2">
+            <Cpu className="w-5 h-5 text-[#9EDCFF]" />
+            <h2 className="text-base font-bold text-[#F1F4F8]">
+              Google Antigravity SDK & MCP Runtime
+            </h2>
+          </div>
           <span className="px-2.5 py-1 text-xs font-mono font-bold rounded-full bg-[#58AAE1]/10 text-[#58AAE1] border border-[#58AAE1]/30">
             {antigravityHealth?.status || "NEEDS_INSTALLATION"}
           </span>

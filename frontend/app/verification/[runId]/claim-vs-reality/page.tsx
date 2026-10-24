@@ -115,8 +115,9 @@ export default function ClaimVsRealityPage() {
                 Core Invariant Evaluation
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#F1F4F8] mt-1">
-              Claim vs Reality
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#F1F4F8] mt-1 flex items-center gap-2.5">
+              <Scale className="w-7 h-7 text-[#58AAE1]" />
+              <span>Claim vs Reality</span>
             </h1>
           </div>
         </div>
@@ -134,6 +135,7 @@ export default function ClaimVsRealityPage() {
             <Button
               variant="outline"
               size="sm"
+              icon={<FileText className="w-4 h-4" />}
             >
               Full Report
             </Button>
@@ -142,8 +144,11 @@ export default function ClaimVsRealityPage() {
       </div>
 
       {/* Invariant Explanation Banner */}
-      <div className="p-4 rounded-xl border border-[#58AAE1]/20 bg-[#0B1423] backdrop-blur-sm text-xs text-[#A4B2C5] border-l-4 border-l-[#58AAE1]">
-        <strong className="text-[#9EDCFF]">Deterministic Invariant:</strong> The left panel represents what the AI coding agent declared in its completion message. The right panel represents what VIKASA&apos;s deterministic engine actually observed in git status, command exit codes, and test assertions. The verdict is never invented by the agent.
+      <div className="p-4 rounded-xl border border-[#58AAE1]/20 bg-[#0B1423] backdrop-blur-sm flex items-start gap-3 text-xs text-[#A4B2C5]">
+        <Info className="w-4 h-4 text-[#58AAE1] shrink-0 mt-0.5" />
+        <div>
+          <strong className="text-[#9EDCFF]">Deterministic Invariant:</strong> The left panel represents what the AI coding agent declared in its completion message. The right panel represents what VIKASA&apos;s deterministic engine actually observed in git status, command exit codes, and test assertions. The verdict is never invented by the agent.
+        </div>
       </div>
 
       {/* Side-by-Side (Desktop) / Stacked (Mobile) Layout */}
@@ -153,8 +158,9 @@ export default function ClaimVsRealityPage() {
         {/* ============================================================ */}
         <div className="space-y-4">
           <div className="flex items-center justify-between px-1">
-            <div className="text-sm font-bold tracking-tight text-[#9EDCFF] uppercase font-mono">
-              Agent Stated Claim
+            <div className="flex items-center gap-2 text-sm font-bold text-[#9EDCFF]">
+              <Bot className="w-5 h-5 text-[#58AAE1]" />
+              <span>Agent Claim</span>
             </div>
             <span className="text-[11px] font-mono text-[#9EDCFF] bg-[#58AAE1]/10 px-2 py-0.5 rounded border border-[#58AAE1]/20">
               Self-Reported Message
@@ -203,7 +209,7 @@ export default function ClaimVsRealityPage() {
                     key={i}
                     className="flex items-center gap-2 p-2 rounded bg-[#05080F] border border-white/5 text-[#A4B2C5]"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#58AAE1] shrink-0" />
+                    <FileCode className="w-3.5 h-3.5 text-[#58AAE1] shrink-0" />
                     <span className="truncate">{file}</span>
                   </div>
                 ))}
@@ -242,10 +248,11 @@ export default function ClaimVsRealityPage() {
         {/* ============================================================ */}
         <div className="space-y-4">
           <div className="flex items-center justify-between px-1">
-            <div className="text-sm font-bold tracking-tight text-emerald-400 uppercase font-mono">
-              Observed Evidence (Ground Truth)
+            <div className="flex items-center gap-2 text-sm font-bold text-[#58AAE1]">
+              <ShieldCheck className="w-5 h-5 text-[#58AAE1]" />
+              <span>Observed Evidence</span>
             </div>
-            <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+            <span className="text-[11px] font-mono text-[#58AAE1] bg-[#58AAE1]/10 px-2 py-0.5 rounded border border-[#58AAE1]/20">
               Deterministic Facts
             </span>
           </div>

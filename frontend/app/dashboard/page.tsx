@@ -357,16 +357,8 @@ export default function DashboardPage() {
                   key={i}
                   className="h-24 rounded-xl shimmer"
                   style={{ border: "1px solid rgba(255, 255, 255, 0.08)" }}
-            ) : tasks.length === 0 ? (
-              <div className="p-8 text-center rounded-xl border border-dashed border-white/10 bg-[#0B1423]/40 text-[#718198]">
-                <p className="text-sm font-medium text-[#F1F4F8]">No active tasks in this project</p>
-                <p className="text-xs text-[#718198] mt-1 mb-4">Create your first task to start planning and deterministic verification.</p>
-                <Link href="/tasks/new">
-                  <Button variant="brand" size="sm" icon={<Plus className="w-4 h-4" />}>
-                    Create Task
-                  </Button>
-                </Link>
-              </div>
+                />
+              ))
             ) : (
               tasks.map((task) => (
                 <Card key={task.id} lift className="p-4 group">
@@ -449,15 +441,12 @@ export default function DashboardPage() {
                 borderLeft: "1px solid rgba(255, 255, 255, 0.08)",
                 marginLeft: "4px",
               }}
-                          {loading
+            >
+              {loading
                 ? Array.from({ length: 4 }).map((_, i) => (
                     <div key={i} className="h-10 rounded shimmer" />
                   ))
-                : events.length === 0 ? (
-                    <div className="py-4 text-center text-xs text-[#718198] font-mono">
-                      No telemetry events recorded yet.
-                    </div>
-                  ) : events.slice(0, 5).map((evt) => (
+                : events.slice(0, 5).map((evt) => (
                     <div key={evt.id} className="relative text-xs">
                       <span
                         className="absolute -left-[25px] top-1 w-2.5 h-2.5 rounded-full border-2"
@@ -553,6 +542,7 @@ export default function DashboardPage() {
             }}
           >
             <div className="flex items-center gap-2 mb-2">
+              <Zap className="w-4 h-4" style={{ color: "#58AAE1" }} />
               <span className="text-xs font-bold text-[#F1F4F8]">
                 Verification Engine
               </span>
