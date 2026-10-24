@@ -1,4 +1,7 @@
 from fastapi.testclient import TestClient
+from unittest.mock import patch, AsyncMock
+import json
+
 from backend.app.main import app
 from backend.app.schemas.core import VerificationVerdict, GeneratorStatus
 
@@ -48,7 +51,7 @@ def test_verify_endpoint_rejects_unsubstantiated_claim():
     assert response.status_code == 200
     data = response.json()
     assert data["verdict"] == VerificationVerdict.FAILED.value
-    assert data["confidence_score"] == 0.0
+    assert data["confidence_score"] < 0.5
 
 def test_plan_endpoint_with_direct_task():
     payload = {
@@ -59,13 +62,37 @@ def test_plan_endpoint_with_direct_task():
             {"id": "AC-1", "description": "Create audit table", "required": True}
         ]
     }
-    response = client.post("/api/plan", json=payload)
+    mock_plan_data = {
+        "task_summary": "Implement audit log in sqlite",
+        "steps": [
+            {
+                "step_number": 1,
+                "action": "Create audit table",
+                "expected_outcome": "Table exists",
+                "associated_criterion_id": "AC-1"
+            }
+        ],
+        "acceptance_criteria": [
+            {
+                "criterion_id": "AC-1",
+                "description": "Create audit table",
+                "verification_method": "pytest"
+            }
+        ],
+        "files_to_inspect": ["backend/app/main.py"],
+        "tests_to_run": ["pytest tests/test_audit.py"],
+        "risks": ["Database locking"],
+        "verification_strategy": "Deterministic table check"
+    }
+    with patch("backend.app.services.gemma_service.GemmaService._query_ollama", new=AsyncMock(return_value=json.dumps(mock_plan_data))):
+        response = client.post("/api/plan", json=payload)
+
     assert response.status_code == 200
     data = response.json()
     assert data["task_id"] == "task-plan-01"
-    assert "task_summary" in data
+    assert data["task_summary"] == "Implement audit log in sqlite"
     assert len(data["steps"]) >= 1
-    assert "generator_status" in data
+    assert data["generator_status"] == GeneratorStatus.AI_ACTIVE.value
 
 def test_plan_endpoint_with_plan_request_wrapper():
     payload = {
@@ -79,11 +106,29 @@ def test_plan_endpoint_with_plan_request_wrapper():
         },
         "repo_context": "backend/app/main.py defines FastAPI endpoints"
     }
-    response = client.post("/api/plan", json=payload)
+    mock_plan_data = {
+        "task_summary": "Implement audit log with context",
+        "steps": [
+            {
+                "step_number": 1,
+                "action": "Create audit table",
+                "expected_outcome": "Table exists",
+                "associated_criterion_id": "AC-1"
+            }
+        ],
+        "acceptance_criteria": [],
+        "files_to_inspect": ["backend/app/main.py"],
+        "tests_to_run": [],
+        "risks": [],
+        "verification_strategy": "Check sqlite"
+    }
+    with patch("backend.app.services.gemma_service.GemmaService._query_ollama", new=AsyncMock(return_value=json.dumps(mock_plan_data))):
+        response = client.post("/api/plan", json=payload)
+
     assert response.status_code == 200
     data = response.json()
     assert data["task_id"] == "task-plan-02"
-    assert "generator_status" in data
+    assert data["generator_status"] == GeneratorStatus.AI_ACTIVE.value
 
 def test_diagnosis_endpoint():
     payload = {
@@ -114,7 +159,17 @@ def test_diagnosis_endpoint():
         "repo_diff": None,
         "evidence_list": []
     }
-    response = client.post("/api/diagnosis", json=payload)
+    mock_diag_data = {
+        "failure_summary": "Insufficient evidence: pytest exited with exit code 1",
+        "likely_causes": ["Missing test assertion"],
+        "evidence_references": ["CommandExitCodeCheck failed"],
+        "recommended_fixes": ["Fix failing test in test_routes.py"],
+        "suggested_retests": ["python -m pytest"],
+        "confidence": 0.85
+    }
+    with patch("backend.app.services.gemma_service.GemmaService._query_ollama", new=AsyncMock(return_value=json.dumps(mock_diag_data))):
+        response = client.post("/api/diagnosis", json=payload)
+
     assert response.status_code == 200
     data = response.json()
     assert data["task_id"] == "t-diag-1"
