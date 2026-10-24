@@ -42,7 +42,7 @@ def test_safe_runner_rejects_shell_metacharacters(temp_workspace):
         "python -c 'print(1)' $(whoami)",
     ]
     for cmd in dangerous_commands:
-        with pytest.raises(ValueError, match="Forbidden shell metacharacter"):
+        with pytest.raises(ValueError, match="Forbidden shell"):
             runner.execute_command(
                 task_id="t-safe-3",
                 command=cmd,

@@ -39,7 +39,7 @@ class DatabaseRepository:
 
     @contextmanager
     def _get_connection(self):
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=30.0)
         conn.row_factory = sqlite3.Row
         try:
             yield conn
@@ -345,9 +345,27 @@ class DatabaseRepository:
                     run.started_at.isoformat(),
                 ),
             )
-            # Save associated evidence items
+            # Insert evidence directly using the active cursor to avoid connection deadlocks
             for ev in run.evidence_items:
-                self.save_evidence_item(run.task_id, run.run_id, ev)
+                cursor.execute(
+                    """
+                    INSERT INTO evidence_records (
+                        task_id, run_id, criterion_id, evidence_type, content,
+                        exit_code, file_path, passed, created_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        run.task_id,
+                        run.run_id,
+                        ev.criterion_id,
+                        ev.evidence_type.value if isinstance(ev.evidence_type, EvidenceType) else str(ev.evidence_type),
+                        ev.content,
+                        ev.exit_code,
+                        ev.file_path,
+                        1 if ev.passed else (0 if ev.passed is False else None),
+                        datetime.now(timezone.utc).isoformat(),
+                    ),
+                )
 
     def get_execution_run(self, run_id: str) -> Optional[ExecutionRun]:
         with self._get_connection() as conn:
@@ -356,7 +374,26 @@ class DatabaseRepository:
             row = cursor.fetchone()
             if not row:
                 return None
-            evidence = self.list_evidence(row["task_id"], run_id=run_id)
+            
+            # Query evidence directly on the active cursor
+            cursor.execute(
+                "SELECT * FROM evidence_records WHERE task_id = ? AND run_id = ? ORDER BY id ASC",
+                (row["task_id"], run_id),
+            )
+            evidence = []
+            for ev_row in cursor.fetchall():
+                passed_val = True if ev_row["passed"] == 1 else (False if ev_row["passed"] == 0 else None)
+                evidence.append(
+                    EvidenceItem(
+                        criterion_id=ev_row["criterion_id"],
+                        evidence_type=EvidenceType(ev_row["evidence_type"]),
+                        content=ev_row["content"],
+                        exit_code=ev_row["exit_code"],
+                        file_path=ev_row["file_path"],
+                        passed=passed_val,
+                    )
+                )
+
             return ExecutionRun(
                 run_id=row["run_id"],
                 task_id=row["task_id"],
@@ -382,7 +419,8 @@ class DatabaseRepository:
             row = cursor.fetchone()
             if not row:
                 return None
-            return self.get_execution_run(row["run_id"])
+            run_id = row["run_id"]
+        return self.get_execution_run(run_id)
 
     def list_execution_runs(self, task_id: str) -> List[ExecutionRun]:
         with self._get_connection() as conn:
@@ -391,12 +429,14 @@ class DatabaseRepository:
                 "SELECT run_id FROM execution_runs WHERE task_id = ? ORDER BY started_at ASC",
                 (task_id,),
             )
-            runs = []
-            for row in cursor.fetchall():
-                r = self.get_execution_run(row["run_id"])
-                if r:
-                    runs.append(r)
-            return runs
+            run_ids = [row["run_id"] for row in cursor.fetchall()]
+        
+        runs = []
+        for rid in run_ids:
+            r = self.get_execution_run(rid)
+            if r:
+                runs.append(r)
+        return runs
 
     def save_evidence_item(self, task_id: str, run_id: Optional[str], evidence: EvidenceItem):
         with self._get_connection() as conn:

@@ -9,7 +9,7 @@ import os
 import shlex
 import subprocess
 import logging
-from typing import List, Optional, Tuple
+from typing import List, Optional
 from datetime import datetime, timezone
 import uuid
 
@@ -51,12 +51,13 @@ class SafeExecutionRunner:
             raise ValueError("Empty command cannot be executed.")
 
         # Disallow dangerous shell metacharacters
-        forbidden_chars = [";", "&&", "||", "|", ">", "<", "`", "$("]
-        for char in forbidden_chars:
-            if char in stripped:
-                raise ValueError(f"Forbidden shell metacharacter '{char}' in command: '{command}'")
+        forbidden_operators = ["&&", "||", "|", ">", "<", "`", "$("]
+        for op in forbidden_operators:
+            if op in stripped:
+                raise ValueError(f"Forbidden shell metacharacter '{op}' in command: '{command}'")
 
         try:
+            # Parse tokens using shlex
             parts = shlex.split(stripped, posix=False)
         except Exception as e:
             raise ValueError(f"Failed to parse command line safely: {e}")
@@ -64,7 +65,19 @@ class SafeExecutionRunner:
         if not parts:
             raise ValueError("No executable command found.")
 
-        binary = os.path.basename(parts[0]).lower()
+        # Check for unquoted shell separators like ';' outside argument strings
+        if ";" in parts:
+            raise ValueError(f"Forbidden shell separator ';' detected in command: '{command}'")
+
+        cleaned_parts = []
+        for p in parts:
+            # Strip matching outer quotes added by non-posix shlex on Windows
+            if (p.startswith('"') and p.endswith('"')) or (p.startswith("'") and p.endswith("'")):
+                cleaned_parts.append(p[1:-1])
+            else:
+                cleaned_parts.append(p)
+
+        binary = os.path.basename(cleaned_parts[0]).lower()
         if binary.endswith(".exe"):
             binary = binary[:-4]
 
@@ -74,7 +87,7 @@ class SafeExecutionRunner:
                 f"Binary '{binary}' is not permitted. Only allowlisted tools ({', '.join(sorted(ALLOWLISTED_BINARIES))}) may be run."
             )
 
-        return parts
+        return cleaned_parts
 
     def _capture_git_diff(self, workspace: str) -> Optional[str]:
         """

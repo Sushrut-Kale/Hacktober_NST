@@ -3,7 +3,7 @@ from unittest.mock import patch, AsyncMock
 import json
 
 from backend.app.main import app
-from backend.app.schemas.core import VerificationVerdict, GeneratorStatus
+from backend.app.schemas.core import VerificationVerdict, GeneratorStatus, TaskState
 
 client = TestClient(app)
 
@@ -177,3 +177,93 @@ def test_diagnosis_endpoint():
     assert data["insufficient_evidence"] is True
     assert "likely_causes" in data
     assert "recommended_fixes" in data
+
+def test_persistent_task_lifecycle_routes():
+    # 1. POST /api/tasks
+    task_res = client.post("/api/tasks", json={
+        "id": "api-task-lifecycle-01",
+        "title": "API Lifecycle Task",
+        "description": "Testing full persistent lifecycle via API",
+        "acceptance_criteria": [
+            {"id": "AC-1", "description": "Returns 200 from endpoint", "required": True}
+        ]
+    })
+    assert task_res.status_code == 201
+    task_data = task_res.json()
+    assert task_data["id"] == "api-task-lifecycle-01"
+    assert task_data["state"] == TaskState.CREATED.value
+
+    # 2. GET /api/tasks
+    list_res = client.get("/api/tasks")
+    assert list_res.status_code == 200
+    assert any(t["id"] == "api-task-lifecycle-01" for t in list_res.json())
+
+    # 3. Execution rejected before approval (POST /api/tasks/{id}/execute)
+    exec_reject_res = client.post(f"/api/tasks/{task_data['id']}/execute", json={
+        "command": "python -c \"print(1)\""
+    })
+    assert exec_reject_res.status_code == 409
+
+    # 4. POST /api/tasks/{id}/plan
+    mock_plan = {
+        "task_summary": "API lifecycle plan",
+        "steps": [{"step_number": 1, "action": "Test step", "expected_outcome": "Passed", "associated_criterion_id": "AC-1"}],
+        "acceptance_criteria": [],
+        "files_to_inspect": [],
+        "tests_to_run": [],
+        "risks": [],
+        "verification_strategy": "pytest"
+    }
+    with patch("backend.app.services.gemma_service.GemmaService._query_ollama", new=AsyncMock(return_value=json.dumps(mock_plan))):
+        plan_res = client.post(f"/api/tasks/{task_data['id']}/plan")
+    assert plan_res.status_code == 200
+    assert plan_res.json()["task_id"] == task_data["id"]
+
+    # 5. POST /api/tasks/{id}/approve
+    approve_res = client.post(f"/api/tasks/{task_data['id']}/approve", json={
+        "approved_by": "QA_ENGINEER"
+    })
+    assert approve_res.status_code == 200
+    assert approve_res.json()["state"] == TaskState.APPROVED.value
+
+    # 6. POST /api/tasks/{id}/execute
+    exec_res = client.post(f"/api/tasks/{task_data['id']}/execute", json={
+        "command": "python -c \"print('RUN_SUCCESS')\"",
+        "criterion_id": "AC-1"
+    })
+    assert exec_res.status_code == 200
+    run_data = exec_res.json()
+    assert run_data["status"] == "COMPLETED"
+    run_id = run_data["run_id"]
+
+    # 7. GET /api/tasks/{id}/events
+    events_res = client.get(f"/api/tasks/{task_data['id']}/events")
+    assert events_res.status_code == 200
+    assert len(events_res.json()) >= 4
+
+    # 8. POST /api/tasks/{id}/verify
+    verify_res = client.post(f"/api/tasks/{task_data['id']}/verify")
+    assert verify_res.status_code == 200
+    assert "verdict" in verify_res.json()
+
+    # 9. GET /api/tasks/{id}/verification
+    get_v_res = client.get(f"/api/tasks/{task_data['id']}/verification")
+    assert get_v_res.status_code == 200
+    assert get_v_res.json()["task_id"] == task_data["id"]
+
+    # 10. GET /api/runs/{run_id}
+    run_inspect_res = client.get(f"/api/runs/{run_id}")
+    assert run_inspect_res.status_code == 200
+    assert run_inspect_res.json()["run_id"] == run_id
+
+    # 11. GET /api/runs/{run_id}/report
+    report_res = client.get(f"/api/runs/{run_id}/report")
+    assert report_res.status_code == 200
+    assert report_res.json()["run"]["run_id"] == run_id
+
+    # 12. GET /api/tasks/{id} (TaskDetail)
+    detail_res = client.get(f"/api/tasks/{task_data['id']}")
+    assert detail_res.status_code == 200
+    assert detail_res.json()["task"]["id"] == task_data["id"]
+    assert detail_res.json()["plan"] is not None
+    assert detail_res.json()["latest_run"] is not None
