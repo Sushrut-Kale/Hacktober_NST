@@ -8,6 +8,11 @@ export const metadata: Metadata = {
     "Deterministic verification and evidence platform for AI coding agents. Plan → Approve → Execute → Record Evidence → Verify → Diagnose.",
   keywords: ["AI verification", "deterministic testing", "coding agents", "evidence platform"],
   authors: [{ name: "VIKASA Team" }],
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({

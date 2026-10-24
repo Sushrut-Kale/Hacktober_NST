@@ -23,6 +23,7 @@ import {
   Zap,
 } from "lucide-react";
 import { NAVIGATION_SECTIONS } from "@/lib/constants";
+import { BrandLogo } from "@/components/ui/Logo";
 
 const ICON_MAP: Record<string, React.ReactNode> = {
   LayoutDashboard: <LayoutDashboard className="w-4 h-4" />,
@@ -81,28 +82,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="h-16 px-5 flex items-center justify-between shrink-0 z-10 relative" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
           <Link
             href="/dashboard"
-            className="flex items-center gap-3 group"
+            className="flex items-center group"
             onClick={onClose}
           >
-            {/* Animated logo icon */}
-            <div className="relative flex items-center justify-center w-9 h-9 rounded-xl shrink-0" style={{ background: "linear-gradient(135deg, #00c3ff 0%, #7c3aed 100%)" }}>
-              <Shield className="w-5 h-5 text-white" />
-              <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: "linear-gradient(135deg, rgba(0,195,255,0.3) 0%, rgba(124,58,237,0.3) 100%)", filter: "blur(6px)" }} />
-            </div>
-
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-extrabold tracking-wider text-[15px] text-white" style={{ letterSpacing: "0.05em" }}>
-                  VIKASA
-                </span>
-                <span className="px-1.5 py-px text-[9px] font-bold font-mono uppercase rounded" style={{ background: "rgba(0,195,255,0.12)", color: "#00c3ff", border: "1px solid rgba(0,195,255,0.25)" }}>
-                  AI
-                </span>
-              </div>
-              <span className="text-[10px] text-slate-500 font-mono tracking-tight block leading-none mt-0.5">
-                Verification Platform
-              </span>
-            </div>
+            <BrandLogo size={36} />
           </Link>
         </div>
 

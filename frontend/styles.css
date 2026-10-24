@@ -85,6 +85,14 @@ body {
 .brand-icon {
   width: 32px;
   height: 32px;
+  border-radius: 8px;
+  filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.45));
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+
+.brand-icon:hover {
+  transform: scale(1.08);
+  filter: drop-shadow(0 0 14px rgba(0, 240, 255, 0.8));
 }
 
 .brand-name {
