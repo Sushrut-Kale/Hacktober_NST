@@ -13,6 +13,7 @@ import {
   Server,
   SlidersHorizontal,
   ExternalLink,
+  Zap,
 } from "lucide-react";
 import { Button } from "../ui/Button";
 
@@ -44,12 +45,20 @@ export function Header({ onToggleSidebar }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-30 h-16 bg-[#0a0d14]/80 backdrop-blur-md border-b border-white/10 px-4 sm:px-6 flex items-center justify-between">
+    <header
+      className="sticky top-0 z-30 h-16 px-4 sm:px-6 flex items-center justify-between"
+      style={{
+        background: "rgba(7, 9, 14, 0.85)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        borderBottom: "1px solid rgba(255,255,255,0.07)",
+      }}
+    >
       {/* Left: Mobile Menu Toggle & Project Selector */}
       <div className="flex items-center gap-3">
         <button
           onClick={onToggleSidebar}
-          className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 lg:hidden"
+          className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 lg:hidden transition-colors"
           aria-label="Toggle navigation menu"
         >
           <Menu className="w-5 h-5" />
@@ -59,9 +68,15 @@ export function Header({ onToggleSidebar }: HeaderProps) {
         <div className="relative">
           <button
             onClick={() => setProjectDropdownOpen(!projectDropdownOpen)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-100 border border-white/10 hover:border-white/20 text-xs sm:text-sm font-medium text-slate-200 transition-all"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-200 transition-all"
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.09)",
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.18)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.09)"; }}
           >
-            <FolderGit2 className="w-4 h-4 text-sky-400 shrink-0" />
+            <FolderGit2 className="w-4 h-4 shrink-0" style={{ color: "#00c3ff" }} />
             <span className="max-w-[140px] sm:max-w-[220px] truncate">
               {currentProject?.name || "Select Project"}
             </span>
@@ -74,8 +89,16 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                 className="fixed inset-0 z-40"
                 onClick={() => setProjectDropdownOpen(false)}
               />
-              <div className="absolute left-0 mt-2 w-72 rounded-xl bg-surface-200 border border-white/10 shadow-2xl p-2 z-50 animate-slide-up">
-                <div className="px-2 py-1.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              <div
+                className="absolute left-0 mt-2 w-72 rounded-xl p-2 z-50 animate-slide-down"
+                style={{
+                  background: "rgba(11, 16, 27, 0.98)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  backdropFilter: "blur(20px)",
+                  boxShadow: "0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(0,195,255,0.05)",
+                }}
+              >
+                <div className="px-2 py-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                   Active Projects
                 </div>
                 <div className="space-y-1">
@@ -86,11 +109,16 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                         setCurrentProjectId(proj.id);
                         setProjectDropdownOpen(false);
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-between ${
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-all flex items-center justify-between ${
                         proj.id === currentProjectId
-                          ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
+                          ? "text-white"
                           : "text-slate-300 hover:bg-white/5"
                       }`}
+                      style={
+                        proj.id === currentProjectId
+                          ? { background: "rgba(0,195,255,0.08)", border: "1px solid rgba(0,195,255,0.2)" }
+                          : { border: "1px solid transparent" }
+                      }
                     >
                       <div className="truncate">
                         <div className="font-semibold truncate">{proj.name}</div>
@@ -99,16 +127,19 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                         </div>
                       </div>
                       {proj.id === currentProjectId && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-sky-400 shrink-0" />
+                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: "#00c3ff" }} />
                       )}
                     </button>
                   ))}
                 </div>
-                <div className="mt-2 pt-2 border-t border-white/10">
+                <div className="mt-2 pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
                   <Link
                     href="/projects/new"
                     onClick={() => setProjectDropdownOpen(false)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-sky-400 hover:bg-sky-500/10 transition-colors"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-colors"
+                    style={{ color: "#00c3ff" }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(0,195,255,0.07)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Register New Project</span>
@@ -121,7 +152,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
       </div>
 
       {/* Right: Status Indicators & Quick Actions */}
-      <div className="flex items-center gap-2.5 sm:gap-4">
+      <div className="flex items-center gap-2 sm:gap-3">
         {/* Model Status Chip */}
         <div className="hidden md:flex">
           <ModelChip status={modelStatus} modelName="gemma4:e4b" />
@@ -129,13 +160,14 @@ export function Header({ onToggleSidebar }: HeaderProps) {
 
         {/* Backend Connection Indicator */}
         <div
-          className={`flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium border ${
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border"
+          style={
             isBackendOnline
-              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+              ? { background: "rgba(16,185,129,0.08)", borderColor: "rgba(16,185,129,0.25)", color: "#10b981" }
               : isMockMode
-              ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
-              : "bg-rose-500/10 border-rose-500/30 text-rose-400"
-          }`}
+              ? { background: "rgba(245,158,11,0.08)", borderColor: "rgba(245,158,11,0.25)", color: "#f59e0b" }
+              : { background: "rgba(239,68,68,0.08)", borderColor: "rgba(239,68,68,0.25)", color: "#ef4444" }
+          }
           title={
             isBackendOnline
               ? `Backend Connected (Latency: ${backendLatency}ms)`
@@ -145,36 +177,40 @@ export function Header({ onToggleSidebar }: HeaderProps) {
           }
         >
           <Server className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline font-mono">
+          <span className="hidden sm:inline font-mono text-[11px]">
             {isBackendOnline
-              ? `Online (${backendLatency}ms)`
+              ? `${backendLatency}ms`
               : isMockMode
-              ? "Mock Data"
-              : "Demo Fallback"}
+              ? "Mock"
+              : "Offline"}
           </span>
-          <span
-            className={`w-1.5 h-1.5 rounded-full ${
-              isBackendOnline
-                ? "bg-emerald-400"
-                : isMockMode
-                ? "bg-amber-400"
-                : "bg-rose-400"
-            }`}
-          />
+          {/* Pulsing dot */}
+          <span className="relative flex h-1.5 w-1.5">
+            {isBackendOnline && (
+              <span className="absolute animate-ping-slow inline-flex h-full w-full rounded-full opacity-60" style={{ background: "#10b981" }} />
+            )}
+            <span
+              className="relative inline-flex rounded-full h-1.5 w-1.5"
+              style={{
+                background: isBackendOnline ? "#10b981" : isMockMode ? "#f59e0b" : "#ef4444",
+              }}
+            />
+          </span>
         </div>
 
         {/* Mock/Live Toggle */}
         <button
           onClick={toggleMockMode}
-          className={`hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
+          className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-all"
+          style={
             isMockMode
-              ? "bg-amber-500/15 border-amber-500/40 text-amber-300"
-              : "bg-white/5 border-white/10 hover:border-white/20 text-slate-400 hover:text-slate-200"
-          }`}
+              ? { background: "rgba(245,158,11,0.08)", borderColor: "rgba(245,158,11,0.3)", color: "#fbbf24" }
+              : { background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.08)", color: "#64748b" }
+          }
           title="Toggle between real API requests and demo fixtures"
         >
           <SlidersHorizontal className="w-3.5 h-3.5" />
-          <span>{isMockMode ? "Mock Fixtures: ON" : "Mock Fixtures: OFF"}</span>
+          <span>{isMockMode ? "Mock: ON" : "Mock: OFF"}</span>
         </button>
 
         {/* Refresh health button */}
@@ -184,7 +220,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
           title="Refresh health and status"
         >
           <RefreshCw
-            className={`w-4 h-4 ${isRefreshing ? "animate-spin text-sky-400" : ""}`}
+            className={`w-4 h-4 transition-all ${isRefreshing ? "animate-spin text-[#00c3ff]" : ""}`}
           />
         </button>
 

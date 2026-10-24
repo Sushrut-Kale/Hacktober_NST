@@ -3,7 +3,8 @@ import React from "react";
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   glow?: boolean;
-  borderVariant?: "default" | "brand" | "emerald" | "rose";
+  borderVariant?: "default" | "brand" | "emerald" | "rose" | "purple";
+  lift?: boolean;
 }
 
 export function Card({
@@ -11,20 +12,45 @@ export function Card({
   className = "",
   glow = false,
   borderVariant = "default",
+  lift = false,
   ...props
 }: CardProps) {
-  const borderClasses = {
-    default: "border-white/10 hover:border-white/15",
-    brand: "border-brand-500/30 hover:border-brand-500/50 shadow-glow-sm",
-    emerald: "border-emerald-500/30 hover:border-emerald-500/50 shadow-glow-emerald",
-    rose: "border-rose-500/30 hover:border-rose-500/50 shadow-glow-rose",
+  const borderStyles: Record<string, React.CSSProperties> = {
+    default: {
+      background: "rgba(11, 16, 27, 0.85)",
+      borderColor: "rgba(255,255,255,0.08)",
+      backdropFilter: "blur(12px)",
+    },
+    brand: {
+      background: "rgba(11, 16, 27, 0.85)",
+      borderColor: "rgba(0,195,255,0.25)",
+      boxShadow: "0 0 30px -8px rgba(0,195,255,0.15), inset 0 1px 0 rgba(0,195,255,0.06)",
+      backdropFilter: "blur(12px)",
+    },
+    emerald: {
+      background: "rgba(11, 16, 27, 0.85)",
+      borderColor: "rgba(16,185,129,0.25)",
+      boxShadow: "0 0 30px -8px rgba(16,185,129,0.15), inset 0 1px 0 rgba(16,185,129,0.05)",
+      backdropFilter: "blur(12px)",
+    },
+    rose: {
+      background: "rgba(11, 16, 27, 0.85)",
+      borderColor: "rgba(239,68,68,0.25)",
+      boxShadow: "0 0 30px -8px rgba(239,68,68,0.15), inset 0 1px 0 rgba(239,68,68,0.05)",
+      backdropFilter: "blur(12px)",
+    },
+    purple: {
+      background: "rgba(11, 16, 27, 0.85)",
+      borderColor: "rgba(139,92,246,0.25)",
+      boxShadow: "0 0 30px -8px rgba(139,92,246,0.15), inset 0 1px 0 rgba(139,92,246,0.05)",
+      backdropFilter: "blur(12px)",
+    },
   };
 
   return (
     <div
-      className={`relative rounded-xl bg-surface-200/90 backdrop-blur-md border ${borderClasses[borderVariant]} transition-all duration-200 overflow-hidden ${
-        glow ? "shadow-glow-sm" : ""
-      } ${className}`}
+      className={`relative rounded-xl border overflow-hidden transition-all duration-200 ${lift ? "card-lift" : ""} ${className}`}
+      style={borderStyles[borderVariant]}
       {...props}
     >
       {children}
@@ -41,7 +67,8 @@ export function CardHeader({
 }) {
   return (
     <div
-      className={`px-6 py-4 border-b border-white/5 flex items-center justify-between ${className}`}
+      className={`px-6 py-4 flex items-center justify-between ${className}`}
+      style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
     >
       {children}
     </div>
@@ -67,7 +94,8 @@ export function CardFooter({
 }) {
   return (
     <div
-      className={`px-6 py-3 border-t border-white/5 bg-white/[0.02] flex items-center justify-between ${className}`}
+      className={`px-6 py-3 flex items-center justify-between ${className}`}
+      style={{ borderTop: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.015)" }}
     >
       {children}
     </div>
