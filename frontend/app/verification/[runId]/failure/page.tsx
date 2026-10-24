@@ -11,10 +11,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ModelChip } from "@/components/ui/ModelChip";
 import {
-  AlertTriangle,
   ArrowLeft,
   Languages,
-  Sparkles,
   FileCode,
   CheckCircle2,
   Terminal,
@@ -90,9 +88,8 @@ export default function FailureExplanationPage() {
                 modelName="gemma4:e4b"
               />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-[#F1F4F8] mt-1 flex items-center gap-2">
-              <AlertTriangle className="w-6 h-6 text-rose-400" />
-              <span>Failure Diagnosis & Explanation</span>
+            <h1 className="text-2xl font-bold tracking-tight text-[#F1F4F8] mt-1">
+              Failure Diagnosis & Explanation
             </h1>
           </div>
         </div>
@@ -148,9 +145,8 @@ export default function FailureExplanationPage() {
 
         {language === "mr" && diagnosis.explanation_mr ? (
           <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-200 leading-relaxed font-sans">
-            <div className="flex items-center gap-2 font-bold mb-1 text-purple-300">
-              <Sparkles className="w-4 h-4" />
-              <span>Gemma 4 Marathi Diagnosis:</span>
+            <div className="font-bold mb-1 text-purple-300">
+              Gemma 4 Marathi Diagnosis:
             </div>
             {diagnosis.explanation_mr}
           </div>
@@ -192,10 +188,9 @@ export default function FailureExplanationPage() {
 
       {/* Recommended Fix & Retest Command */}
       <Card borderVariant="brand" className="p-6 space-y-4">
-        <div className="flex items-center gap-2 text-sm font-bold text-[#F1F4F8]">
-          <Sparkles className="w-4 h-4 text-[#58AAE1]" />
-          <span>Recommended Code Fix (Deterministic Correction)</span>
-        </div>
+        <h2 className="text-sm font-bold text-[#F1F4F8]">
+          Recommended Code Fix (Deterministic Correction)
+        </h2>
 
         <p className="text-xs text-[#A4B2C5] leading-relaxed">
           {diagnosis.recommended_fix}

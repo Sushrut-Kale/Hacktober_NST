@@ -7,7 +7,6 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { formatDate } from "@/lib/formatters";
 import {
-  Lock,
   CheckCircle2,
   XCircle,
   Info,
@@ -54,12 +53,9 @@ export default function SecurityTestResultsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-[#F1F4F8] flex items-center gap-2">
-              <Lock className="w-6 h-6 text-emerald-400" />
-              <span>Safe Execution Runner Security Tests</span>
-            </h1>
-          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-[#F1F4F8]">
+            Safe Execution Runner Security Tests
+          </h1>
           <p className="text-xs text-[#718198] mt-1">
             Verification of sandbox containment, shell injection prevention, and allowlisted binaries
           </p>

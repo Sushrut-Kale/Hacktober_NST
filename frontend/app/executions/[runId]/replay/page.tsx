@@ -14,7 +14,6 @@ import { formatDate, formatDuration } from "@/lib/formatters";
 import {
   ArrowLeft,
   Scale,
-  Bot,
 } from "lucide-react";
 
 export default function ReplayPage() {
@@ -142,10 +141,9 @@ export default function ReplayPage() {
       {/* Recorded Agent Claim */}
       {comparison?.claim && (
         <Card className="p-6 space-y-3 border-[#58AAE1]/30">
-          <div className="flex items-center gap-2 text-sm font-bold text-[#9EDCFF]">
-            <Bot className="w-5 h-5 text-[#58AAE1]" />
-            <span>Recorded Agent Claim</span>
-          </div>
+          <h2 className="text-sm font-bold text-[#9EDCFF] uppercase tracking-wider font-mono">
+            Recorded Agent Claim
+          </h2>
           <div className="p-3.5 rounded-lg bg-[#0B1423] border border-white/5 font-mono text-xs text-[#F1F4F8]">
             &ldquo;{comparison.claim.exact_claim}&rdquo;
           </div>

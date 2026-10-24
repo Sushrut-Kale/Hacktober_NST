@@ -11,13 +11,11 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { formatDate } from "@/lib/formatters";
 import {
-  ShieldCheck,
   Scale,
   AlertTriangle,
   ArrowLeft,
   CheckCircle2,
   XCircle,
-  Terminal,
 } from "lucide-react";
 
 export default function VerificationResultsPage() {
@@ -174,9 +172,8 @@ export default function VerificationResultsPage() {
 
       {/* Rule Evaluations Table */}
       <Card className="p-6 space-y-4">
-        <h2 className="text-base font-bold text-[#F1F4F8] flex items-center gap-2">
-          <ShieldCheck className="w-5 h-5 text-[#58AAE1]" />
-          <span>Rule Evaluations ({result.rule_evaluations.length})</span>
+        <h2 className="text-base font-bold text-[#F1F4F8]">
+          Rule Evaluations ({result.rule_evaluations.length})
         </h2>
 
         <div className="space-y-3">
@@ -220,9 +217,8 @@ export default function VerificationResultsPage() {
       {/* Test Results Table */}
       {result.test_results && result.test_results.length > 0 && (
         <Card className="p-6 space-y-4">
-          <h2 className="text-base font-bold text-[#F1F4F8] flex items-center gap-2">
-            <Terminal className="w-5 h-5 text-emerald-400" />
-            <span>Test Cases Breakdown ({result.test_results.length})</span>
+          <h2 className="text-base font-bold text-[#F1F4F8]">
+            Test Cases Breakdown ({result.test_results.length})
           </h2>
 
           <div className="overflow-x-auto">
