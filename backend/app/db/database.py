@@ -1,7 +1,7 @@
 """Database engine and session configuration for VIKASA."""
 
 from typing import Generator
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from backend.app.config import settings
 
@@ -14,6 +14,16 @@ engine = create_engine(
     connect_args=connect_args,
     echo=False,
 )
+
+if settings.database_url.startswith("sqlite"):
+    @event.listens_for(engine, "connect")
+    def _set_sqlite_pragma(dbapi_connection, connection_record):
+        try:
+            cursor = dbapi_connection.cursor()
+            cursor.execute("PRAGMA foreign_keys=ON")
+            cursor.close()
+        except Exception:
+            pass
 
 SessionLocal = sessionmaker(
     autocommit=False,

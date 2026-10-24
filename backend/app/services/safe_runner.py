@@ -48,6 +48,9 @@ class SafeExecutionRunner:
         """
         Validates that the command uses an allowlisted binary and contains no dangerous shell injection.
         """
+        if command and "\0" in command:
+            raise ValueError("Command contains invalid null bytes.")
+
         stripped = command.strip()
         if not stripped:
             raise ValueError("Empty command cannot be executed.")
@@ -117,6 +120,31 @@ class SafeExecutionRunner:
             logger.debug("Could not capture git diff in %s: %s", workspace, e)
         return None
 
+    MAX_OUTPUT_BYTES: int = 512 * 1024  # 512 KB
+
+    @staticmethod
+    def _cap_output(text: Optional[str], max_bytes: int = 512 * 1024) -> str:
+        if not text:
+            return ""
+        encoded = text.encode("utf-8", errors="replace")
+        if len(encoded) <= max_bytes:
+            return text
+        return encoded[:max_bytes].decode("utf-8", errors="replace") + "\n\n[TRUNCATED: Output exceeded 512 KB limit]"
+
+    @staticmethod
+    def _get_sanitized_environment() -> dict:
+        """
+        Sanitizes environment variables to prevent leaking credentials or secrets into subprocess runs.
+        """
+        sensitive_substrings = ("KEY", "SECRET", "TOKEN", "PASSWORD", "AUTH", "CREDENTIAL", "PRIVATE")
+        sanitized = {}
+        for k, v in os.environ.items():
+            k_upper = k.upper()
+            if any(sens in k_upper for sens in sensitive_substrings):
+                continue
+            sanitized[k] = v
+        return sanitized
+
     def execute_command(
         self,
         task_id: str,
@@ -142,19 +170,20 @@ class SafeExecutionRunner:
             proc = subprocess.run(
                 cmd_args,
                 cwd=workspace,
+                env=self._get_sanitized_environment(),
                 capture_output=True,
                 text=True,
                 timeout=timeout_seconds,
             )
             exit_code = proc.returncode
-            stdout = proc.stdout
-            stderr = proc.stderr
+            stdout = self._cap_output(proc.stdout)
+            stderr = self._cap_output(proc.stderr)
             status = "COMPLETED" if exit_code == 0 else "FAILED"
         except subprocess.TimeoutExpired as te:
             logger.warning("Execution timed out after %s seconds: %s", timeout_seconds, command)
             status = "TIMEOUT"
             exit_code = -1
-            stdout = te.stdout or ""
+            stdout = self._cap_output(te.stdout or "")
             stderr = f"Execution timed out after {timeout_seconds} seconds"
         except Exception as e:
             logger.error("Execution error: %s", e)

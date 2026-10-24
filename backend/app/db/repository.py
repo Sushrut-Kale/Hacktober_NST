@@ -42,6 +42,7 @@ class DatabaseRepository:
         conn = sqlite3.connect(self.db_path, timeout=30.0)
         conn.row_factory = sqlite3.Row
         try:
+            conn.execute("PRAGMA foreign_keys = ON;")
             yield conn
             conn.commit()
         except Exception:

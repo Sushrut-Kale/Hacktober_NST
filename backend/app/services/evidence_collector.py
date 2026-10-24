@@ -244,15 +244,29 @@ class EvidenceCollector:
             )
 
         try:
+            sensitive_substrings = ("KEY", "SECRET", "TOKEN", "PASSWORD", "AUTH", "CREDENTIAL", "PRIVATE")
+            sanitized_env = {
+                k: v for k, v in os.environ.items()
+                if not any(sens in k.upper() for sens in sensitive_substrings)
+            }
+
             proc = subprocess.run(
                 command,
                 cwd=valid_cwd,
+                env=sanitized_env,
                 capture_output=True,
                 text=True,
                 timeout=timeout_seconds,
                 shell=False,
             )
-            output = (proc.stdout or "") + ("\n" + proc.stderr if proc.stderr else "")
+            raw_output = (proc.stdout or "") + ("\n" + proc.stderr if proc.stderr else "")
+            max_bytes = 512 * 1024
+            encoded = raw_output.encode("utf-8", errors="replace")
+            if len(encoded) > max_bytes:
+                output = encoded[:max_bytes].decode("utf-8", errors="replace") + "\n\n[TRUNCATED: Output exceeded 512 KB limit]"
+            else:
+                output = raw_output
+
             return EvidenceItem(
                 criterion_id=criterion_id,
                 evidence_type=EvidenceType.COMMAND_EXIT_CODE,

@@ -203,8 +203,9 @@ async def list_tasks(
     return db_repo.list_tasks(project_id=project_id, limit=limit, offset=offset)
 
 ALLOWED_TRANSITIONS: dict[str, set[str]] = {
-    "PLANNED": {"PENDING_APPROVAL", "CANCELLED"},
-    "PENDING_APPROVAL": {"IN_PROGRESS", "PLANNED", "CANCELLED"},
+    "PLANNED": {"PENDING_APPROVAL", "APPROVED", "CANCELLED"},
+    "PENDING_APPROVAL": {"APPROVED", "IN_PROGRESS", "PLANNED", "CANCELLED"},
+    "APPROVED": {"IN_PROGRESS", "PLANNED", "CANCELLED"},
     "IN_PROGRESS": {"COMPLETED", "FAILED", "CANCELLED"},
     "COMPLETED": set(),
     "FAILED": {"PLANNED", "CANCELLED"},
@@ -334,12 +335,13 @@ async def approve_task_plan(
     notes = payload.notes if payload else None
     try:
         from backend.app.models.task import TaskRecord
+        task = workflow_service.approve_plan(task_id, approved_by=approved_by, notes=notes)
         rec = db.query(TaskRecord).filter(TaskRecord.id == task_id).first()
         if rec:
-            rec.status = "PENDING_APPROVAL"
+            rec.status = "APPROVED"
             db.commit()
             db.refresh(rec)
-        return workflow_service.approve_plan(task_id, approved_by=approved_by, notes=notes)
+        return task
     except KeyError:
         raise HTTPException(status_code=404, detail=f"Task '{task_id}' not found.")
     except (InvalidStateTransitionError, ValueError) as e:
@@ -406,12 +408,10 @@ async def execute_task_route(
         repo_task.state = TaskState.IN_PROGRESS
         db_repo.save_task(repo_task)
 
-    # 3. Detect Execution Mode
-    capabilities = antigravity_adapter.inspect_capabilities()
-    if capabilities.get("sdk_installed") or capabilities.get("cli_installed"):
-        execution_mode = "ANTIGRAVITY_AGENT"
-    else:
-        execution_mode = "LOCAL_SAFE_RUNNER"
+    # 3. Detect Execution Mode:
+    # Safe local subprocess executions must be honestly labeled LOCAL_SAFE_RUNNER.
+    # ANTIGRAVITY_AGENT is strictly reserved for genuine dispatches through Antigravity CLI/SDK.
+    execution_mode = "LOCAL_SAFE_RUNNER"
 
     # 4. Target Directory
     if req.repo_path:
