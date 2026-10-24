@@ -23,8 +23,7 @@ export function VerificationOverviewSection() {
       <RevealOnScroll delayMs={0} durationMs={650}>
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-12">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full glass-panel-subtle text-[11px] font-mono tracking-widest text-emerald-400 uppercase mb-2">
-              <Scale className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center px-3 py-1 rounded-full glass-panel-subtle text-[11px] font-mono tracking-widest text-emerald-400 uppercase mb-2">
               <span>Deterministic Ground Truth</span>
             </div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white font-tight">
@@ -79,8 +78,7 @@ export function VerificationOverviewSection() {
             {/* Left Column: What AI Claimed */}
             <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-5 space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-300">
-                  <Bot className="w-4 h-4 text-[#58AAE1]" />
+                <div className="text-xs font-bold uppercase tracking-wider text-slate-300">
                   <span>AI Agent Stated Claim</span>
                 </div>
                 <span className="text-[10px] font-mono text-slate-500">
@@ -116,8 +114,7 @@ export function VerificationOverviewSection() {
             {/* Right Column: Ground Truth Reality & Actual Evidence */}
             <div className="rounded-2xl bg-white/[0.02] border border-emerald-500/30 p-5 space-y-4 shadow-[0_0_30px_rgba(16,185,129,0.08)]">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-400">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <div className="text-xs font-bold uppercase tracking-wider text-emerald-400">
                   <span>Deterministic Evidence (Reality)</span>
                 </div>
                 <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">

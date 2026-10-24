@@ -3,12 +3,13 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useProject } from "@/hooks/useProject";
+import { api } from "@/lib/api";
 import { ExecutionRun } from "@/lib/types";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { formatDate, formatDuration } from "@/lib/formatters";
-import { DEMO_RUNS } from "@/fixtures/demo-data";
 import {
   Terminal,
   History,
@@ -16,7 +17,21 @@ import {
 } from "lucide-react";
 
 export default function ExecutionsPage() {
-  const [runs] = useState<ExecutionRun[]>(Object.values(DEMO_RUNS));
+  const [runs, setRuns] = React.useState<ExecutionRun[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    async function loadRuns() {
+      setLoading(true);
+      try {
+        const res = await api.getRuns();
+        setRuns(res.data);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadRuns();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -35,7 +50,7 @@ export default function ExecutionsPage() {
             <Button
               variant="outline"
               size="sm"
-              icon={<History className="w-4 h-4 text-amber-400" />}
+              icon={<History className="w-4 h-4" />}
             >
               Replay Console
             </Button>
@@ -44,7 +59,18 @@ export default function ExecutionsPage() {
       </div>
 
       {/* Execution Runs List */}
-      <div className="space-y-3">
+      {loading ? (
+        <div className="p-12 text-center text-[#718198] font-mono text-sm">
+          Loading deterministic execution records...
+        </div>
+      ) : runs.length === 0 ? (
+        <EmptyState
+          icon={Terminal}
+          title="No Execution Runs Recorded"
+          description="Approved tasks executed through the safe runner will log stdout, stderr, exit codes, and captured evidence records here."
+        />
+      ) : (
+        <div className="space-y-3">
         {runs.map((run) => (
           <Card
             key={run.run_id}
@@ -119,7 +145,8 @@ export default function ExecutionsPage() {
             </div>
           </Card>
         ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

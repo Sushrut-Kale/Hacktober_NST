@@ -2,11 +2,13 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useProject } from "@/hooks/useProject";
 import { api } from "@/lib/api";
 import { Project } from "@/lib/types";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import {
   FolderGit2,
   GitBranch,
@@ -19,6 +21,7 @@ import {
 } from "lucide-react";
 
 export default function ProjectsPage() {
+  const router = useRouter();
   const { currentProjectId, setCurrentProjectId } = useProject();
   const [projects, setProjects] = useState<Project[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -85,6 +88,16 @@ export default function ProjectsPage() {
               style={{ border: "1px solid rgba(255, 255, 255, 0.08)" }}
             />
           ))
+        ) : filteredProjects.length === 0 ? (
+          <div className="col-span-full">
+            <EmptyState
+              icon={FolderGit2}
+              title="No Projects Registered"
+              description="Register your first repository to configure automated task planning, test execution, and deterministic evidence collection."
+              actionLabel="Register Project"
+              onAction={() => router.push("/projects/new")}
+            />
+          </div>
         ) : (
           filteredProjects.map((project) => {
             const isSelected = project.id === currentProjectId;
@@ -97,18 +110,18 @@ export default function ProjectsPage() {
               >
                 <div>
                   <div className="flex items-start justify-between gap-3 mb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 rounded-xl bg-[#58AAE1]/10 text-[#58AAE1] border border-[#58AAE1]/20">
-                        <FolderGit2 className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h2 className="text-base font-bold text-[#F1F4F8]">
-                          {project.name}
-                        </h2>
-                        <div className="flex items-center gap-2 text-xs font-mono text-[#718198] mt-0.5">
-                          <GitBranch className="w-3.5 h-3.5 text-[#9EDCFF]" />
+                    <div>
+                      <h2 className="text-base font-bold text-[#F1F4F8]">
+                        {project.name}
+                      </h2>
+                      <div className="flex items-center gap-2 text-xs font-mono text-[#718198] mt-1">
+                        <span className="px-2 py-0.5 rounded text-[10px] bg-white/5 border border-white/10 text-[#9EDCFF]">
+                          {project.language || "Python"}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <GitBranch className="w-3 h-3 text-[#58AAE1]" />
                           <span>{project.branch}</span>
-                        </div>
+                        </span>
                       </div>
                     </div>
 

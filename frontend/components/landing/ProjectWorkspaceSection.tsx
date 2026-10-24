@@ -29,8 +29,7 @@ export function ProjectWorkspaceSection({
       <RevealOnScroll delayMs={0} durationMs={650}>
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
           <div>
-            <div className="flex items-center gap-2 text-xs font-mono tracking-widest text-[#58AAE1] uppercase mb-1">
-              <Layers className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center text-xs font-mono tracking-widest text-[#58AAE1] uppercase mb-1">
               <span>Workspace Inventory</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white font-tight">
@@ -55,6 +54,15 @@ export function ProjectWorkspaceSection({
 
       {/* Grid of Projects with Staggered Reveals */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+        {projects.length === 0 && (
+          <div className="col-span-1 md:col-span-2 rounded-2xl glass-panel p-8 text-center flex flex-col items-center justify-center">
+            <h3 className="text-base font-bold text-white font-tight">No Active Projects Registered</h3>
+            <p className="text-xs text-slate-400 mt-1.5 max-w-sm">
+              Connect your first repository to begin deterministic planning and automated verification.
+            </p>
+          </div>
+        )}
+
         {projects.slice(0, 5).map((project, idx) => {
           const isSelected = project.id === currentProjectId;
           return (
@@ -74,11 +82,11 @@ export function ProjectWorkspaceSection({
               >
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <div className="w-8 h-8 rounded-xl bg-[#58AAE1]/15 text-[#9EDCFF] flex items-center justify-center border border-[#58AAE1]/30">
-                      <FolderGit2 className="w-4 h-4" />
-                    </div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-slate-300">
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[#9EDCFF]">
                       {project.language || "Python"}
+                    </span>
+                    <span className="text-[10px] font-mono text-slate-500">
+                      {project.branch || "main"}
                     </span>
                   </div>
 

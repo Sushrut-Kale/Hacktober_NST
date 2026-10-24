@@ -1,17 +1,32 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { api } from "@/lib/api";
 import { ExecutionRun } from "@/lib/types";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { formatDate } from "@/lib/formatters";
-import { DEMO_RUNS } from "@/fixtures/demo-data";
 import { FileText, Scale } from "lucide-react";
 
 export default function ReportsPage() {
-  const [runs] = useState<ExecutionRun[]>(Object.values(DEMO_RUNS));
+  const [runs, setRuns] = useState<ExecutionRun[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadRuns() {
+      setLoading(true);
+      try {
+        const res = await api.getRuns();
+        setRuns(res.data);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadRuns();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -28,7 +43,18 @@ export default function ReportsPage() {
       </div>
 
       {/* Reports List */}
-      <div className="space-y-3">
+      {loading ? (
+        <div className="p-12 text-center text-[#718198] font-mono text-sm">
+          Loading audit-ready run reports...
+        </div>
+      ) : runs.length === 0 ? (
+        <EmptyState
+          icon={FileText}
+          title="No Verification Reports Available"
+          description="Detailed cryptographic evidence dossiers and run reports will be compiled as tasks complete deterministic execution."
+        />
+      ) : (
+        <div className="space-y-3">
         {runs.map((run) => (
           <Card
             key={run.run_id}
@@ -76,7 +102,8 @@ export default function ReportsPage() {
             </div>
           </Card>
         ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

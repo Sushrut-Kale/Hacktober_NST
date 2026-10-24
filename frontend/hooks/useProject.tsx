@@ -30,7 +30,7 @@ interface ProjectContextType {
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 export function ProjectProvider({ children }: { children: React.ReactNode }) {
-  const [projects, setProjects] = useState<Project[]>(DEMO_PROJECTS);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [currentProjectId, setCurrentProjectIdState] = useState<string>("default");
   const [isBackendOnline, setIsBackendOnline] = useState<boolean>(false);
   const [isMockMode, setIsMockModeState] = useState<boolean>(false);
@@ -83,8 +83,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       }
 
       const projs = await api.getProjects();
-      if (projs.data && projs.data.length > 0) {
-        setProjects(projs.data);
+      if (projs.data) {
+        setProjects(isMockModeForced() && projs.data.length === 0 ? DEMO_PROJECTS : projs.data);
       }
     } catch {
       setIsBackendOnline(false);

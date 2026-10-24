@@ -2,12 +2,14 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useProject } from "@/hooks/useProject";
 import { api } from "@/lib/api";
 import { Task } from "@/lib/types";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import {
   CheckSquare,
   Plus,
@@ -18,6 +20,7 @@ import {
 } from "lucide-react";
 
 export default function TasksPage() {
+  const router = useRouter();
   const { currentProjectId } = useProject();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -139,10 +142,17 @@ export default function TasksPage() {
             />
           ))
         ) : filteredTasks.length === 0 ? (
-          <div className="p-12 text-center rounded-2xl border border-dashed border-white/10 bg-[#0B1423]/40 text-[#718198]">
-            <CheckSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm font-medium">No tasks found matching criteria.</p>
-          </div>
+          <EmptyState
+            icon={CheckSquare}
+            title={searchTerm || stateFilter !== "ALL" ? "No Matching Tasks" : "No Tasks Found"}
+            description={
+              searchTerm || stateFilter !== "ALL"
+                ? "No tasks match the active filters. Try clearing your search or switching filter tabs."
+                : "No tasks have been created in this project yet. Create a task to initiate the lifecycle state machine."
+            }
+            actionLabel="Create Task"
+            onAction={() => router.push("/tasks/new")}
+          />
         ) : (
           filteredTasks.map((task) => (
             <Card

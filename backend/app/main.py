@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 from typing import Dict, Any, AsyncGenerator, Optional, Union, List
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -116,6 +117,151 @@ async def ollama_health() -> Dict[str, Any]:
 @app.get("/api/health/antigravity")
 async def antigravity_health() -> Dict[str, Any]:
     return antigravity_adapter.inspect_capabilities()
+
+
+@app.get("/api/model/info")
+async def get_model_info_route() -> Dict[str, Any]:
+    """
+    Returns telemetry for the local coding intelligence model and Antigravity adapter.
+    """
+    ollama = await gemma_service.check_readiness()
+    ag = antigravity_adapter.inspect_capabilities()
+    return {
+        "model_id": ollama.get("model", "gemma4:e4b"),
+        "ollama_status": ollama.get("status", "FALLBACK_ACTIVE"),
+        "context_window_tokens": 8192,
+        "temperature": 0.2,
+        "quantization": "4-bit (e4b)",
+        "antigravity_sdk_installed": ag.get("sdk_installed", False),
+        "cli_installed": ag.get("cli_installed", False),
+        "mcp_enabled": ag.get("mcp_enabled", True),
+        "inference_engine": "Ollama Local Runtime",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+@app.get("/api/security/results")
+async def get_security_test_results() -> List[Dict[str, Any]]:
+    """
+    Runs live automated security validation checks against the SafeExecutionRunner.
+    """
+    tests = []
+    # Test 1: Shell injection &&
+    try:
+        safe_runner.validate_command("python -c 'print(1)' && echo 'hacked'")
+        tests.append({
+            "test_id": "SEC-001",
+            "name": "Shell Metacharacter Rejection (&&)",
+            "description": "Verifies that compound command chaining with '&&' is blocked prior to execution.",
+            "status": "FAIL",
+            "exit_code": 1,
+            "stdout": "Failed: Shell injection was not rejected",
+            "executed_at": datetime.now(timezone.utc).isoformat(),
+        })
+    except ValueError as e:
+        tests.append({
+            "test_id": "SEC-001",
+            "name": "Shell Metacharacter Rejection (&&)",
+            "description": "Verifies that compound command chaining with '&&' is blocked prior to execution.",
+            "status": "PASS",
+            "exit_code": 0,
+            "stdout": f"Passed: Blocked with error: {str(e)}",
+            "executed_at": datetime.now(timezone.utc).isoformat(),
+        })
+
+    # Test 2: Shell pipe operator |
+    try:
+        safe_runner.validate_command("python -c 'print(1)' | grep 1")
+        tests.append({
+            "test_id": "SEC-002",
+            "name": "Pipeline Operator Rejection (|)",
+            "description": "Verifies that piping commands through subshells is strictly prohibited.",
+            "status": "FAIL",
+            "exit_code": 1,
+            "stdout": "Failed: Pipe operator was not rejected",
+            "executed_at": datetime.now(timezone.utc).isoformat(),
+        })
+    except ValueError as e:
+        tests.append({
+            "test_id": "SEC-002",
+            "name": "Pipeline Operator Rejection (|)",
+            "description": "Verifies that piping commands through subshells is strictly prohibited.",
+            "status": "PASS",
+            "exit_code": 0,
+            "stdout": f"Passed: Blocked with error: {str(e)}",
+            "executed_at": datetime.now(timezone.utc).isoformat(),
+        })
+
+    # Test 3: Unallowlisted binary
+    try:
+        safe_runner.validate_command("curl http://example.com")
+        tests.append({
+            "test_id": "SEC-003",
+            "name": "Unallowlisted Binary Quarantine",
+            "description": "Restricts execution strictly to pytest, python, python3, and git.",
+            "status": "FAIL",
+            "exit_code": 1,
+            "stdout": "Failed: curl was not blocked",
+            "executed_at": datetime.now(timezone.utc).isoformat(),
+        })
+    except ValueError as e:
+        tests.append({
+            "test_id": "SEC-003",
+            "name": "Unallowlisted Binary Quarantine",
+            "description": "Restricts execution strictly to pytest, python, python3, and git.",
+            "status": "PASS",
+            "exit_code": 0,
+            "stdout": f"Passed: Blocked with error: {str(e)}",
+            "executed_at": datetime.now(timezone.utc).isoformat(),
+        })
+
+    # Test 4: Workspace directory boundary validation
+    try:
+        safe_runner.validate_workspace("Z:/nonexistent/sandbox/escape")
+        tests.append({
+            "test_id": "SEC-004",
+            "name": "Workspace Boundary Containment",
+            "description": "Ensures working directory exists and enforces absolute canonical path validation.",
+            "status": "FAIL",
+            "exit_code": 1,
+            "stdout": "Failed: Non-existent workspace was accepted",
+            "executed_at": datetime.now(timezone.utc).isoformat(),
+        })
+    except ValueError as e:
+        tests.append({
+            "test_id": "SEC-004",
+            "name": "Workspace Boundary Containment",
+            "description": "Ensures working directory exists and enforces absolute canonical path validation.",
+            "status": "PASS",
+            "exit_code": 0,
+            "stdout": f"Passed: Blocked with error: {str(e)}",
+            "executed_at": datetime.now(timezone.utc).isoformat(),
+        })
+
+    # Test 5: Allowlisted Python execution in default workspace
+    try:
+        safe_runner.validate_command("python -c \"print('OK')\"")
+        tests.append({
+            "test_id": "SEC-005",
+            "name": "Allowlisted Binary Safe Invocation",
+            "description": "Validates authorized Python environment command syntax.",
+            "status": "PASS",
+            "exit_code": 0,
+            "stdout": "Passed: Allowlisted command validated successfully.",
+            "executed_at": datetime.now(timezone.utc).isoformat(),
+        })
+    except ValueError as e:
+        tests.append({
+            "test_id": "SEC-005",
+            "name": "Allowlisted Binary Safe Invocation",
+            "description": "Validates authorized Python environment command syntax.",
+            "status": "FAIL",
+            "exit_code": 1,
+            "stdout": f"Failed: {str(e)}",
+            "executed_at": datetime.now(timezone.utc).isoformat(),
+        })
+
+    return tests
 
 
 # -------------------------------------------------------------

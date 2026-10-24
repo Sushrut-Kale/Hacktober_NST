@@ -40,8 +40,8 @@ export function DeveloperStatusStrip() {
         }
       } catch {
         if (isMounted) {
-          setTaskCount(3);
-          setVerificationStats({ verified: 2, total: 3 });
+          setTaskCount(0);
+          setVerificationStats({ verified: 0, total: 0 });
         }
       }
     }
