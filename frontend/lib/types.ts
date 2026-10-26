@@ -178,9 +178,12 @@ export interface Project {
   branch: string;
   repo_path?: string;
   language: string;
-  framework: string;
+  framework?: string;
+  source_type?: string;
+  root_path?: string;
+  repository_url?: string;
   created_at: string;
-  stats: {
+  stats?: {
     total_tasks: number;
     verified_tasks: number;
     failed_tasks: number;

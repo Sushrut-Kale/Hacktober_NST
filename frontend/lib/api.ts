@@ -269,6 +269,114 @@ export const api = {
     );
   },
 
+  async uploadArchive(formData: FormData) {
+    const baseUrl = getApiBaseUrl();
+    const url = `${baseUrl.replace(/\/$/, "")}/api/projects/upload`;
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) {
+        const err = await res.text();
+        return { data: null, error: err };
+      }
+      const data = await res.json();
+      return { data, error: undefined };
+    } catch (e: any) {
+      return { data: null, error: e?.message || "Failed to upload archive" };
+    }
+  },
+
+  async getProjectFiles(projectId: string, maxDepth: number = 4) {
+    return fetchWithFallback<any>(
+      `/api/projects/${projectId}/files?max_depth=${maxDepth}`,
+      {},
+      { name: "root", path: "", type: "dir", children: [] }
+    );
+  },
+
+  async getProjectFileContent(projectId: string, path: string) {
+    return fetchWithFallback<any>(
+      `/api/projects/${projectId}/file-content?path=${encodeURIComponent(path)}`,
+      {},
+      null
+    );
+  },
+
+  async getProjectHealthAudit(projectId: string) {
+    return fetchWithFallback<any>(
+      `/api/projects/${projectId}/health-audit`,
+      {},
+      {
+        project_id: projectId,
+        health_score: 95,
+        summary: "Static health audit summary.",
+        dead_code_candidates: [],
+        unused_dependencies: [],
+        debug_markers: [],
+        todo_markers: [],
+        recommended_actions: [],
+      }
+    );
+  },
+
+  async generateCleanupProposal(projectId: string, request: { target_findings: string[]; remove_debug_statements: boolean }) {
+    return fetchWithFallback<any>(
+      `/api/projects/${projectId}/cleanup-proposal`,
+      {
+        method: "POST",
+        body: JSON.stringify(request),
+      },
+      null
+    );
+  },
+
+  async sendProjectChat(projectId: string, message: string, history: any[] = []) {
+    return fetchWithFallback<any>(
+      `/api/projects/${projectId}/chat`,
+      {
+        method: "POST",
+        body: JSON.stringify({ message, history }),
+      },
+      {
+        response: "VIKASA Assistant: Grounded repository context.",
+        generator_status: "FALLBACK_ACTIVE",
+        model: "vikasa-deterministic-assistant",
+        grounded_files: [],
+        suggested_actions: ["Inspect Claim vs Reality matrix", "Generate tasks"],
+      }
+    );
+  },
+
+  async diagnoseProjectImage(projectId: string, request: { error_text_override?: string; context_notes?: string; image_base64?: string }) {
+    return fetchWithFallback<any>(
+      `/api/projects/${projectId}/diagnose-image`,
+      {
+        method: "POST",
+        body: JSON.stringify(request),
+      },
+      null
+    );
+  },
+
+  async getProjectReplay(projectId: string) {
+    return fetchWithFallback<any>(
+      `/api/projects/${projectId}/replay`,
+      {},
+      { project_id: projectId, events: [], total_events: 0 }
+    );
+  },
+
+  async getProjectExport(projectId: string) {
+    return fetchWithFallback<any>(
+      `/api/projects/${projectId}/export`,
+      {},
+      null
+    );
+  },
+
+
   async getTasks(projectId?: string) {
     let fallback = DEMO_TASKS;
     if (projectId && projectId !== "all") {

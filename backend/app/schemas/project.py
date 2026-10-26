@@ -153,3 +153,166 @@ class ClarificationAnswerRequest(BaseModel):
 
 class SkipQuestionsRequest(BaseModel):
     use_defaults: bool = True
+
+
+# -------------------------------------------------------------
+# Repository Explorer & File Viewer Schemas
+# -------------------------------------------------------------
+
+class FileTreeNode(BaseModel):
+    name: str
+    path: str
+    type: str  # "file" | "dir"
+    size_bytes: int = 0
+    extension: Optional[str] = None
+    children: Optional[List["FileTreeNode"]] = None
+
+
+class FileContentResponse(BaseModel):
+    path: str
+    relative_path: str
+    content: str
+    lines_count: int
+    size_bytes: int
+    extension: str
+    truncated: bool = False
+
+
+# -------------------------------------------------------------
+# Repository Health & Garbage Code Schemas
+# -------------------------------------------------------------
+
+class DeadCodeFinding(BaseModel):
+    file_path: str
+    symbol: str
+    line: int
+    reason: str
+    confidence: float = 0.75
+
+
+class UnusedDependencyFinding(BaseModel):
+    package_name: str
+    manifest_file: str
+    reason: str
+
+
+class DebugMarkerFinding(BaseModel):
+    file_path: str
+    line: int
+    marker: str  # "console.log" | "print(" | "debugger" | "pdb.set_trace()"
+    snippet: str
+
+
+class TodoMarkerFinding(BaseModel):
+    file_path: str
+    line: int
+    type: str  # "TODO" | "FIXME" | "HACK" | "XXX"
+    text: str
+
+
+class RepoHealthAuditResponse(BaseModel):
+    project_id: str
+    health_score: int  # 0 to 100
+    summary: str
+    dead_code_candidates: List[DeadCodeFinding] = Field(default_factory=list)
+    unused_dependencies: List[UnusedDependencyFinding] = Field(default_factory=list)
+    debug_markers: List[DebugMarkerFinding] = Field(default_factory=list)
+    todo_markers: List[TodoMarkerFinding] = Field(default_factory=list)
+    recommended_actions: List[str] = Field(default_factory=list)
+
+
+class CleanupProposalRequest(BaseModel):
+    target_findings: List[str]  # e.g. ["debug_markers", "todo_markers"]
+    remove_debug_statements: bool = True
+
+
+class CleanupProposalResponse(BaseModel):
+    proposal_id: str
+    summary: str
+    diff: str
+    affected_files: List[str]
+    requires_human_approval: bool = True
+    approved: bool = False
+
+
+# -------------------------------------------------------------
+# Project AI Chat & Contextual Assistant Schemas
+# -------------------------------------------------------------
+
+class AIChatMessage(BaseModel):
+    role: str  # "user" | "assistant" | "system"
+    content: str
+
+
+class AIChatRequest(BaseModel):
+    message: str
+    history: List[AIChatMessage] = Field(default_factory=list)
+
+
+class AIChatResponse(BaseModel):
+    response: str
+    generator_status: str  # "AI_ACTIVE" | "FALLBACK_ACTIVE" | "AI_UNAVAILABLE"
+    model: str
+    grounded_files: List[str] = Field(default_factory=list)
+    suggested_actions: List[str] = Field(default_factory=list)
+    suggested_handoff_prompt: Optional[str] = None
+
+
+# -------------------------------------------------------------
+# Image-Based Issue Diagnosis Schemas
+# -------------------------------------------------------------
+
+class ImageDiagnosisRequest(BaseModel):
+    image_base64: Optional[str] = None
+    file_name: Optional[str] = None
+    context_notes: Optional[str] = None
+    error_text_override: Optional[str] = None
+
+
+class ImageDiagnosisResponse(BaseModel):
+    diagnosis_id: str
+    extracted_error_text: str
+    likely_cause: str
+    matching_repository_files: List[str] = Field(default_factory=list)
+    hypothesized_fix: str
+    coding_agent_prompt: str
+    suggested_verification_tests: List[str] = Field(default_factory=list)
+    confidence: float
+    is_hypothesis: bool = True
+
+
+# -------------------------------------------------------------
+# Activity History & Replay Schemas
+# -------------------------------------------------------------
+
+class ReplayEventItem(BaseModel):
+    id: str
+    timestamp: datetime
+    event_type: str  # "SCAN" | "TASK_CREATED" | "TASK_APPROVED" | "EXECUTION" | "VERIFIED" | "FAILED"
+    description: str
+    author: str
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class ReplayHistoryResponse(BaseModel):
+    project_id: str
+    events: List[ReplayEventItem] = Field(default_factory=list)
+    total_events: int
+    first_event_at: Optional[datetime] = None
+    last_event_at: Optional[datetime] = None
+
+
+# -------------------------------------------------------------
+# Project Export Schemas
+# -------------------------------------------------------------
+
+class ProjectExportResponse(BaseModel):
+    project_id: str
+    project_name: str
+    generated_at: datetime
+    markdown_report: str
+    mermaid_architecture: str
+    features_count: int
+    health_score: Optional[int] = None
+
+
