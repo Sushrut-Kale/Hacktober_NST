@@ -52,6 +52,7 @@ export default function NewProjectPage() {
   const [projectIdea, setProjectIdea] = useState("");
   const [projectBrief, setProjectBrief] = useState("");
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [archiveFile, setArchiveFile] = useState<File | null>(null);
 
   // Cross-examination questions
   const [questions, setQuestions] = useState<CrossQuestion[]>([]);
@@ -139,6 +140,23 @@ export default function NewProjectPage() {
   const finalizeProjectRegistration = async () => {
     setStep("syncing");
     try {
+      if (archiveFile) {
+        const formData = new FormData();
+        formData.append("file", archiveFile);
+        if (name) formData.append("name", name);
+        if (description || projectBrief) formData.append("description", description || projectBrief);
+
+        const uploadRes = await api.uploadArchive(formData);
+        if (uploadRes.data?.id) {
+          showToast(`Archive "${archiveFile.name}" ingested and analyzed!`, "success");
+          await refreshStatus();
+          router.push(`/projects/${uploadRes.data.id}`);
+          return;
+        } else if (uploadRes.error) {
+          throw new Error(uploadRes.error);
+        }
+      }
+
       // 1. Create project in real FastAPI backend
       const res = await api.createProject({
         name: name || "VIKASA Workspace Project",
@@ -342,27 +360,32 @@ export default function NewProjectPage() {
                     <div className="flex items-center gap-3">
                       <label className="px-3.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-300 cursor-pointer flex items-center gap-2 transition-colors">
                         <Upload className="w-4 h-4 text-cyan-400" />
-                        <span>Upload .md or .txt document</span>
+                        <span>Upload Archive (.zip, .tar.gz) or Document</span>
                         <input
                           type="file"
-                          accept=".md,.txt,.json"
+                          accept=".zip,.tar.gz,.tgz,.tar,.md,.txt,.json,.yaml"
                           className="hidden"
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) {
                               setUploadedFileName(file.name);
-                              const reader = new FileReader();
-                              reader.onload = (evt) => {
-                                setProjectBrief(String(evt.target?.result || ""));
-                              };
-                              reader.readAsText(file);
+                              if (file.name.endsWith(".zip") || file.name.endsWith(".tar.gz") || file.name.endsWith(".tgz") || file.name.endsWith(".tar")) {
+                                setArchiveFile(file);
+                                if (!name) setName(file.name.replace(/\.[^/.]+$/, ""));
+                              } else {
+                                const reader = new FileReader();
+                                reader.onload = (evt) => {
+                                  setProjectBrief(String(evt.target?.result || ""));
+                                };
+                                reader.readAsText(file);
+                              }
                             }
                           }}
                         />
                       </label>
                       {uploadedFileName && (
                         <span className="text-xs text-emerald-400 font-mono">
-                          Loaded: {uploadedFileName}
+                          Selected: {uploadedFileName}
                         </span>
                       )}
                     </div>

@@ -39,7 +39,16 @@ import {
   Boxes,
   Compass,
   Check,
+  Bug,
+  History,
+  Download,
+  Copy,
 } from "lucide-react";
+import { RepositoryExplorer } from "@/components/project/RepositoryExplorer";
+import { RepoHealthAudit } from "@/components/project/RepoHealthAudit";
+import { ProjectAIChat } from "@/components/project/ProjectAIChat";
+import { ImageIssueDiagnosis } from "@/components/project/ImageIssueDiagnosis";
+import { ReplayTimeline } from "@/components/project/ReplayTimeline";
 
 interface FeatureFinding {
   id: string;
@@ -71,7 +80,7 @@ export default function ProjectDetailsPage() {
   const [isRescanning, setIsRescanning] = useState(false);
   const [isBuildingFeature, setIsBuildingFeature] = useState(false);
   const [activeTab, setActiveTab] = useState<
-    "claims" | "overview" | "architecture" | "tech" | "tasks" | "docs"
+    "claims" | "overview" | "architecture" | "tech" | "tasks" | "docs" | "explorer" | "health" | "chat" | "diag" | "replay"
   >("claims");
 
   // Selected Feature for inspection modal
@@ -79,6 +88,87 @@ export default function ProjectDetailsPage() {
 
   // Status filter for Claims tab
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
+
+  // Architecture view & Export states
+  const [archView, setArchView] = useState<"cards" | "mermaid">("cards");
+  const [copiedMermaid, setCopiedMermaid] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const getMermaidSyntax = () => {
+    if (!projectDetail?.architecture) {
+      return `graph TD\n    node_ui["Next.js Web Client<br/><small>Next.js 14</small>"] -->|"REST API"| node_api["FastAPI Backend Service<br/><small>FastAPI / Python</small>"]\n    node_api -->|"ORM"| node_db[("Relational Database<br/><small>PostgreSQL / SQLite</small>")]\n    node_api -->|"Evaluation"| node_verif["Deterministic Verification Engine<br/><small>Rule Matrix</small>"]\n    node_verif -->|"Sandbox"| node_runner["Safe Execution Runner<br/><small>Subprocess Sandbox</small>"]\n    classDef service fill:#0f172a,stroke:#38bdf8,stroke-width:1.5px,color:#f0f9ff;\n    class node_ui,node_api,node_verif,node_runner service;\n    classDef db fill:#1e1b4b,stroke:#818cf8,stroke-width:1.5px,color:#e0e7ff;\n    class node_db db;`;
+    }
+    const comps = projectDetail.architecture.components || [];
+    const rels = projectDetail.architecture.relationships || [];
+    const lines = ["graph TD"];
+    comps.forEach((c: any) => {
+      const cid = (c.id || "node").replace(/[^a-zA-Z0-9_]/g, "_");
+      const cname = (c.name || "Component").replace(/"/g, "'");
+      const tech = (c.technology || "").replace(/"/g, "'");
+      const label = tech ? `${cname}<br/><small>${tech}</small>` : cname;
+      if (c.type?.toLowerCase() === "database") {
+        lines.push(`    ${cid}[("${label}")]`);
+      } else if (c.type?.toLowerCase() === "ui") {
+        lines.push(`    ${cid}["${label}"]`);
+      } else {
+        lines.push(`    ${cid}["${label}"]`);
+      }
+    });
+    rels.forEach((r: any) => {
+      const src = (r.source || "").replace(/[^a-zA-Z0-9_]/g, "_");
+      const tgt = (r.target || "").replace(/[^a-zA-Z0-9_]/g, "_");
+      const lbl = (r.label || "").replace(/"/g, "'");
+      const proto = (r.protocol || "").replace(/"/g, "'");
+      const text = proto ? `${lbl} (${proto})` : lbl;
+      if (src && tgt) {
+        lines.push(`    ${src} -->|"${text}"| ${tgt}`);
+      }
+    });
+    lines.push("    classDef verified fill:#064e3b,stroke:#10b981,stroke-width:1.5px,color:#ecfdf5;");
+    lines.push("    classDef proposed fill:#451a03,stroke:#f59e0b,stroke-width:1.5px,stroke-dasharray: 4 4,color:#fef3c7;");
+    lines.push("    classDef service fill:#0f172a,stroke:#38bdf8,stroke-width:1.5px,color:#f0f9ff;");
+    lines.push("    classDef db fill:#1e1b4b,stroke:#818cf8,stroke-width:1.5px,color:#e0e7ff;");
+    return lines.join("\n");
+  };
+
+  const handleDownloadFile = (content: string, filename: string, type: string) => {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(`Downloaded ${filename}`, "success");
+  };
+
+  const handleExportMarkdown = async () => {
+    setIsExporting(true);
+    try {
+      const res = await api.getProjectExport(projectId);
+      if (res.data?.markdown_report) {
+        handleDownloadFile(res.data.markdown_report, `vikasa-${projectId}-dossier.md`, "text/markdown");
+      } else {
+        const mmd = getMermaidSyntax();
+        const md = `# VIKASA Project Dossier: ${projectDetail?.name || project?.name || "Project"}\n\n## Overview\n${projectDetail?.description || ""}\n\n## Architecture\n\`\`\`mermaid\n${mmd}\n\`\`\`\n`;
+        handleDownloadFile(md, `vikasa-${projectId}-dossier.md`, "text/markdown");
+      }
+    } catch {
+      showToast("Failed to generate export dossier", "error");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleCopyMermaid = () => {
+    const mmd = getMermaidSyntax();
+    navigator.clipboard.writeText(mmd);
+    setCopiedMermaid(true);
+    showToast("Mermaid diagram code copied to clipboard", "success");
+    setTimeout(() => setCopiedMermaid(false), 2000);
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -295,6 +385,18 @@ export default function ProjectDetailsPage() {
           <Button
             variant="outline"
             size="sm"
+            onClick={handleExportMarkdown}
+            disabled={isExporting}
+            className="flex items-center gap-1.5"
+            title="Download complete project audit dossier"
+          >
+            <Download className="w-3.5 h-3.5" />
+            {isExporting ? "Exporting..." : "Export Dossier"}
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleRescan}
             disabled={isRescanning}
             className="flex items-center gap-1.5"
@@ -391,13 +493,18 @@ export default function ProjectDetailsPage() {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex border-b border-white/5 text-xs gap-1 overflow-x-auto">
+      <div className="flex border-b border-white/5 text-xs gap-1 overflow-x-auto pb-0.5">
         {[
           { id: "claims", label: "Claim vs Reality", icon: ShieldCheck },
-          { id: "architecture", label: "Architecture Graph", icon: Activity },
-          { id: "tech", label: "Technology Stack", icon: Boxes },
-          { id: "tasks", label: `Tasks & Roadmap (${tasks.length})`, icon: Layers },
-          { id: "docs", label: "Auto Documentation", icon: FileText },
+          { id: "architecture", label: "Architecture", icon: Activity },
+          { id: "explorer", label: "Workspace Explorer", icon: FolderGit2 },
+          { id: "health", label: "Health & Cleanup", icon: Bug },
+          { id: "chat", label: "AI Assistant", icon: Sparkles },
+          { id: "diag", label: "Error Diagnosis", icon: Terminal },
+          { id: "replay", label: "Replay History", icon: History },
+          { id: "tech", label: "Tech Stack", icon: Boxes },
+          { id: "tasks", label: `Tasks (${tasks.length})`, icon: Layers },
+          { id: "docs", label: "Documentation", icon: FileText },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -493,7 +600,7 @@ export default function ProjectDetailsPage() {
       {/* TAB 2: ARCHITECTURE GRAPH */}
       {activeTab === "architecture" && (
         <Card className="p-6 space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <h3 className="text-sm font-semibold text-white">
                 Discovered Component Architecture
@@ -503,12 +610,66 @@ export default function ProjectDetailsPage() {
                   "Modular multi-tier topology detected from repository components."}
               </p>
             </div>
-            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-              DETERMINISTIC TOPOLOGY
-            </span>
+            <div className="flex items-center gap-2">
+              <div className="flex rounded-lg bg-white/5 p-0.5 border border-white/10 text-xs">
+                <button
+                  onClick={() => setArchView("cards")}
+                  className={`px-2.5 py-1 rounded-md transition-all ${
+                    archView === "cards"
+                      ? "bg-cyan-500/20 text-cyan-300 font-medium"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Cards
+                </button>
+                <button
+                  onClick={() => setArchView("mermaid")}
+                  className={`px-2.5 py-1 rounded-md transition-all ${
+                    archView === "mermaid"
+                      ? "bg-cyan-500/20 text-cyan-300 font-medium"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Mermaid Source
+                </button>
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyMermaid}
+                className="flex items-center gap-1"
+                title="Copy Mermaid diagram definition"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                {copiedMermaid ? "Copied" : "Copy"}
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  handleDownloadFile(getMermaidSyntax(), `vikasa-${projectId}-arch.mmd`, "text/plain")
+                }
+                className="flex items-center gap-1"
+                title="Download .mmd file"
+              >
+                <Download className="w-3.5 h-3.5" />
+                .mmd
+              </Button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {archView === "mermaid" ? (
+            <div className="space-y-3">
+              <div className="p-4 rounded-xl bg-black/50 border border-white/10 font-mono text-[11px] text-cyan-300 overflow-x-auto whitespace-pre">
+                {getMermaidSyntax()}
+              </div>
+              <p className="text-[11px] text-slate-400">
+                You can paste this diagram into any Mermaid-compatible viewer, GitHub Markdown, or documentation site.
+              </p>
+            </div>
+          ) : (
             {(
               projectDetail?.architecture?.components || [
                 {
@@ -575,6 +736,7 @@ export default function ProjectDetailsPage() {
               </div>
             ))}
           </div>
+          )}
         </Card>
       )}
 
@@ -670,11 +832,23 @@ export default function ProjectDetailsPage() {
       {/* TAB 5: AUTO DOCUMENTATION */}
       {activeTab === "docs" && (
         <Card className="p-6 space-y-6">
-          <div>
-            <h3 className="text-sm font-semibold text-white">Evidence-Grounded Documentation</h3>
-            <p className="text-xs text-slate-400">
-              Extracted from repository source code, manifests, and deterministic test results.
-            </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-white">Evidence-Grounded Documentation</h3>
+              <p className="text-xs text-slate-400">
+                Extracted from repository source code, manifests, and deterministic test results.
+              </p>
+            </div>
+            <Button
+              variant="brand"
+              size="sm"
+              onClick={handleExportMarkdown}
+              disabled={isExporting}
+              className="flex items-center gap-1.5"
+            >
+              <Download className="w-3.5 h-3.5" />
+              {isExporting ? "Exporting..." : "Download Dossier (.md)"}
+            </Button>
           </div>
 
           <div className="space-y-4 text-xs">
@@ -703,6 +877,31 @@ export default function ProjectDetailsPage() {
             </div>
           </div>
         </Card>
+      )}
+
+      {/* TAB: WORKSPACE REPOSITORY EXPLORER */}
+      {activeTab === "explorer" && (
+        <RepositoryExplorer projectId={projectId} />
+      )}
+
+      {/* TAB: REPOSITORY HEALTH & CLEANUP */}
+      {activeTab === "health" && (
+        <RepoHealthAudit projectId={projectId} />
+      )}
+
+      {/* TAB: PROJECT AI CHAT ASSISTANT */}
+      {activeTab === "chat" && (
+        <ProjectAIChat projectId={projectId} />
+      )}
+
+      {/* TAB: ERROR & ISSUE DIAGNOSIS */}
+      {activeTab === "diag" && (
+        <ImageIssueDiagnosis projectId={projectId} />
+      )}
+
+      {/* TAB: REPLAY EVENT TIMELINE */}
+      {activeTab === "replay" && (
+        <ReplayTimeline projectId={projectId} />
       )}
 
       {/* FEATURE INSPECTION & BUILD FURTHER MODAL */}
