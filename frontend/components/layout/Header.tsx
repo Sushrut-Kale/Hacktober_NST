@@ -14,6 +14,7 @@ import {
   Server,
   SlidersHorizontal,
   ChevronRight,
+  Search,
 } from "lucide-react";
 import { Button } from "../ui/Button";
 
@@ -237,6 +238,19 @@ export function Header({ onToggleSidebar }: HeaderProps) {
             />
           </span>
         </div>
+
+        {/* Quick Command Search (Ctrl+K) */}
+        <button
+          onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true }))}
+          className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs font-mono text-slate-400 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 hover:border-white/10 transition-all cursor-pointer"
+          title="Open Command Palette (Ctrl+K)"
+        >
+          <Search className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="text-[11px] text-slate-400">Search</span>
+          <kbd className="px-1.5 py-0.2 rounded text-[9px] bg-white/5 border border-white/10 text-slate-500">
+            Ctrl K
+          </kbd>
+        </button>
 
         {/* Mock toggle */}
         <button

@@ -6,6 +6,7 @@ import { Header } from "./Header";
 import { ToastContainer } from "../ui/ToastContainer";
 import { ProjectProvider } from "@/hooks/useProject";
 import { ContextualAssistant } from "../assistant/ContextualAssistant";
+import { CommandPalette } from "../ui/CommandPalette";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -36,6 +37,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </main>
         </div>
 
+        <CommandPalette />
         <ContextualAssistant />
         <ToastContainer />
       </div>
